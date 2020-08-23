@@ -1,4 +1,4 @@
-class BertConfit:
+class BertConfig:
 
     def __init__(
             self,

@@ -1,10 +1,8 @@
-import logging
 import math
 
 import torch
 import torch.nn.functional as F
 
-logger = logger.getLogger(__name__)
 
 gelu = F.gelu
 
