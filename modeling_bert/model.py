@@ -67,3 +67,11 @@ class BertEmbeddings(nn.Module):
         embeddings = self.dropout(embeddings)
         return embeddings
 
+
+class BertSelfAttention(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+
+        if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
+            # TODO
+            pass
