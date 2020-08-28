@@ -150,3 +150,15 @@ class BertSelfOutput(nn.Module):
         return hidden_states
 
 
+class BertAttention(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.self = BertSelfAttention(config)
+        self.output = BertSelfOutput(config)
+        self.pruned_heads = set()
+
+    def prune_heads(self, heads):
+        if len(heads) == 0:
+            return
+        heads, index = find_pruneable_heads_and_indices(heads, )
+        pass
