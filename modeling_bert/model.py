@@ -11,6 +11,7 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from activations import gelu, gelu_new, swish
 
 from config_bert import BertConfig
+from utils import find_pruneable_heads_and_indices
 
 config = BertConfig()
 
@@ -160,5 +161,29 @@ class BertAttention(nn.Module):
     def prune_heads(self, heads):
         if len(heads) == 0:
             return
-        heads, index = find_pruneable_heads_and_indices(heads, )
-        pass
+        heads, index = find_pruneable_heads_and_indices(heads, self.self.num_attention_heads, self.self.attention_head_size, self.pruned_heads)
+
+        # Prune Linear Layers
+        self.self.query = prune_linear_layer(self.self.query, index)
+        self.self.key = prune_linear_layer(self.self.key, index)
+        self.self.value = prune_linear_layer(self.output.dense, index, dim=1)
+
+        # Update hyper params and store pruned heads
+        self.self.num_attention_heads = self.self.num_attention_heads - len(heads)
+        self.self.all_head_size = self.self.attention_head_size * self.self.num_attention_heads
+        self.pruned_heads = self.pruned_heads.union(heads)
+
+    def forward(self,
+            hidden_states,
+            attention_mask=None,
+            head_mask=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            output_attentions=False,):
+
+        self.outputs = self.self(hidden_states, attention_mask, head_mask, encoder_hidden_states, encoder_attention_mask, output_attentions)
+        attention_output = self.output(self.outputs[0], hidden_states)
+        outputs = (attention_output) + self.outputs[1:]
+        return outputs
+
+
