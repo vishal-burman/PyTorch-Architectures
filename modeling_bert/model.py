@@ -283,4 +283,46 @@ class BertEncoder(nn.Module):
 
                     return custom_forward
 
-                layer_outputs = torch.utils.checkpoint.checkpoint()
+                layer_outputs = torch.utils.checkpoint.checkpoint(
+                        create_custom_forward(layer_module),
+                        hidden_states,
+                        attention_mask,
+                        head_mask[i],
+                        encoder_hidden_states,
+                        encoder_attention_mask,
+                        )
+            else:
+                layer_outputs = layer_module(
+                        hidden_states,
+                        attention_mask,
+                        head_mask[i],
+                        encoder_hidden_states,
+                        encoder_attention_mask,
+                        output_attentions,
+                        )
+            hidden_states = layer_outputs[0]
+            if output_attentions:
+                all_attentions = all_attentions + (layer_outputs[1],)
+
+
+        if output_hidden_states:
+            all_hidden_states = all_hidden_states + (hidden_states,)
+
+        if not return_dict:
+            return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
+
+        return BaseModelOutput(
+                last_hidden_state=hidden_states, hidden_states=all_hidden_states, attention=all_attentions
+                )
+
+class BertPooler(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        self.activation = nn.Tanh()
+
+    def forward(self, hidden_states):
+        first_token_tensor = hidden_states[:, 0]
+        pooled_output = self.dense(first_token_tensor)
+        pooled_output = self.activation(pooled_output)
+        return pooled_output
