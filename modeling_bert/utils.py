@@ -67,4 +67,27 @@ class PretrainedModel(nn.Module):
         else:
             raise ValueError("Wrong shape for input_ids")
 
+        extended_attention_mask = extended_attention_mask.to(dtype=self.dtype)
+        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+        return extended_attention_mask
+
+    def invert_attention_mask(self, encoder_attention_mask):
+        """
+        Invert an attention mask
+        """
+        if encoder_attention_mask.dim() == 3:
+            encoder_extended_attention_mask = encoder_attention_mask[:, None, :, :]
+        if encoder_attention_mask.dim() == 2:
+            encoder_extended_attention_mask = encoder_attention_mask[:, None, None, :]
+
+        encoder_extended_attention_mask = encoder_extended_attention_mask.to(dtype=self.dtype)
+
+        if self.dtype == torch.float16:
+            encoder_extended_attention_mask = (1.0 - encoder_extended_attention_mask) * -1e4
+        elif self.dtype == torch.float32:
+            encoder_extended_attention_mask = (1.0 - encoder_extended_attention_mask) * -1e9
+        else:
+            raise ValueError("Not Recognized!!")
+
+        return encoder_extended_attention_mask
 
