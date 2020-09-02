@@ -42,5 +42,29 @@ class PretrainedModel(nn.Module):
         """
 
         for layer, heads in heads_to_prune.items():
-            pass
-        pass
+            union_heads = set(self.config.pruned_heads.get(layer, [])) | set(heads)
+            self.config.pruned_heads[layer] = list(union_heads)
+        self.base_model._prune_heads(heads_to_prune)
+
+    def get_extended_attention_mask(self, attention_mask, input_shape, device=device):
+        """
+        Makes broadcastable attention and casual masks so that future and masked tokens are ignored.
+        """
+
+        if attention_mask.dim() == 3:
+            extended_attention_mask = attention_mask[:, None, :, :]
+        elif attention_mask.dim() == 2:
+
+            if self.config.is_decoder:
+                batch_size, seq_length = input_shape
+                seq_ids = torch.arange(seq_length, device=device)
+                casual_mask = seq_ids[None, None, :].repeat(batch_size, seq_length, 1) <= seq_ids[None, :, None]
+
+                casual_mask = casual_mask.to(attention_mask.dtype)
+                extended_attention_mask = casual_mask[:, None, :, :] * attention_mask[:, None, None, :]
+            else:
+                extended_attention_mask = casual_mask[:, None, :, :]
+        else:
+            raise ValueError("Wrong shape for input_ids")
+
+
