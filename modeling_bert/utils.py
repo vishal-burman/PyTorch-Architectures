@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import torch
+import torch.nn as nn
 
 def find_pruneable_heads_and_indices(heads, n_heads, head_size, already_pruned_heads):
 
@@ -12,8 +13,34 @@ def find_pruneable_heads_and_indices(heads, n_heads, head_size, already_pruned_h
         index = torch.arange(len(mask))[mask].long()
         return heads, index
 
-class ModelOutput(OrderedDict):
+class PretrainedModel(nn.Module):
+    config_class = None
+    base_model_prefix = ""
+    authorized_missing_keys = None
 
-    def __post_init__(self):
-        class_fields = fields(self)
+    def __init__(self, config, *inputs, **kwargs):
+        super().__init__()
 
+        self.config = config
+
+    def init_weights(self):
+        """
+        Initializes and prunes weights if needed
+        """
+
+        self.apply(self._init_weights)
+
+        if self.config.pruned_heads:
+            self.prune_heads(self.config.pruned_heads)
+
+        # Tie weights if needed
+        self.tie_weights()
+
+    def prune_heads(self, heads_to_prune):
+        """
+        Prunes heads of the base model
+        """
+
+        for layer, heads in heads_to_prune.items():
+            pass
+        pass
