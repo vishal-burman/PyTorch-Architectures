@@ -8,6 +8,7 @@ gelu = F.gelu
 
 def gelu_new(x):
     """
+    Gaussian Error Linear Unit
     Implementation of the gelu activation function currently in Google Bert repo
 
     """

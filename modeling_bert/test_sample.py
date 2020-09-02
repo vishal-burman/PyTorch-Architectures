@@ -4,3 +4,6 @@
 
 from activations import gelu
 print("Done")
+sample = input("Enter key: ")
+if sample == "hello":
+    raise KeyError("Wrong Key")
