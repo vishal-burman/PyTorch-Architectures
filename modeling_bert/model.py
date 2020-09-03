@@ -62,12 +62,18 @@ class BertEmbeddings(nn.Module):
             token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=self.position_ids.device)
 
         if inputs_embeds is None:
+            # inputs_embeds ~ [batch_size, seq_max_len, emb_size]
             inputs_embeds = self.word_embeddings(input_ids)
+        # position_embeds ~ [1, max_seq_len, emb_size]
         position_embeddings = self.position_embeddings(position_ids)
+        # token_type_embeds ~ [batch_size, max_seq_len, emb_size]
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
 
+        # embeddings ~ [batch_size, max_seq_len, emb_size]
         embeddings = input_embeds + position_embeddings + token_type_embeddings
+        # embeddings ~ [batch_size, max_seq_len, emb_size]
         embeddings = self.LayerNorm(embeddings)
+        # embeddings ~ [batch_size, max_seq_len, emb_size]
         embeddings = self.dropout(embeddings)
         return embeddings
 
