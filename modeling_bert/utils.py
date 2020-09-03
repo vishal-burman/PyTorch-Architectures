@@ -63,7 +63,7 @@ class PretrainedModel(nn.Module):
                 casual_mask = casual_mask.to(attention_mask.dtype)
                 extended_attention_mask = casual_mask[:, None, :, :] * attention_mask[:, None, None, :]
             else:
-                extended_attention_mask = casual_mask[:, None, :, :]
+                extended_attention_mask = attention_mask[:, None, :, :]
         else:
             raise ValueError("Wrong shape for input_ids")
 
