@@ -142,6 +142,7 @@ class PretrainedModel(nn.Module):
         num_args_in_forward_chunk_fn = len(inpect.signature(forward_fn).parameters)
         assert num_args_in_forward_chunk_fn == len(input_tensors)
 
+        # chunk_size ~ 0
         if chunk_size > 0:
             assert(input_tensors[0].shape[chunk_dim] % chunk_size == 0)
 

@@ -4,6 +4,7 @@
 import sys
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer
 
@@ -70,9 +71,7 @@ query = nn.Linear(768, all_head_size)
 mixed_query = query(emb)
 sample_x_size = mixed_query.size()[:-1] + (num_attention_heads, attention_head_size)
 mixed_query = mixed_query.view(*sample_x_size).permute(0, 2, 1, 3)
-print(mixed_query.shape, mixed_query.transpose(-1, 2).shape)
-print(torch.matmul(mixed_query, mixed_query.transpose(-1, -2)).shape)
-x_1 = torch.rand(2, 2, 2, 2)
-x_2 = torch.rand(2, 2)
-x_3 = nn.Softmax(dim=-2)(x_1@x_2)
-print(x_1.contiguous().shape)
+
+sample_1 = torch.rand(2, 32, 768)
+outputs = (sample_1,) + torch.rand(32, 768)
+print(outputs.shape)
