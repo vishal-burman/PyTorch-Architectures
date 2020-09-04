@@ -137,28 +137,37 @@ class BertSelfAttention(nn.Module):
 
         # attention_scores ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+        # attention_scires ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
         attention_scores = attention_scores / math.sqrt(self.attention_head_size)
 
         if attention_mask is not None:
+            # attention_scores ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
             attention_scores = attention_scores + attention_mask
 
+        # attention_probs ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
         attention_probs = nn.Softmax(dim=-1)(attention_scores)
 
+        # attention_probs ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
         attention_probs = self.dropout(attention_probs)
 
         if head_mask is not None:
             attention_probs = attention_probs * head_mask
 
+        # context_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
         context_layer = torch.matmul(attention_probs, value_layer)
 
+        # context_layer ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
 
+        # new_context_layer_shape ~ [batch_size, max_seq_len, all_head_size] where all_head_size = emb_size
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
 
+        # context_layer ~ [batch_size, max_seq_len, all_head_size]
         context_layer = context_layer.view(*new_context_layer_shape)
 
         outputs = (context_layer, attention_probs) if output_attention else (context_layer,)
         
+        # outputs ~ ([batch_size, max_seq_len, all_head_size])
         return outputs
 
 class BertSelfOutput(nn.Module):
