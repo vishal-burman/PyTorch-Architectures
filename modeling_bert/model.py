@@ -107,14 +107,18 @@ class BertSelfAttention(nn.Module):
             encoder_attention_mask=None,
             output_attention=False):
 
+        # mixed_query_layer ~ [batch_size, max_seq_len, emb_size] where emb_size = self.all_head_size
         mixed_query_layer = self.query(hidden_states)
 
+        # encoder_hidden_states ~ None
         if encoder_hidden_states is not None:
             mixed_key_layer = self.key(encoder_hidden_states)
             mixed_value_layer = self.value(encoder_hidden_states)
             attention_mask = encoder_attention_mask
         else:
+            # mixed_key_layer ~ [batch_size, max_seq_len, emb_size]
             mixed_key_layer = self.key(hidden_states)
+            # mixed_value_layer ~ [batch_size, max_seq_len, emb_size]
             mixed_value_layer = self.value(hidden_states)
 
         query_layer = self.transpose_for_scores(mixed_query_layer)
@@ -247,6 +251,7 @@ class BertLayer(nn.Module):
         attention_output = self_attention_outputs[0]
         outputs = self_attention_outputs[1:]
 
+        # self.is_decoder ~ False encoder_hidden_states ~ None
         if self.is_decoder and encoder_hidden_states is not None:
             assert hasattr(self, 'crossattention'), f"some statement"
             cross_attention_outputs = self.crossattention(attention_output, attention_mask, head_mask, encoder_hidden_states, encoder_attention_mask, output_attentions)
@@ -278,12 +283,16 @@ class BertEncoder(nn.Module):
             output_hidden_states=False,
             return_dict=False):
 
+        # all_hidden_states ~ False
         all_hidden_states = () if output_hidden_states else None
+        # all_attentions ~ False
         all_attentions = () if output_attentions else None
-        for i, layer_module in enumerate(self.layer):
+        for i, layer_module in enumerate(self.layer): # self.layer ~ BertLayer
+            # output_hidden_states ~ False
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
+            # gradient_checkpointing ~ False
             if getattr(self.config, "gradient_checkpointing", False):
 
                 def create_custom_forward(module):
@@ -294,11 +303,11 @@ class BertEncoder(nn.Module):
 
                 layer_outputs = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(layer_module),
-                        hidden_states,
-                        attention_mask,
-                        head_mask[i],
-                        encoder_hidden_states,
-                        encoder_attention_mask,
+                        hidden_states, # [batch_size, max_seq_len, emb_size]
+                        attention_mask, # [batch_size, extra, extra, max_seq_len]
+                        head_mask[i], # head_mask ~ [None] * num_hidden_layers
+                        encoder_hidden_states, # None
+                        encoder_attention_mask, # None
                         )
             else:
                 layer_outputs = layer_module(
@@ -456,26 +465,26 @@ class BertModel(BertPretrainedModel):
             encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
             if encoder_attention_mask is None:
                 encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)
-            # TODO
             encoder_extended_attention_mask = self.invert_attention_mask(encoder_attention_mask)
         else:
             encoder_attention_mask = None
 
-        # TODO
+        # head_mask ~ [None] * num_hidden_layers
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
+        # embedding_output ~ [batch_size, max_seq_len, emb_size]
         embedding_output = self.embeddings(
                 input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, input_embeds=input_embeds
                 )
 
         encoder_outputs = self.encoder(
-                embedding_output,
-                attention_mask=extended_attention_mask,
-                head_mask=head_mask,
-                encoder_hidden_states=encoder_hidden_states,
-                encoder_attention_mask=encoder_extended_attention_mask,
-                output_attentions=output_attentions,
-                output_hidden_states=output_hidden_states,
+                embedding_output, # [batch_size, max_seq_len, emb_size]
+                attention_mask=extended_attention_mask, # [batch_size, extra, extra, max_seq_len]
+                head_mask=head_mask, # [None] * num_hidden_layers
+                encoder_hidden_states=encoder_hidden_states, # None
+                encoder_attention_mask=encoder_extended_attention_mask, # None
+                output_attentions=output_attentions, # False
+                output_hidden_states=output_hidden_states, # False
                 return_dict=return_dict,
                 )
         sequence_output = encoder_outputs[0]

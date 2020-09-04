@@ -61,11 +61,10 @@ emb_2 = em_2(p_ids)
 emb_3 = em_3(t_ids)
 emb = emb_1 + emb_2 + emb_3
 
-extended_attention_mask = mask[:, None, None, :]
-extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
-encoder_extended_attention_mask = None
-head_mask = [None] * 12
+num_attention_heads = 12
+attention_head_size = int(768/12)
+print(attention_head_size)
+all_head_size = 12 * attention_head_size
 
-sample_test = torch.arange(32)
-sample_test = sample_test.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-print(sample_test.expand(32, -1, -1, -1, -1).shape)
+query = nn.Linear(768, all_head_size)
+print(query(emb).shape)

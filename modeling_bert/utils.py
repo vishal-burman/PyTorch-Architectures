@@ -1,3 +1,4 @@
+import inspect
 from collections import OrderedDict
 import torch
 import torch.nn as nn
@@ -98,7 +99,6 @@ class PretrainedModel(nn.Module):
         Prepare the head mask if needed
         """
         if head_mask is not None:
-            # TODO
             head_mask = self._convert_head_mask_to_5d(head_mask, num_hidden_layers)
             if is_attention_chunked is True:
                 head_mask = head_mask.unsqueeze(-1)
@@ -126,4 +126,32 @@ class PretrainedModel(nn.Module):
         head_mask = head_mask.to(dtype=self.dtype)
         return head_mask
 
+    def apply_chunking_to_forward(forward_fn, chunk_size, chunk_dim, *input_tensors):
+        """
+        Functions chunks input_tensors to smaller input_tensor parts of size 'chunk_size'
+        over the dimension 'chunk_dim'. It then applies a layer of 'forward_fn' to each
+        chunk independently to save memory.
+        """
 
+        assert len(input_tensors) > 0
+        tensor_shape = input_tensors[0].shape
+        assert all(
+                input_tensor.shape == tensor_shape for input_tensor in input_tensors
+                )
+
+        num_args_in_forward_chunk_fn = len(inpect.signature(forward_fn).parameters)
+        assert num_args_in_forward_chunk_fn == len(input_tensors)
+
+        if chunk_size > 0:
+            assert(input_tensors[0].shape[chunk_dim] % chunk_size == 0)
+
+            num_chunks = input_tensors[0].shape[chunk_dim] // chunk_size
+
+            # check input tensor into tuples
+            input_tensors_chunks = tuple(input_tensor.chunk(num_chunks, dim=chunk_dim) for input_tensor in input_tensors)
+            # apply forward fn to every tuple
+            output_chunks = tuple(forward_fn(*input_tensors_chunk) for input_tensors_chunk in zip(*input_tensors_chunks))
+            # concatenate output at same dimension
+            return torch.cat(output_chunks, dim=chunk_dim)
+
+        return forward_fn(*input_tensors)
