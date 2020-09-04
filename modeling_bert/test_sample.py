@@ -67,4 +67,8 @@ print(attention_head_size)
 all_head_size = 12 * attention_head_size
 
 query = nn.Linear(768, all_head_size)
-print(query(emb).shape)
+mixed_query = query(emb)
+sample_x_size = mixed_query.size()[:-1] + (num_attention_heads, attention_head_size)
+mixed_query = mixed_query.view(*sample_x_size).permute(0, 2, 1, 3)
+print(type(mixed_query))
+print(torch.matmul(mixed_query, mixed_query.transpose(-1, -2)).shape)

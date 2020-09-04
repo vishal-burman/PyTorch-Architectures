@@ -85,8 +85,11 @@ class BertSelfAttention(nn.Module):
         if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
             # TODO
             print("Error!!!")
+        # self.num_attention_heads ~ 12
         self.num_attention_heads = config.num_attention_heads
+        # self.attention_head_size ~ int(768/12) ~ 64
         self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
+        # self.all_head_size ~ 768
         self.all_head_size = self.num_attention_heads * self.attention_head_size
 
         self.query = nn.Linear(config.hidden_size, self.all_head_size)
@@ -96,8 +99,12 @@ class BertSelfAttention(nn.Module):
         self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        # x ~ [batch_size, max_seq_len, emb_size]
+        # new_x_shape ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size) # num_attention_heads * attention_head_size = emb_size
+        # x ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
         x = x.view(*new_x_shape)
+        # x.permute ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
         return x.permute(0, 2, 1, 3)
 
     def forward(self, hidden_states, 
@@ -121,10 +128,14 @@ class BertSelfAttention(nn.Module):
             # mixed_value_layer ~ [batch_size, max_seq_len, emb_size]
             mixed_value_layer = self.value(hidden_states)
 
+        # query_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
         query_layer = self.transpose_for_scores(mixed_query_layer)
+        # key_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
         key_layer = self.transpose_for_scores(mixed_key_layer)
+        # value_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
         value_layer = self.transpose_for_scores(mixed_value_layer)
 
+        # attention_scores ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
         attention_scores = attention_scores / math.sqrt(self.attention_head_size)
 
