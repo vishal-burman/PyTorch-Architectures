@@ -55,6 +55,7 @@ class PretrainedModel(nn.Module):
             extended_attention_mask = attention_mask[:, None, :, :]
         elif attention_mask.dim() == 2:
 
+            # self.config.is_decoder ~ False (default)
             if self.config.is_decoder:
                 batch_size, seq_length = input_shape
                 seq_ids = torch.arange(seq_length, device=device)
@@ -63,7 +64,8 @@ class PretrainedModel(nn.Module):
                 casual_mask = casual_mask.to(attention_mask.dtype)
                 extended_attention_mask = casual_mask[:, None, :, :] * attention_mask[:, None, None, :]
             else:
-                extended_attention_mask = attention_mask[:, None, :, :]
+                # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
+                extended_attention_mask = attention_mask[:, None, None, :]
         else:
             raise ValueError("Wrong shape for input_ids")
 

@@ -36,11 +36,9 @@ class CustomDataset(Dataset):
             self.train_list.append(tokenizer(t, max_length=32, pad_to_max_length=True, truncation=True, return_token_type_ids=True))
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-print("Tokenizer Loaded")
 
 texts = ['This is a good house', 'Where are you going?', 'There is someone at the door', 'What is your name?']
 dataset = CustomDataset(texts, tokenizer)
-print("Dataset Done")
 
 data_loader = DataLoader(dataset=dataset, shuffle=False, batch_size=2)
 for sample in data_loader:
@@ -50,13 +48,10 @@ for sample in data_loader:
     break
 ###########################################
 
-print(ids.shape)
 seq_length = ids.size()[1]
-print(seq_length)
 
 p_ids = torch.arange(512).expand((1, -1))
 p_ids = p_ids[:, :seq_length]
-print(ids.shape, p_ids.shape)
 em_1 = nn.Embedding(30522, 768)
 em_2 = nn.Embedding(512, 768)
 em_3 = nn.Embedding(30522, 768)
@@ -64,6 +59,10 @@ em_3 = nn.Embedding(30522, 768)
 emb_1 = em_1(ids)
 emb_2 = em_2(p_ids)
 emb_3 = em_3(t_ids)
-print(emb_1.shape, " ", emb_2.shape, " ", emb_3.shape)
 emb = emb_1 + emb_2 + emb_3
-print(emb.shape)
+
+extended_attention_mask = mask[:, None, None, :]
+extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+encoder_extended_attention_mask = None
+head_mask = [None] * 12
+print(head_mask)
