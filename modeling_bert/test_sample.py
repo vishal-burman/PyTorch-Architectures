@@ -65,4 +65,7 @@ extended_attention_mask = mask[:, None, None, :]
 extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 encoder_extended_attention_mask = None
 head_mask = [None] * 12
-print(head_mask)
+
+sample_test = torch.arange(32)
+sample_test = sample_test.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+print(sample_test.expand(32, -1, -1, -1, -1).shape)
