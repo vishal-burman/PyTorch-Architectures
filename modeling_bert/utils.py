@@ -3,6 +3,8 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 def find_pruneable_heads_and_indices(heads, n_heads, head_size, already_pruned_heads):
 
     mask = torch.ones(n_heads, head_size)

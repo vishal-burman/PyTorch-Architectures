@@ -11,6 +11,7 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from activations import gelu, gelu_new, swish
 
 from config_bert import BertConfig
+from utils import PretrainedModel
 #from utils import find_pruneable_heads_and_indices
 
 config = BertConfig()
@@ -25,7 +26,6 @@ def mish(x):
 ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "gelu_new": gelu_new, "mish": mish}
 
 BertLayerNorm = torch.nn.LayerNorm
-print(config.vocab_size)
 
 class BertEmbeddings(nn.Module):
     """
@@ -412,7 +412,7 @@ class BertLMPredictionHead(nn.Module):
 class BertPreTrainedModel(PretrainedModel):
     # TODO
     config_class = BertConfig
-    load_tf_weights = load_tf_weights_in_bert
+    #load_tf_weights = load_tf_weights_in_bert
     base_model_prefix = "bert"
     authorized_missing_keys = [r"position_ids"]
 
@@ -426,7 +426,7 @@ class BertPreTrainedModel(PretrainedModel):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
 
-class BertModel(BertPretrainedModel):
+class BertModel(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
@@ -537,7 +537,7 @@ class BertModel(BertPretrainedModel):
 
 
 
-class BertForSequenceClassification(BertPretrainedModel):
+class BertForSequenceClassification(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__()
         self.num_labels = config.num_labels
