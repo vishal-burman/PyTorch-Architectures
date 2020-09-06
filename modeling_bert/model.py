@@ -180,8 +180,11 @@ class BertSelfOutput(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
+        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
         hidden_states = self.dense(hidden_states)
+        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
         hidden_states = self.dropout(hidden_states)
+        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
 
@@ -216,10 +219,12 @@ class BertAttention(nn.Module):
             encoder_attention_mask=None,
             output_attentions=False,):
 
-        # self.outputs ~ ([batch_size, max_seq_len, hidden_size])
+        # self.outputs ~ ([batch_size, max_seq_len, hidden_size]) where emb_size = hidden_size
         self.outputs = self.self(hidden_states, attention_mask, head_mask, encoder_hidden_states, encoder_attention_mask, output_attentions)
+        # attention_output ~ [batch_size, max_seq_len, emb_size]
         attention_output = self.output(self.outputs[0], hidden_states)
-        outputs = (attention_output) + self.outputs[1:]
+        # outputs ~ ([batch_size, max_seq_len, hidden_size])
+        outputs = (attention_output,) + self.outputs[1:]
         return outputs
 
 class BertIntermediate(nn.Module):
@@ -278,6 +283,7 @@ class BertLayer(nn.Module):
             output_attentions=False):
 
         # self_attention_outputs ~ ([batch_size, max_seq_len, all_head_size]) where all_head_size = hidden_size
+        pdb.set_trace()
         self_attention_outputs = self.attention(hidden_states, attention_mask, head_mask, output_attentions=output_attentions)
         # attention_output ~ [batch_size, max_seq_len, all_head_size]
         attention_output = self_attention_outputs[0]
@@ -320,7 +326,6 @@ class BertEncoder(nn.Module):
             return_dict=False):
 
         # all_hidden_states ~ False
-        pdb.set_trace()
         all_hidden_states = () if output_hidden_states else None
         # all_attentions ~ False
         all_attentions = () if output_attentions else None
