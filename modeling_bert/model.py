@@ -435,6 +435,7 @@ class BertModel(BertPreTrainedModel):
         self.encoder = BertEncoder(config)
         self.pooler = BertPooler(config)
 
+        # TODO Not needed for sequence classification
         self.init_weights()
 
     def get_input_embeddings(self):

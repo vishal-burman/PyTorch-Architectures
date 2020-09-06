@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from model import BertEmbeddings
+from model import BertModel
 from transformers import BertTokenizer
 from config_bert import BertConfig
 
@@ -47,7 +48,8 @@ dataset = CustomDataset(texts, tokenizer)
 
 data_loader = DataLoader(dataset=dataset, shuffle=False, batch_size=2)
 
-embeddings = BertEmbeddings(config)
+model = BertModel(config)
 for sample in data_loader:
-    embeddings = embeddings(input_ids=sample['ids'])
+    pdb.set_trace()
+    output = model(input_ids = sample['ids'], attention_mask=sample['mask'])
     break

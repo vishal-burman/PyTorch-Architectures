@@ -12,10 +12,14 @@ class BertConfig:
             attention_probs_dropout_prob=0.1,
             max_position_embeddings=512,
             type_vocab_size=2,
+            chunk_size_feed_forward=0,
             initializer_range=0.02,
             layer_norm_eps=1e-12,
             pad_token_id=0,
             gradient_checkpointing=False,
+            is_decoder=False,
+            add_cross_attention=False,
+            pruned_heads={},
             **kwargs
             ):
 
@@ -33,3 +37,7 @@ class BertConfig:
         self.layer_norm_eps = layer_norm_eps
         self.gradient_checkpointing = gradient_checkpointing
         self.pad_token_id = pad_token_id
+        self.chunk_size_feed_forward = chunk_size_feed_forward
+        self.is_decoder = is_decoder
+        self.add_cross_attention = add_cross_attention
+        self.pruned_heads = pruned_heads

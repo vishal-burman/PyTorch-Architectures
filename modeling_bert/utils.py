@@ -158,3 +158,33 @@ class PretrainedModel(nn.Module):
             return torch.cat(output_chunks, dim=chunk_dim)
 
         return forward_fn(*input_tensors)
+
+    def get_output_embeddings(self):
+        """
+        Returns the model's output embeddings
+        """
+
+    def tie_weights(self):
+        """
+        Tie the weights between the input_embeddings and the output_embeddings
+        """
+
+        output_embeddings = self.get_output_embeddings()
+        if output_embeddings is not None and self.config.tie_word_embeddings:
+            self._tie_or_clone_weights(output_embeddings, self.get_input_embeddings())
+
+    def _tie_or_clone_weights(self, output_embeddings, input_embeddings):
+        output_embeddings.weight = input_embeddings.weight
+
+        if getattr(output_embeddings, "bias", None) is not None:
+            output_embeddings.bias.data = torch.nn.functional.pad(
+                    output_embeddings.bias.data,
+                    (
+                        0,
+                        output_embeddings.weight.shape[0] - output_embeddings.shape[0],
+                        ),
+                    "constant",
+                    0,
+                    )
+            if hasattr(output_embeddings, "out_features") and hasattr(input_embeddings, "num_embeddings"):
+                output_embeddings.out_features = input_embeddings.num_embeddings
