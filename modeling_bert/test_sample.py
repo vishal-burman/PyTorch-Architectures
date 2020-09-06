@@ -11,7 +11,7 @@ from model import BertEmbeddings
 from model import BertModel
 from transformers import BertTokenizer
 from config_bert import BertConfig
-
+from model import BertEncoder
 config = BertConfig()
 BertLayerNorm = nn.LayerNorm
 #########################################
@@ -50,6 +50,5 @@ data_loader = DataLoader(dataset=dataset, shuffle=False, batch_size=2)
 
 model = BertModel(config)
 for sample in data_loader:
-    pdb.set_trace()
     output = model(input_ids = sample['ids'], attention_mask=sample['mask'])
     break

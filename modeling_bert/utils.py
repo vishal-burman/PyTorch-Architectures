@@ -1,3 +1,4 @@
+import pdb
 import inspect
 from collections import OrderedDict
 import torch
@@ -72,7 +73,7 @@ class PretrainedModel(nn.Module):
         else:
             raise ValueError("Wrong shape for input_ids")
 
-        extended_attention_mask = extended_attention_mask.to(dtype=self.dtype)
+        #extended_attention_mask = extended_attention_mask.to(dtype=self.dtype) fp16 compatibility throws error
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
         return extended_attention_mask
 

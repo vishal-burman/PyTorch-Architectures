@@ -20,6 +20,9 @@ class BertConfig:
             is_decoder=False,
             add_cross_attention=False,
             pruned_heads={},
+            output_attentions=False,
+            output_hidden_states=False,
+            return_dict=True,
             **kwargs
             ):
 
@@ -41,3 +44,6 @@ class BertConfig:
         self.is_decoder = is_decoder
         self.add_cross_attention = add_cross_attention
         self.pruned_heads = pruned_heads
+        self.output_attentions = output_attentions
+        self.output_hidden_states = output_hidden_states
+        self.return_dict = return_dict

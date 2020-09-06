@@ -1,4 +1,5 @@
 import sys
+import pdb
 import math
 import os
 import warnings
@@ -319,6 +320,7 @@ class BertEncoder(nn.Module):
             return_dict=False):
 
         # all_hidden_states ~ False
+        pdb.set_trace()
         all_hidden_states = () if output_hidden_states else None
         # all_attentions ~ False
         all_attentions = () if output_attentions else None
@@ -467,13 +469,11 @@ class BertModel(BertPreTrainedModel):
         # output_attentions ~ False
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         # output_hidden_states ~ False
-        output_hidden_states = (
-                output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
-                )
+        output_hidden_states = (output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states)
         # return_dict ~ False
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = return_dict if return_dict is not None else self.config.return_dict
 
-        if input_ids is not None and input_embeds is not None:
+        if input_ids is not None and inputs_embeds is not None:
             raise ValueError("Both input_ids and input_embeds cannot exist at the same time")
         elif input_ids is not None:
             # input_shape ~ (batch_size, max_seq_len)
@@ -492,6 +492,7 @@ class BertModel(BertPreTrainedModel):
             # token_type_ids ~ [batch_size, max_seq_len]
             token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
 
+        
         # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
         extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape, device)
 
@@ -503,14 +504,14 @@ class BertModel(BertPreTrainedModel):
                 encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)
             encoder_extended_attention_mask = self.invert_attention_mask(encoder_attention_mask)
         else:
-            encoder_attention_mask = None
+            encoder_extended_attention_mask = None
 
         # head_mask ~ [None] * num_hidden_layers
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
         # embedding_output ~ [batch_size, max_seq_len, emb_size]
         embedding_output = self.embeddings(
-                input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, input_embeds=input_embeds
+                input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
                 )
 
         encoder_outputs = self.encoder(
