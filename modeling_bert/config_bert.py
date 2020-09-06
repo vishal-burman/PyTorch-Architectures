@@ -32,3 +32,4 @@ class BertConfig:
         self.initializer_range = initializer_range
         self.layer_norm_eps = layer_norm_eps
         self.gradient_checkpointing = gradient_checkpointing
+        self.pad_token_id = pad_token_id

@@ -11,7 +11,7 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from activations import gelu, gelu_new, swish
 
 from config_bert import BertConfig
-from utils import find_pruneable_heads_and_indices
+#from utils import find_pruneable_heads_and_indices
 
 config = BertConfig()
 
@@ -55,7 +55,7 @@ class BertEmbeddings(nn.Module):
 
         if position_ids is None:
             # position_ids ~ [1, seq_max_len]
-            position_ids = self.position_ids[:, seq_length]
+            position_ids = self.position_ids[:, :seq_length]
 
         if token_type_ids is None:
             # token_type_ids ~ [batch_size, seq_len] 
@@ -70,7 +70,7 @@ class BertEmbeddings(nn.Module):
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
 
         # embeddings ~ [batch_size, max_seq_len, emb_size]
-        embeddings = input_embeds + position_embeddings + token_type_embeddings
+        embeddings = inputs_embeds + position_embeddings + token_type_embeddings
         # embeddings ~ [batch_size, max_seq_len, emb_size]
         embeddings = self.LayerNorm(embeddings)
         # embeddings ~ [batch_size, max_seq_len, emb_size]
@@ -107,8 +107,9 @@ class BertSelfAttention(nn.Module):
         # x.permute ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
         return x.permute(0, 2, 1, 3)
 
-    def forward(self, hidden_states, 
-            attention_mask=None, 
+    def forward(self, 
+            hidden_states, # hidden_states ~ [batch_size, max_seq_len, hidden_size] 
+            attention_mask=None, #attention_mask ~ [batch_size, max_seq_len, hidden_size] 
             head_mask=None, 
             encoder_hidden_states=None,
             encoder_attention_mask=None,
