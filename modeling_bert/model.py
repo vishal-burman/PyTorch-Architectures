@@ -12,7 +12,7 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from activations import gelu, gelu_new, swish
 
 from config_bert import BertConfig
-from utils import PretrainedModel
+from utils import PretrainedModel, apply_chunking_to_forward 
 #from utils import find_pruneable_heads_and_indices
 
 config = BertConfig()
@@ -283,7 +283,6 @@ class BertLayer(nn.Module):
             output_attentions=False):
 
         # self_attention_outputs ~ ([batch_size, max_seq_len, all_head_size]) where all_head_size = hidden_size
-        pdb.set_trace()
         self_attention_outputs = self.attention(hidden_states, attention_mask, head_mask, output_attentions=output_attentions)
         # attention_output ~ [batch_size, max_seq_len, all_head_size]
         attention_output = self_attention_outputs[0]
@@ -299,6 +298,7 @@ class BertLayer(nn.Module):
 
         # layer_output ~ [batch_size, max_seq_len, hidden_size]
         layer_output = apply_chunking_to_forward(self.feed_forward_chunk, self.chunk_size_feed_forward, self.seq_len_dim, attention_output)
+        # outputs ~ ([batch_size, max_seq_len, hidden_size])
         outputs = (layer_output,) + outputs
         return outputs
 
@@ -323,7 +323,7 @@ class BertEncoder(nn.Module):
             encoder_attention_mask=None,
             output_attentions=False,
             output_hidden_states=False,
-            return_dict=False):
+            return_dict=True):
 
         # all_hidden_states ~ False
         all_hidden_states = () if output_hidden_states else None
@@ -343,6 +343,7 @@ class BertEncoder(nn.Module):
 
                     return custom_forward
 
+                # layer_outputs ~ ([batch_size, max_seq_len, hidden_size])
                 layer_outputs = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(layer_module),
                         hidden_states, # [batch_size, max_seq_len, emb_size]
@@ -360,20 +361,18 @@ class BertEncoder(nn.Module):
                         encoder_attention_mask,
                         output_attentions,
                         )
+            # hidden_states ~ [batch_size, max_seq_len, emb_size]
             hidden_states = layer_outputs[0]
+            # output_attentions ~ False
             if output_attentions:
                 all_attentions = all_attentions + (layer_outputs[1],)
 
 
+        # output_hidden_states ~ False
         if output_hidden_states:
             all_hidden_states = all_hidden_states + (hidden_states,)
 
-        if not return_dict:
-            return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
-
-        return BaseModelOutput(
-                last_hidden_state=hidden_states, hidden_states=all_hidden_states, attention=all_attentions
-                )
+        return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
 
 class BertPooler(nn.Module):
     def __init__(self, config):
@@ -382,8 +381,11 @@ class BertPooler(nn.Module):
         self.activation = nn.Tanh()
 
     def forward(self, hidden_states):
+        # first_token_tensor ~ [batch_size, emb_size]
         first_token_tensor = hidden_states[:, 0]
+        # pooled_output ~ [batch_size, emb_size]
         pooled_output = self.dense(first_token_tensor)
+        # pooled_output ~ [batch_size, emb_size]
         pooled_output = self.activation(pooled_output)
         return pooled_output
 
@@ -529,19 +531,14 @@ class BertModel(BertPreTrainedModel):
                 output_hidden_states=output_hidden_states, # False
                 return_dict=return_dict,
                 )
+        
+        #sequence_output ~ [batch_size, max_seq_len, emb_size]
         sequence_output = encoder_outputs[0]
+        # pooled_output ~ [batch_size, emb_size]
         pooled_output = self.pooler(sequence_output)
 
-        if not return_dict:
-            return (sequence_output, pooled_output) + encoder_outputs[1:]
-
-        return BaseModelOutputWithPooling(
-                last_hidden_state=sequence_output,
-                pooler_output=pooled_output,
-                hidden_states=encoder_outputs.hidden_states,
-                attentions=encoder_outputs.attentions,
-                )
-
+        # return ~ ([batch_size, max_seq_len, emb_size], [batch_size, emb_size])
+        return (sequence_output, pooled_output) + encoder_outputs[1:] 
 
 
 class BertForSequenceClassification(BertPreTrainedModel):

@@ -128,38 +128,7 @@ class PretrainedModel(nn.Module):
         assert head_mask.dim() == 5
         head_mask = head_mask.to(dtype=self.dtype)
         return head_mask
-
-    def apply_chunking_to_forward(forward_fn, chunk_size, chunk_dim, *input_tensors):
-        """
-        Functions chunks input_tensors to smaller input_tensor parts of size 'chunk_size'
-        over the dimension 'chunk_dim'. It then applies a layer of 'forward_fn' to each
-        chunk independently to save memory.
-        """
-
-        assert len(input_tensors) > 0
-        tensor_shape = input_tensors[0].shape
-        assert all(
-                input_tensor.shape == tensor_shape for input_tensor in input_tensors
-                )
-
-        num_args_in_forward_chunk_fn = len(inpect.signature(forward_fn).parameters)
-        assert num_args_in_forward_chunk_fn == len(input_tensors)
-
-        # chunk_size ~ 0
-        if chunk_size > 0:
-            assert(input_tensors[0].shape[chunk_dim] % chunk_size == 0)
-
-            num_chunks = input_tensors[0].shape[chunk_dim] // chunk_size
-
-            # check input tensor into tuples
-            input_tensors_chunks = tuple(input_tensor.chunk(num_chunks, dim=chunk_dim) for input_tensor in input_tensors)
-            # apply forward fn to every tuple
-            output_chunks = tuple(forward_fn(*input_tensors_chunk) for input_tensors_chunk in zip(*input_tensors_chunks))
-            # concatenate output at same dimension
-            return torch.cat(output_chunks, dim=chunk_dim)
-
-        return forward_fn(*input_tensors)
-
+ 
     def get_output_embeddings(self):
         """
         Returns the model's output embeddings
@@ -189,3 +158,36 @@ class PretrainedModel(nn.Module):
                     )
             if hasattr(output_embeddings, "out_features") and hasattr(input_embeddings, "num_embeddings"):
                 output_embeddings.out_features = input_embeddings.num_embeddings
+
+def apply_chunking_to_forward(forward_fn, chunk_size, chunk_dim, *input_tensors):
+        """
+        Functions chunks input_tensors to smaller input_tensor parts of size 'chunk_size'
+        over the dimension 'chunk_dim'. It then applies a layer of 'forward_fn' to each
+        chunk independently to save memory.
+        """
+        # TODO Bypass this method
+
+        assert len(input_tensors) > 0
+        tensor_shape = input_tensors[0].shape
+        assert all(
+                input_tensor.shape == tensor_shape for input_tensor in input_tensors
+                )
+
+        num_args_in_forward_chunk_fn = len(inspect.signature(forward_fn).parameters)
+        assert num_args_in_forward_chunk_fn == len(input_tensors)
+
+        # chunk_size ~ 0
+        if chunk_size > 0:
+            assert(input_tensors[0].shape[chunk_dim] % chunk_size == 0)
+
+            num_chunks = input_tensors[0].shape[chunk_dim] // chunk_size
+
+            # check input tensor into tuples
+            input_tensors_chunks = tuple(input_tensor.chunk(num_chunks, dim=chunk_dim) for input_tensor in input_tensors)
+            # apply forward fn to every tuple
+            output_chunks = tuple(forward_fn(*input_tensors_chunk) for input_tensors_chunk in zip(*input_tensors_chunks))
+            # concatenate output at same dimension
+            return torch.cat(output_chunks, dim=chunk_dim)
+
+        return forward_fn(*input_tensors)
+

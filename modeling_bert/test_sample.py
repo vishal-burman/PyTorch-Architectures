@@ -40,6 +40,7 @@ class CustomDataset(Dataset):
     def build(self):
         for t in self.texts:
             self.train_list.append(tokenizer(t, max_length=32, pad_to_max_length=True, truncation=True, return_token_type_ids=True))
+##########################################
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
@@ -50,5 +51,5 @@ data_loader = DataLoader(dataset=dataset, shuffle=False, batch_size=2)
 
 model = BertModel(config)
 for sample in data_loader:
-    output = model(input_ids = sample['ids'], attention_mask=sample['mask'])
+    output = model(input_ids = sample['ids'], attention_mask=sample['mask'], return_dict=True)
     break
