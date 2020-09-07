@@ -4,7 +4,7 @@ class BertConfig:
             self,
             vocab_size=30522,
             hidden_size=768,
-            num_hidden_layers=12,
+            num_hidden_layers=6,
             num_attention_heads=12,
             intermediate_size=3072,
             hidden_act="gelu",
@@ -23,6 +23,7 @@ class BertConfig:
             output_attentions=False,
             output_hidden_states=False,
             return_dict=True,
+            num_labels=2,
             **kwargs
             ):
 
@@ -47,3 +48,4 @@ class BertConfig:
         self.output_attentions = output_attentions
         self.output_hidden_states = output_hidden_states
         self.return_dict = return_dict
+        self.num_labels = num_labels
