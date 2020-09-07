@@ -7,7 +7,7 @@ import warnings
 import torch
 import torch.utils.checkpoint
 from torch import nn
-from torch.nn import CrossEntropyLoss, MSELoss
+from torch.nn import CrossEntropyLoss, MSELoss, BCEWithLogitsLoss
 
 from activations import gelu, gelu_new, swish
 
@@ -594,7 +594,9 @@ class BertForSequenceClassification(BertPreTrainedModel):
                 loss = loss_fct(logits.view(-1), labels.view(-1))
             else:
                 loss_fct = CrossEntropyLoss()
+                #loss_fct = BCEWithLogitsLoss
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                #loss = BCEWithLogitsLoss()(logits.view(-1, self.num_labels), labels.view(-1))
 
         
         output = (logits,) + outputs[2:]

@@ -38,7 +38,7 @@ class CustomDataset(Dataset):
         return{
                 'ids': torch.tensor(ids, dtype=torch.long),
                 'mask': torch.tensor(ids, dtype=torch.long),
-                'target': torch.tensor(target, dtype=torch.long)
+                'target': torch.tensor(target, dtype=torch.long).unsqueeze(0)
                 }
 
     def build(self):
@@ -64,11 +64,11 @@ labels = labels[1:]
 
 labels = [1 if label == "positive" else 0 for label in labels]
 
-texts_train = texts[:9000]
-labels_train = labels[:9000]
+texts_train = texts[:1000]
+labels_train = labels[:1000]
 
-texts_valid = texts[9000:]
-labels_valid = labels[9000:]
+texts_valid = texts[9500:]
+labels_valid = labels[9500:]
 
 start_time = time.time()
 train_dataset = CustomDataset(texts_train, labels_train, tokenizer)
@@ -76,19 +76,64 @@ valid_dataset = CustomDataset(texts_valid, labels_valid, tokenizer)
 print("Dataset Conversion Done!!")
 print("Time Taken = ", (time.time() - start_time)/60)
 
-train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=2)
-valid_loader = DataLoader(dataset=valid_dataset, shuffle=False, batch_size=2)
+BATCH_SIZE = 2
+LEARNING_RATE = 1e-05
+EPOCHS = 5
+
+train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=BATCH_SIZE)
+valid_loader = DataLoader(dataset=valid_dataset, shuffle=False, batch_size=BATCH_SIZE)
+print("Total train batches = ", len(train_loader))
+print("Total valid batches = ", len(valid_loader))
 
 model = BertForSequenceClassification(config).to(device)
 pytorch_total_params = sum(p.numel() for p in model.parameters())
 print("Total Parameters = ", pytorch_total_params)
 
+optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
-for sample in train_loader:
-    ids = sample['ids'].to(device)
-    mask = sample['mask'].to(device)
-    target = sample['target'].to(device)
-    output = model(input_ids=ids, attention_mask=mask, labels=target, return_dict=True)
-    print("Loss = ", output[0])
-    print("Logits shape = ", output[1].shape)
-    break
+def compute_accuracy(model, data_loader, device):
+    correct_pred, num_examples = 0, 0
+    model.eval()
+    for idx, sample in enumerate(data_loader):
+        ids = sample['ids'].to(device)
+        mask = sample['mask'].to(device)
+        target = sample['target'].to(device)
+
+        output = model(input_ids=ids, attention_mask=mask)
+        logits = output[0]
+        probas = F.softmax(logits, dim=1)
+        _, predicted_labels = torch.max(probas, 1)
+        num_examples += target.size(0)
+        correct_pred += (predicted_labels.unsqueeze(1) == target).sum()
+    return correct_pred.float()/num_examples*100
+        
+
+start_time = time.time()
+for epoch in range(EPOCHS):
+    model.train()
+    for idx, sample in enumerate(train_loader):
+        ids = sample['ids'].to(device)
+        mask = sample['mask'].to(device)
+        target = sample['target'].to(device)
+        
+        optimizer.zero_grad()
+        output = model(input_ids=ids, attention_mask=mask, labels=target, return_dict=True)
+        loss = output[0]
+
+        if idx % 100 == 0:
+            print('Loss = ', loss.item())
+        
+        loss.backward()
+        optimizer.step()
+
+    model.eval()
+    with torch.set_grad_enabled(False):
+
+        train_acc = compute_accuracy(model, train_loader, device)
+        valid_acc = compute_accuracy(model, valid_loader, device)
+
+        print("Train Accuracy = ", train_acc)
+        print("Valid Accuracy = ", valid_acc)
+
+    elapsed_time = (time.time() - start_time) / 60
+    print("Elapsed Time: ", elapsed_time)
