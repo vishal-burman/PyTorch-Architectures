@@ -1,8 +1,10 @@
 ###############################################
-# Ignore this file...used for testing of scripts
+# Main file 
 ################################################
-import pdb
+import time
+import csv
 import sys
+import pdb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -11,7 +13,9 @@ from model import BertForSequenceClassification
 from transformers import BertTokenizer
 from config_bert import BertConfig
 config = BertConfig()
-BertLayerNorm = nn.LayerNorm
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
 #########################################
 # Sample data code
 class CustomDataset(Dataset):
@@ -43,19 +47,48 @@ class CustomDataset(Dataset):
             self.label_list.append(l)
 ##########################################
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+texts = []
+labels = []
+count = 0
+with open("dataset.csv", "r") as file_1:
+    reader = csv.reader(file_1)
+    for line in reader:
+        if count == 10001:
+            break
+        texts.append(line[0].strip())
+        labels.append(line[1].strip())
+        count += 1
 
-texts = ['This is a good house', 'That was a bad movie', 'This is amazing', 'That was horrible']
-labels = [1, 0, 1, 0]
-dataset = CustomDataset(texts, labels, tokenizer)
+texts = texts[1:]
+labels = labels[1:]
 
-data_loader = DataLoader(dataset=dataset, shuffle=False, batch_size=2)
+labels = [1 if label == "positive" else 0 for label in labels]
 
-model = BertForSequenceClassification(config)
+texts_train = texts[:9000]
+labels_train = labels[:9000]
+
+texts_valid = texts[9000:]
+labels_valid = labels[9000:]
+
+start_time = time.time()
+train_dataset = CustomDataset(texts_train, labels_train, tokenizer)
+valid_dataset = CustomDataset(texts_valid, labels_valid, tokenizer)
+print("Dataset Conversion Done!!")
+print("Time Taken = ", (time.time() - start_time)/60)
+
+train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=2)
+valid_loader = DataLoader(dataset=valid_dataset, shuffle=False, batch_size=2)
+
+model = BertForSequenceClassification(config).to(device)
 pytorch_total_params = sum(p.numel() for p in model.parameters())
 print("Total Parameters = ", pytorch_total_params)
-for sample in data_loader:
-    output = model(input_ids = sample['ids'], attention_mask=sample['mask'], labels=sample['target'], return_dict=True)
+
+
+for sample in train_loader:
+    ids = sample['ids'].to(device)
+    mask = sample['mask'].to(device)
+    target = sample['target'].to(device)
+    output = model(input_ids=ids, attention_mask=mask, labels=target, return_dict=True)
     print("Loss = ", output[0])
     print("Logits shape = ", output[1].shape)
     break
