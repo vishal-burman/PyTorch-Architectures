@@ -49,15 +49,11 @@ class CustomDataset(Dataset):
 
 texts = []
 labels = []
-count = 0
 with open("dataset.csv", "r") as file_1:
     reader = csv.reader(file_1)
     for line in reader:
-        if count == 10001:
-            break
         texts.append(line[0].strip())
         labels.append(line[1].strip())
-        count += 1
 
 texts = texts[1:]
 labels = labels[1:]
@@ -76,9 +72,9 @@ valid_dataset = CustomDataset(texts_valid, labels_valid, tokenizer)
 print("Dataset Conversion Done!!")
 print("Time Taken = ", (time.time() - start_time)/60)
 
-BATCH_SIZE = int(input("Enter batch size = "))
+BATCH_SIZE = 16
 LEARNING_RATE = 1e-05
-EPOCHS = int(input("Enter no. of epochs = "))
+EPOCHS = 5
 
 train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=BATCH_SIZE)
 valid_loader = DataLoader(dataset=valid_dataset, shuffle=False, batch_size=BATCH_SIZE)
