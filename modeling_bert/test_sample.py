@@ -43,7 +43,7 @@ class CustomDataset(Dataset):
 
     def build(self):
         for t, l in zip(self.texts, self.labels):
-            self.train_list.append(tokenizer(t, max_length=32, pad_to_max_length=True, truncation=True))
+            self.train_list.append(tokenizer(t, max_length=128, pad_to_max_length=True, truncation=True))
             self.label_list.append(l)
 ##########################################
 
@@ -64,11 +64,11 @@ labels = labels[1:]
 
 labels = [1 if label == "positive" else 0 for label in labels]
 
-texts_train = texts[:1000]
-labels_train = labels[:1000]
+texts_train = texts[:45000]
+labels_train = labels[:45000]
 
-texts_valid = texts[9500:]
-labels_valid = labels[9500:]
+texts_valid = texts[45000:]
+labels_valid = labels[45000:]
 
 start_time = time.time()
 train_dataset = CustomDataset(texts_train, labels_train, tokenizer)
@@ -76,9 +76,9 @@ valid_dataset = CustomDataset(texts_valid, labels_valid, tokenizer)
 print("Dataset Conversion Done!!")
 print("Time Taken = ", (time.time() - start_time)/60)
 
-BATCH_SIZE = 2
+BATCH_SIZE = int(input("Enter batch size = "))
 LEARNING_RATE = 1e-05
-EPOCHS = 5
+EPOCHS = int(input("Enter no. of epochs = "))
 
 train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=BATCH_SIZE)
 valid_loader = DataLoader(dataset=valid_dataset, shuffle=False, batch_size=BATCH_SIZE)
@@ -120,7 +120,7 @@ for epoch in range(EPOCHS):
         output = model(input_ids=ids, attention_mask=mask, labels=target, return_dict=True)
         loss = output[0]
 
-        if idx % 100 == 0:
+        if idx % 1000 == 0:
             print('Loss = ', loss.item())
         
         loss.backward()
