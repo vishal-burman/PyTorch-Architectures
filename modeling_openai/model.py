@@ -1,3 +1,7 @@
+class OpenAIGPTPretrainedModel(PretrainedModel):
+    def _init_weights(self, module):
+        # TODO
+        pass
 
 class OpenAIGPTModel(OpenAIGPTPretrainedModel):
     def __init__(self, config):
