@@ -32,13 +32,35 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
             token_type_ids=None,
             position_ids=None,
             head_mask=None,
-            input_embeds=None,
+            inputs_embeds=None,
             output_attentions=None,
             output_hidden_states=None,
             return_dict=None,
             ):
-        # TODO
-        pass
+
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states)
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        if input_ids is not None and inputs_embeds is not None:
+            raise ValueError("Both input_ids and inputs_embeds is specified!")
+        elif input_ids is not None:
+            input_shape = input_ids.shape()
+            input_ids = input_ids.view(-1, input_shape[-1])
+        elif inputs_embeds is not None:
+            input_shape = inputs_embeds.size()[:-1]
+        else:
+            raise ValueError("Specify either input_ids or inputs_embeds")
+
+        if position_ids is None:
+            position_ids = self.position_ids[None, :input_shape[-1]]
+
+
+        if attention_mask is not None:
+            attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+
+            attention_mask = attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
+            attention_mask = (1.0 - attention_mask) * -10000.0
 
 class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
     def __init__(self, config):
