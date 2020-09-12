@@ -62,6 +62,41 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
             attention_mask = attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
             attention_mask = (1.0 - attention_mask) * -10000.0
 
+        head_mask = self.get_head_mask(head_mask, self.config.n_layer)
+
+        if inputs_embeds is None:
+            inputs_embeds = self.tokens_embed(input_ids)
+        position_embeds = self.positions_embed(position_ids)
+        if token_type_ids is not None:
+            token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
+            token_type_embeds = self.tokens_embed(token_type_ids)
+        else:
+            token_type_embeds = 0
+        hidden_states = inputs_embeds + position_embeds + token_type_embeds
+        hidden_states = self.drop(hidden_states)
+
+        output_shape = input_shape + (hidden_states.size(-1),)
+
+        all_attentions = () if output_attentions else None
+        all_hidden_states = () if output_hidden_states else None
+        for i, block in enumerate(self.h):
+            if output_hidden_states:
+                all_hidden_states = all_hidden_states + (hidden_states.view(*output_shape),)
+                
+            outputs = block(hidden_states, attention_mask, head_mask[i], output_attentions=output_attentions)
+            hidden_states = outputs[0]
+            if output_attentions:
+                all_attentions = all_attentions + (outputs[1],)
+
+        hidden_states = hidden_states.view(*output_shape)
+        # Add last layer
+        if output_hidden_states:
+            all_hidden_states = all_hidden_states + (hidden_states,)
+
+        if not return_dict:
+            return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
+
+
 class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
     def __init__(self, config):
         super().__init__(config)
