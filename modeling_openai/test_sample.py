@@ -40,5 +40,6 @@ texts = ["this is my home", "that movie looks good", "this is a great book!", "w
 dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 for sample in data_loader:
-    print(sample['ids'].shape)
+    input_shape = sample['ids'].shape
+    print(sample['ids'].view(-1, 32).shape)
     break

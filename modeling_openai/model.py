@@ -81,25 +81,31 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
 
     def forward(
             self,
-            input_ids=None,
-            attention_mask=None,
+            input_ids=None, # input_ids ~ [batch_size, max_len]
+            attention_mask=None, # attention_mask ~ [batch_size, max_len]
             token_type_ids=None,
             position_ids=None,
             head_mask=None,
             inputs_embeds=None,
-            output_attentions=None,
-            output_hidden_states=None,
+            output_attentions=None, # output_attentions ~ False
+            output_hidden_states=None, # output_hidden_states ~ False
             return_dict=None,
             ):
 
+        # output_attentions ~ False
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        # output_hidden_states ~ False
         output_hidden_states = (output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states)
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
+        # input_ids ~ [batch_size, max_len] || inputs_embeds ~ None
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("Both input_ids and inputs_embeds is specified!")
+        # input_ids ~ [batch_size, max_len]
         elif input_ids is not None:
+            # input_shape ~ [batch_size, max_len]
             input_shape = input_ids.shape()
+            # input_ids ~ [batch_size, max_len]
             input_ids = input_ids.view(-1, input_shape[-1])
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]
@@ -164,8 +170,8 @@ class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
 
     def forward(
             self,
-            input_ids=None,
-            attention_mask=None,
+            input_ids=None, # input_ids ~ [batch_size, max_len]
+            attention_mask=None, # attention_mask ~ [batch_size, max_len]
             token_type_ids=None,
             position_ids=None,
             head_mask=None,
@@ -176,6 +182,7 @@ class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
             return_dict=None,
             ):
 
+        # TODO
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
         
         transformer_outputs = self.transformer(

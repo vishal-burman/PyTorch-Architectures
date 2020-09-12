@@ -19,6 +19,8 @@ class OpenAIGPTConfig:
             summary_activation=None,
             summary_proj_to_labels=True,
             summary_first_dropout=0.1,
+            output_attentions=False,
+            output_hidden_states=False,
             **kwargs
             ):
 
@@ -40,3 +42,5 @@ class OpenAIGPTConfig:
         self.summary_activation = summary_activation
         self.summary_first_dropout = summary_first_dropout
         self.summary_proj_to_labels = summary_proj_to_labels
+        self.output_attentions = output_attentions
+        self.output_hidden_states = output_hidden_states
