@@ -1,6 +1,31 @@
 import torch
 import torch.nn as nn
 
+class Block(nn.Module):
+    def __init__(self, n_ctx, config, scale=False):
+        super().__init__()
+        nx = config.n_embed
+        self.attn = Attention(nx, n_ctx, config, scale)
+        self.ln_1 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
+        self.mlp = MLP(4*nx, config)
+        self.ln_2 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
+
+    def forward(self, x, attention_mask=None, head_mask=None, output_attentions=False):
+        attn_outputs = self.attn(
+                x,
+                attention_mask=attention_mask,
+                head_mask=head_mask,
+                output_attentions=output_attentions,
+                )
+        a = attn_outputs[0]
+
+        n = self.ln_1(x + a)
+        m = self.mlp(n)
+        h = self.ln_2(n + m)
+
+        outputs = [h] + attn_outputs[1:]
+        return outputs
+
 class OpenAIGPTPretrainedModel(PretrainedModel):
     config_class = OpenAIGPTConfig
     base_model_prefix = "transformer"
