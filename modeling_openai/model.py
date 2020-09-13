@@ -1,6 +1,27 @@
 import torch
 import torch.nn as nn
 
+class Attention(nn.Module):
+    def __init__(self, nx, n_ctx, config, scale=False):
+        super().__init__()
+        pass
+
+    def prune_heads(self, heads):
+        pass
+
+    def _attn(self, q, k, v, attention_mask=None, head_mask=None, output_attentions=False):
+        pass
+
+    def merge_heads(self, x):
+        pass
+
+    def split_heads(self, x, k=False):
+        pass
+
+    def forward(self, x, attention_mask=None, head_mask=None, output_attentions=False):
+        pass
+
+
 class MLP(nn.Module):
     def __init__(self, n_state, config):
         super().__init__()

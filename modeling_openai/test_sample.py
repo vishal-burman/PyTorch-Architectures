@@ -39,6 +39,7 @@ class CustomDataset(Dataset):
 texts = ["this is my home", "that movie looks good", "this is a great book!", "what is your name?"]
 dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
+print("Length of DataLoader = ", len(data_loader))
 emb_1 = nn.Embedding(40478, 768)
 for sample in data_loader:
     shape = sample['ids'].shape
