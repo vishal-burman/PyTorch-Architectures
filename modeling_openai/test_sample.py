@@ -4,7 +4,7 @@
 ############################
 
 import torch
-import torch.nn
+import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from transformers import OpenAIGPTTokenizer
 
@@ -39,7 +39,10 @@ class CustomDataset(Dataset):
 texts = ["this is my home", "that movie looks good", "this is a great book!", "what is your name?"]
 dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
+emb_1 = nn.Embedding(40478, 768)
 for sample in data_loader:
-    input_shape = sample['ids'].shape
-    print(sample['ids'].view(-1, 32).shape)
+    shape = sample['ids'].shape
+    ids = sample['ids']
+    x = emb_1(ids)
+    print(shape + (x.size(-1),))
     break

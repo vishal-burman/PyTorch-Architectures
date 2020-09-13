@@ -57,6 +57,13 @@ class OpenAIGPTPretrainedModel(PretrainedModel):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
+    def get_head_mask(self, head_mask, num_hidden_layers, is_attention_chunked=False):
+        """
+        Prepare the head_mask if needed
+        """
+        head_mask = [None] * num_layers
+        return head_mask
+
 class OpenAIGPTModel(OpenAIGPTPretrainedModel):
     def __init__(self, config):
         super().__init__(config)
@@ -112,34 +119,53 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
         else:
             raise ValueError("Specify either input_ids or inputs_embeds")
 
+        # position_ids ~ [n_positions] where n_positions = 512
         if position_ids is None:
+            # position_ids ~ [1, max_len]
             position_ids = self.position_ids[None, :input_shape[-1]]
 
 
+        # attention_mask ~ [batch_size, max_len]
         if attention_mask is not None:
+            # attention_mask ~ [batch_size, 1, 1, max_len]
             attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
 
+            # TODO check? On single GPU
             attention_mask = attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
+
+            # Invert attention masks
+            # attention_mask ~ [batch_size, 1, 1, max_len]
             attention_mask = (1.0 - attention_mask) * -10000.0
 
+        # head_mask ~ [None] * num_hidden_layers
         head_mask = self.get_head_mask(head_mask, self.config.n_layer)
 
+        # inputs_embeds ~ None 
         if inputs_embeds is None:
+            # inputs_embeds ~ [batch_size, max_len, emb_size] where emb_size = 512
             inputs_embeds = self.tokens_embed(input_ids)
+        # position_embeds ~ [1, max_len, emb_size]
         position_embeds = self.positions_embed(position_ids)
+        # token_ids ~ None
         if token_type_ids is not None:
             token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
             token_type_embeds = self.tokens_embed(token_type_ids)
         else:
             token_type_embeds = 0
+        # hidden_states ~ [batch_size, max_len, emb_size]
         hidden_states = inputs_embeds + position_embeds + token_type_embeds
+        # hidden_states ~ [batch_size, max_len, emb_size]
         hidden_states = self.drop(hidden_states)
 
+        # output_shape ~ torch.Size([batch_size, max_len, emb_size])
         output_shape = input_shape + (hidden_states.size(-1),)
 
+        # all_attentions ~ None
         all_attentions = () if output_attentions else None
+        # all_hidden_states ~ None
         all_hidden_states = () if output_hidden_states else None
         for i, block in enumerate(self.h):
+            # TODO needed?
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states.view(*output_shape),)
                 
