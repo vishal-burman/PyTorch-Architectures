@@ -54,7 +54,12 @@ class Attention(nn.Module):
         else:
             return x.permute(0, 2, 1, 3)
 
-    def forward(self, x, attention_mask=None, head_mask=None, output_attentions=False):
+    def forward(self, 
+            x, # x ~ [batch_size, max_len, emb_size]
+            attention_mask=None, # attention_mask ~ [batch_size, 1, 1, max_len]
+            head_mask=None, # head_mask ~ None
+            output_attentions=False):
+
         x = self.c_attn(x)
         query, key, value = x.split(self.split_size, dim=2)
         query = self.split_heads(query)
@@ -96,9 +101,9 @@ class Block(nn.Module):
         self.ln_2 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
 
     def forward(self, 
-            x, # [batch_size, max_len]
-            attention_mask=None, 
-            head_mask=None, 
+            x, # x ~ [batch_size, max_len, emb_size]
+            attention_mask=None, # attention_mask ~ [batch_size, 1, 1, max_len]
+            head_mask=None, # head_mask ~ None 
             output_attentions=False):
 
         attn_outputs = self.attn(

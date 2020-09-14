@@ -41,6 +41,7 @@ dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 print("Length of DataLoader = ", len(data_loader))
 emb_1 = nn.Embedding(40478, 768)
+conv_1 = nn.Conv1D()
 for sample in data_loader:
     shape = sample['ids'].shape
     ids = sample['ids']
