@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from transformers import OpenAIGPTTokenizer
+from utils import Conv1D
 
 tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
 # pad_token is not set by default
@@ -41,10 +42,11 @@ dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 print("Length of DataLoader = ", len(data_loader))
 emb_1 = nn.Embedding(40478, 768)
-conv_1 = nn.Conv1D()
+conv_1 = Conv1D()
 for sample in data_loader:
     shape = sample['ids'].shape
     ids = sample['ids']
     x = emb_1(ids)
-    print(shape + (x.size(-1),))
+    x = conv_1(x)
+    print(x.shape)
     break
