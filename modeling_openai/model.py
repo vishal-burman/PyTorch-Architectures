@@ -4,12 +4,16 @@ import torch.nn as nn
 class Attention(nn.Module):
     def __init__(self, nx, n_ctx, config, scale=False):
         super().__init__()
+        # n_state ~ 768 where nx = n_embed = 768
         n_state = nx
 
         assert n_state % config.n_head == 0
         self.register_buffer("bias", torch.tril(torch.ones(n_ctx, n_ctx)).view(1, 1, n_ctx, n_ctx))
+        # self.n_head ~ 12
         self.n_head = config.n_head
+        # self.split_size ~ 768
         self.split_size = n_state
+        # scale ~ False
         self.scale = scale
 
         self.c_attn = Conv1D(n_state * 3, nx)
