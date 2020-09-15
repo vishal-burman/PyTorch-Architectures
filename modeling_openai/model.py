@@ -13,7 +13,7 @@ class Attention(nn.Module):
         self.n_head = config.n_head
         # self.split_size ~ 768
         self.split_size = n_state
-        # scale ~ False
+        # scale ~ True
         self.scale = scale
 
         self.c_attn = Conv1D(n_state * 3, nx)
@@ -24,15 +24,17 @@ class Attention(nn.Module):
 
     def _attn(
             self, 
-            q, 
-            k, 
-            v, 
-            attention_mask=None, 
+            q, # q ~ [batch_size, 12, max_len, 64] 
+            k, # k ~ [batch_size, 12, 64, max_len]
+            v, # v ~ [batch_size, 12, max_len, 64]
+            attention_mask=None, # attention_mask ~ [batch_size, 1, 1, max_len]
             head_mask=None, 
             output_attentions=False):
 
+        # w ~ [batch_size, 12, max_len, max_len]
         w = torch.matmul(q, k)
         if self.scale:
+            # w ~ [batch_size, 12, max_len, max_len]
             w = w / math.sqrt(v.size(-1))
         b = self.bias[:, :, :w.size(-2), :w.size(-1)]
         w = w * b + -1e4 * (1-b)
@@ -115,7 +117,7 @@ class MLP(nn.Module):
         return self.dropout(h2)
 
 class Block(nn.Module):
-    def __init__(self, n_ctx, config, scale=False):
+    def __init__(self, n_ctx, config, scale=False): # scale ~ True
         super().__init__()
         nx = config.n_embed
         self.attn = Attention(nx, n_ctx, config, scale)
