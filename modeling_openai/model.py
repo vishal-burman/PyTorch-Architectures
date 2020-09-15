@@ -22,7 +22,15 @@ class Attention(nn.Module):
         self.resid_dropout = nn.Dropout(config.resid_pdrop)
         self.pruned_heads = set()
 
-    def _attn(self, q, k, v, attention_mask=None, head_mask=None, output_attentions=False):
+    def _attn(
+            self, 
+            q, 
+            k, 
+            v, 
+            attention_mask=None, 
+            head_mask=None, 
+            output_attentions=False):
+
         w = torch.matmul(q, k)
         if self.scale:
             w = w / math.sqrt(v.size(-1))
@@ -51,11 +59,15 @@ class Attention(nn.Module):
         return x.view(*new_x_shape)
 
     def split_heads(self, x, k=False):
+        # new_x_shape ~ [batch_size, max_len, 12, 64] where n_head = 12
         new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
+        # x ~ [batch_size, max_len, 12, 64]
         x = x.view(*new_x_shape)
         if k:
+            # x ~ [batch_size, 12, 64, max_len]
             return x.permute(0, 2, 3, 1)
         else:
+            # x ~ [batch_size, 12, max_len, 64]
             return x.permute(0, 2, 1, 3)
 
     def forward(self, 
@@ -64,10 +76,17 @@ class Attention(nn.Module):
             head_mask=None, # head_mask ~ None
             output_attentions=False):
 
+        # x ~ [batch_size, max_len, n_state * 3] where (n_state * 3 = 2034)
         x = self.c_attn(x)
+        # query ~ [batch_size, max_len, emb_size]
+        # key ~ [batch_size, max_len, emb_size]
+        # value ~ [batch_size, max_len, emb_size]
         query, key, value = x.split(self.split_size, dim=2)
+        # query ~ [batch_size, 12, max_len, 64]
         query = self.split_heads(query)
+        # key ~ [batch_size, 12, 64, max_len]
         key = self.split_heads(key, k=True)
+        # value ~ [batch_size, 12, max_len, 64]
         value = self.split_heads(value)
 
         attn_outputs = self._attn(query, key, value, attention_mask, head_mask, output_attentions)

@@ -48,5 +48,8 @@ for sample in data_loader:
     ids = sample['ids']
     x = emb_1(ids)
     x = conv_1(x)
-    print(x.shape)
+    q, k, v = x.split(768, dim=2)
+    shape = x.size()[:-1] + (12, 768 // 12)
+    q = q.view(*shape)
+    print(q.shape)
     break
