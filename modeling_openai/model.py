@@ -36,21 +36,29 @@ class Attention(nn.Module):
         if self.scale:
             # w ~ [batch_size, 12, max_len, max_len]
             w = w / math.sqrt(v.size(-1))
+        # b ~ [batch_size, 12, max_len, max_len]
         b = self.bias[:, :, :w.size(-2), :w.size(-1)]
+        # w ~ [batch_size, 12, max_len, max_len]  ~ unidirectional attention
         w = w * b + -1e4 * (1-b)
 
         if attention_mask is not None:
             # Apply the attention mask
+            # w ~ [batch_size, 12, max_len, max_len]
             w = w + attention_mask
 
+        # w ~ [batch_size, 12, max_len, max_len]
         w = nn.Softmax(dim=-1)(w)
+        # w ~ [batch_size, 12, max_len, max_len]
         w = self.attn_dropout(w)
 
         # Mask heads if we want to
+        # head_mask ~ None
         if head_mask is not None:
             w = w * head_mask
 
+        # outputs ~ [[batch_size, 12, max_len, 64]]
         outputs = [torch.matmul(w, v)]
+        # output_attentions ~ False
         if output_attentions:
             outputs.append(w)
         return outputs
@@ -91,7 +99,9 @@ class Attention(nn.Module):
         # value ~ [batch_size, 12, max_len, 64]
         value = self.split_heads(value)
 
+        # attn_outputs ~ [[batch_size, 12, max_len, 64]]
         attn_outputs = self._attn(query, key, value, attention_mask, head_mask, output_attentions)
+        # a ~ [batch_size, 12, max_len, 64]
         a = attn_outputs[0]
 
         a = self.merge_heads(a)

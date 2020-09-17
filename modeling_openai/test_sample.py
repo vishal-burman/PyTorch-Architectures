@@ -43,13 +43,14 @@ data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 print("Length of DataLoader = ", len(data_loader))
 emb_1 = nn.Embedding(40478, 768)
 conv_1 = Conv1D(768*3, 768)
-for sample in data_loader:
-    shape = sample['ids'].shape
-    ids = sample['ids']
-    x = emb_1(ids)
-    x = conv_1(x)
-    q, k, v = x.split(768, dim=2)
-    shape = x.size()[:-1] + (12, 768 // 12)
-    q = q.view(*shape)
-    print(q.shape)
-    break
+sample_1 = torch.tril(torch.ones(512, 512))
+#for sample in data_loader:
+#    shape = sample['ids'].shape
+#    ids = sample['ids']
+#    x = emb_1(ids)
+#    x = conv_1(x)
+#    q, k, v = x.split(768, dim=2)
+#    shape = x.size()[:-1] + (12, 768 // 12)
+#    q = q.view(*shape)
+#    print(q.shape)
+#    break
