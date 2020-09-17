@@ -42,11 +42,10 @@ dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 print("Length of DataLoader = ", len(data_loader))
 emb_1 = nn.Embedding(40478, 768)
-conv_1 = Conv1D(768*3, 768)
-sample_1 = torch.ones(2, 32, 12, 64)
-sample_1 = sample_1.permute(0, 2, 1, 3).contiguous()
-sample_shape = sample_1.size()[:-2] + (sample_1.size(-2) * sample_1.size(-1),)
-print(sample_1.view(*sample_shape).shape)
+conv_1 = Conv1D(768, 768)
+sample_1 = torch.ones(2, 32, 768)
+sample_1 = conv_1(sample_1)
+print(sample_1.shape)
 #for sample in data_loader:
 #    shape = sample['ids'].shape
 #    ids = sample['ids']
