@@ -63,9 +63,12 @@ class Attention(nn.Module):
             outputs.append(w)
         return outputs
 
-    def merge_heads(self, x):
+    def merge_heads(self, x): # x ~ [batch_size, 12, max_len, 64]
+        # x ~ [batch_size, max_len, 12, 64]
         x = x.permute(0, 2, 1, 3).contiguous()
+        # new_x_shape ~ [batch_size, max_len, 2048]
         new_x_shape = x.size()[:-2] + (x.size(-2) * x.size(-1),)
+        # x ~ [batch_size, max_len, 2048]
         return x.view(*new_x_shape)
 
     def split_heads(self, x, k=False):
