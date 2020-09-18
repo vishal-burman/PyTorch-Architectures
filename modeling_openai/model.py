@@ -166,9 +166,12 @@ class Block(nn.Module):
 
         # n ~ [batch_size, max_len, 768]
         n = self.ln_1(x + a)
+        # m ~ [batch_size, max_len, 768]
         m = self.mlp(n)
+        # h ~ [batch_size, max_len, 768]
         h = self.ln_2(n + m)
 
+        # outputs ~ [[batch_size, max_len, 768]]
         outputs = [h] + attn_outputs[1:]
         return outputs
 
