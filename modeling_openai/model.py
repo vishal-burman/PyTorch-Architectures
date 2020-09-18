@@ -128,7 +128,8 @@ class MLP(nn.Module):
         self.act = ACT_FNS[config.afn]
         self.dropout = nn.Dropout(config.resid_pdrop)
 
-    def forward(self, x):
+    def forward(self, x): # x ~ [batch_size, max_len, 768]
+
         h = self.act(self.c_fc(x))
         h2 = self.c_proj(h)
         return self.dropout(h2)
@@ -148,14 +149,17 @@ class Block(nn.Module):
             head_mask=None, # head_mask ~ None 
             output_attentions=False):
 
+        # attn_outputs ~ [[batch_size, max_len, 768]] where emb_size = 768
         attn_outputs = self.attn(
                 x,
                 attention_mask=attention_mask,
                 head_mask=head_mask,
                 output_attentions=output_attentions,
                 )
+        # a ~ [batch_size, max_len, 768]
         a = attn_outputs[0]
 
+        # n ~ [batch_size, max_len, 768]
         n = self.ln_1(x + a)
         m = self.mlp(n)
         h = self.ln_2(n + m)
