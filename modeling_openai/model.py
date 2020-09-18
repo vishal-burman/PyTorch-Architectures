@@ -304,17 +304,21 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
             if output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states.view(*output_shape),)
                 
+            # outputs ~ [[batch_size, max_len, 768]]
             outputs = block(hidden_states, attention_mask, head_mask[i], output_attentions=output_attentions)
+            # hidden_states ~ [batch_size, max_len, 768]
             hidden_states = outputs[0]
             if output_attentions:
                 all_attentions = all_attentions + (outputs[1],)
 
+        # hidden_states ~ [batch_size, max_len, 768]
         hidden_states = hidden_states.view(*output_shape)
-        # Add last layer
+        # Add last layer # TODO needed?
         if output_hidden_states:
             all_hidden_states = all_hidden_states + (hidden_states,)
 
         if not return_dict:
+            # return ~ ([batch_size, max_len, emb_size])
             return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
 
 
@@ -346,6 +350,7 @@ class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
         # TODO
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
         
+        # transformer_outputs ~ ([batch_size, max_len, emb_size])
         transformer_outputs = self.transformer(
                 input_ids,
                 attention_mask=attention_mask,
@@ -357,18 +362,24 @@ class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
                 )
+        # hidden_states ~ [batch_size, max_len, 768]
         hidden_states = transformer_outputs[0]
+        # hidden_states ~ [batch_size, max_len, vocab_size] where vocab_size = 40478
         lm_logits = self.lm_head(hidden_states)
 
         loss = None
         if labels is not None:
             # Shift so that tokens < n predict n
+            # shift_logits ~ [batch_size, max_len -1, vocab_size]
             shift_logits = lm_logits[..., :-1, :].contiguous()
+            # shift_labels ~ [batch_size, max_len - 1]
             shift_labels = labels[..., 1:].contiguous()
             # Flatten the tokens 
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if not return_dict:
+            # output ~ ([batch_size, max_len, vocab_size])
             output = (lm_logits,) + transformer_outputs[1:]
+            # return ~ (loss, ([batch_size, max_len, vocab_size]))
             return ((loss,) + output) if loss is not None else output

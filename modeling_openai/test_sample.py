@@ -41,18 +41,15 @@ texts = ["this is my home", "that movie looks good", "this is a great book!", "w
 dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 print("Length of DataLoader = ", len(data_loader))
-emb_1 = nn.Embedding(40478, 768)
-conv_1 = Conv1D(768, 768)
+#emb_1 = nn.Embedding(40478, 768)
+lin_1 = nn.Linear(768, 40478)
 sample_1 = torch.ones(2, 32, 768)
-sample_1 = conv_1(sample_1)
-print(sample_1.shape)
-#for sample in data_loader:
-#    shape = sample['ids'].shape
-#    ids = sample['ids']
-#    x = emb_1(ids)
-#    x = conv_1(x)
-#    q, k, v = x.split(768, dim=2)
-#    shape = x.size()[:-1] + (12, 768 // 12)
-#    q = q.view(*shape)
-#    print(q.shape)
-#    break
+sample_1 = lin_1(sample_1)
+sample_1 = sample_1[..., :-1, :].contiguous()
+print(sample_1.view(-1, sample_1.size(-1)).shape)
+for sample in data_loader:
+    shape = sample['ids'].shape
+    ids = sample['ids']
+    ids = ids[..., 1:].contiguous()
+    print(ids.view(-1).shape)
+    break
