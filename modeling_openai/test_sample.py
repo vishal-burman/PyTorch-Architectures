@@ -7,11 +7,15 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from transformers import OpenAIGPTTokenizer
-from utils import Conv1D
+from model import OpenAIGPTLMHeadModel
+from config import OpenAIGPTConfig
+config = OpenAIGPTConfig()
 
 tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
 # pad_token is not set by default
 tokenizer.pad_token = '[PAD]'
+
+model = OpenAIGPTLMHeadModel(config)
 
 class CustomDataset(Dataset):
 
@@ -41,15 +45,4 @@ texts = ["this is my home", "that movie looks good", "this is a great book!", "w
 dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 print("Length of DataLoader = ", len(data_loader))
-#emb_1 = nn.Embedding(40478, 768)
-lin_1 = nn.Linear(768, 40478)
-sample_1 = torch.ones(2, 32, 768)
-sample_1 = lin_1(sample_1)
-sample_1 = sample_1[..., :-1, :].contiguous()
-print(sample_1.view(-1, sample_1.size(-1)).shape)
-for sample in data_loader:
-    shape = sample['ids'].shape
-    ids = sample['ids']
-    ids = ids[..., 1:].contiguous()
-    print(ids.view(-1).shape)
-    break
+
