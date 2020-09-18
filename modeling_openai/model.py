@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+from activations import gelu_new, swish
+
+ACT_FNS = {"relu": nn.ReLU, "swish": swish, "gelu": gelu_new}
 
 class Attention(nn.Module):
     def __init__(self, nx, n_ctx, config, scale=False):
@@ -130,7 +133,9 @@ class MLP(nn.Module):
 
     def forward(self, x): # x ~ [batch_size, max_len, 768]
 
+        # h ~ [batch_size, max_len, 768]
         h = self.act(self.c_fc(x))
+        # h2 ~ [batch_size, max_len, 768]
         h2 = self.c_proj(h)
         return self.dropout(h2)
 
