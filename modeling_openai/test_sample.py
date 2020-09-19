@@ -10,13 +10,13 @@ from transformers import OpenAIGPTTokenizer
 from model import OpenAIGPTLMHeadModel
 from config_openai import OpenAIGPTConfig
 config = OpenAIGPTConfig()
-
 tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
 # pad_token is not set by default
 tokenizer.pad_token = '[PAD]'
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-model = OpenAIGPTLMHeadModel(config)
-
+##############################################
+# PyTorch Dataset
 class CustomDataset(Dataset):
 
     def __init__(self, texts, tokenizer):
@@ -40,9 +40,15 @@ class CustomDataset(Dataset):
     def build(self):
         for text in self.texts:
             self.list_texts.append(self.tokenizer(text, max_length=32, pad_to_max_length=True, truncation=True))
+################################################
 
 texts = ["this is my home", "that movie looks good", "this is a great book!", "what is your name?"]
 dataset = CustomDataset(texts, tokenizer)
 data_loader = DataLoader(dataset, shuffle=False, batch_size=2)
 print("Length of DataLoader = ", len(data_loader))
+
+model = OpenAIGPTLMHeadModel(config).to(device)
+total_params = sum(p.numel() for p in model.parameters())
+print("Total Parameters = ", total_params)
+
 

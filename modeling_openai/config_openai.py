@@ -5,7 +5,7 @@ class OpenAIGPTConfig:
             n_positions=512,
             n_ctx=512,
             n_embd=768,
-            n_layer=12,
+            n_layer=6,
             n_head=12,
             afn="gelu",
             resid_pdrop=0.1,
