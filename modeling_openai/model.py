@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from activations import gelu_new, swish
+from utils import Conv1D, PretrainedModel
+from config_openai import OpenAIGPTConfig
 
 ACT_FNS = {"relu": nn.ReLU, "swish": swish, "gelu": gelu_new}
 
@@ -142,7 +144,7 @@ class MLP(nn.Module):
 class Block(nn.Module):
     def __init__(self, n_ctx, config, scale=False): # scale ~ True
         super().__init__()
-        nx = config.n_embed
+        nx = config.n_embd
         self.attn = Attention(nx, n_ctx, config, scale)
         self.ln_1 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
         self.mlp = MLP(4*nx, config)
@@ -192,39 +194,6 @@ class OpenAIGPTPretrainedModel(PretrainedModel):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-    def get_head_mask(self, head_mask, num_hidden_layers, is_attention_chunked=False):
-        """
-        Prepare the head_mask if needed
-        """
-        head_mask = [None] * num_layers
-        return head_mask
-
-    def init_weights(self):
-        # Initialize the weights
-        self.apply(_init_weights)
-
-        # Tie weights if necessary
-        self.tie_weights()
-
-    def tie_weights(self):
-        output_embeddings = self.get_output_embeddings()
-        if output_embeddings is not None and self.config.tie_word_embeddings:
-            self._tie_or_clone_weights(output_embeddings, self.get_input_embeddings)
-
-    def _tie_or_clone_weights(self, output_embeddings, input_embeddings):
-        output_embeddings.weight = input_embeddings.weight
-        if getattr(output_embeddings, "bias", None) is not None:
-            output_embeddings.bias.data = torch.nn.functional.pad(
-                    output_embeddings.bias.data,
-                    (
-                        0,
-                        output_embeddings.weight.shape[0] - output_embeddings.bias.shape[0],
-                        ),
-                    "constant",
-                    0,
-                    )
-        if hasattr(output_embeddings, "out_features") and hasattr(input_embeddings, "num_embeddings"):
-            output_embeddings.out_features = input_embeddings.num_embeddings
 
 class OpenAIGPTModel(OpenAIGPTPretrainedModel):
     def __init__(self, config):

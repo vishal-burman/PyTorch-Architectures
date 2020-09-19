@@ -21,6 +21,7 @@ class OpenAIGPTConfig:
             summary_first_dropout=0.1,
             output_attentions=False,
             output_hidden_states=False,
+            tie_word_embeddings=True,
             **kwargs
             ):
 
@@ -44,3 +45,4 @@ class OpenAIGPTConfig:
         self.summary_proj_to_labels = summary_proj_to_labels
         self.output_attentions = output_attentions
         self.output_hidden_states = output_hidden_states
+        self.tie_word_embeddings = tie_word_embeddings

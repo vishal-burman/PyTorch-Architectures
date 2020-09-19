@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from transformers import OpenAIGPTTokenizer
 from model import OpenAIGPTLMHeadModel
-from config import OpenAIGPTConfig
+from config_openai import OpenAIGPTConfig
 config = OpenAIGPTConfig()
 
 tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt")
