@@ -51,4 +51,9 @@ model = OpenAIGPTLMHeadModel(config).to(device)
 total_params = sum(p.numel() for p in model.parameters())
 print("Total Parameters = ", total_params)
 
-
+for sample in data_loader:
+    ids = sample['ids'].to(device)
+    mask = sample['mask'].to(device)
+    output = model(input_ids=ids, attention_mask=mask, labels=ids)
+    print(output[0])
+    break

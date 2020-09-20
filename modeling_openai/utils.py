@@ -31,7 +31,7 @@ class PretrainedModel(nn.Module):
         """
         Prepare the head_mask if needed
         """
-        head_mask = [None] * num_layers
+        head_mask = [None] * num_hidden_layers
         return head_mask
 
     def init_weights(self):

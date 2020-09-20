@@ -1,5 +1,9 @@
+import sys
+import pdb
+import math
 import torch
 import torch.nn as nn
+from torch.nn import CrossEntropyLoss
 from activations import gelu_new, swish
 from utils import Conv1D, PretrainedModel
 from config_openai import OpenAIGPTConfig
@@ -234,7 +238,6 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         # output_hidden_states ~ False
         output_hidden_states = (output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states)
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         # input_ids ~ [batch_size, max_len] || inputs_embeds ~ None
         if input_ids is not None and inputs_embeds is not None:
@@ -242,7 +245,7 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
         # input_ids ~ [batch_size, max_len]
         elif input_ids is not None:
             # input_shape ~ [batch_size, max_len]
-            input_shape = input_ids.shape()
+            input_shape = input_ids.shape
             # input_ids ~ [batch_size, max_len]
             input_ids = input_ids.view(-1, input_shape[-1])
         elif inputs_embeds is not None:
@@ -313,9 +316,8 @@ class OpenAIGPTModel(OpenAIGPTPretrainedModel):
         if output_hidden_states:
             all_hidden_states = all_hidden_states + (hidden_states,)
 
-        if not return_dict:
-            # return ~ ([batch_size, max_len, emb_size])
-            return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
+        # return ~ ([batch_size, max_len, emb_size])
+        return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
 
 
 class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
@@ -336,15 +338,13 @@ class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
             token_type_ids=None,
             position_ids=None,
             head_mask=None,
-            input_embeds=None,
+            inputs_embeds=None,
             labels=None,
             output_attentions=None,
             output_hidden_states=None,
             return_dict=None,
             ):
 
-        # TODO
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
         
         # transformer_outputs ~ ([batch_size, max_len, emb_size])
         transformer_outputs = self.transformer(
@@ -374,8 +374,7 @@ class OpenAIGPTLMHeadModel(OpenAIGPTPretrainedModel):
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
-        if not return_dict:
-            # output ~ ([batch_size, max_len, vocab_size])
-            output = (lm_logits,) + transformer_outputs[1:]
-            # return ~ (loss, ([batch_size, max_len, vocab_size]))
-            return ((loss,) + output) if loss is not None else output
+        # output ~ ([batch_size, max_len, vocab_size])
+        output = (lm_logits,) + transformer_outputs[1:]
+        # return ~ (loss, ([batch_size, max_len, vocab_size]))
+        return ((loss,) + output) if loss is not None else output
