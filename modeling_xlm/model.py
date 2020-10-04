@@ -24,7 +24,15 @@ class XLMModel(XLMPretrainedModel):
         self.attention_dropout = config.attention_dropout
         assert self.dim % self.n_heads == 0 , "transformer dim must be a multiple of n_heads"
 
-        # 
+        # embeddings
+        self.position_embeddings = nn.Embedding(config.max_position_embeddings, self.dim)
+        if config.sinusoidal_embeddings:
+            # TODO
+            create_sinusoidal_embeddings(config.max_position_embeddings, self.dim, out=self.position_embeddings.weight)
+        if config.n_langs > 1 and config.use_lang_emb:
+            self.lang_embeddings = nn.Embedding(self.n_langs, self.dim)
+        self.embeddings = nn.Embedding(self.n_words, self.dim, padding_idx=self.pad_index)
+        self.layer_norm_emb = nn.LayerNorm(self.dim, eps=config.layer_norm_eps)
 
 
 class XLMForSequenceClassification(XLMPretrainedModel):
