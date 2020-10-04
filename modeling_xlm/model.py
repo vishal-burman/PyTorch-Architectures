@@ -34,6 +34,48 @@ class XLMModel(XLMPretrainedModel):
         self.embeddings = nn.Embedding(self.n_words, self.dim, padding_idx=self.pad_index)
         self.layer_norm_emb = nn.LayerNorm(self.dim, eps=config.layer_norm_eps)
 
+        # transformer layers
+        self.attentions = nn.ModuleList()
+        self.layer_norm1 = nn.ModuleList()
+        self.ffns = nn.ModuleList()
+        self.layer_norm2 = nn.ModuleList()
+
+        for _ in range(self.n_layers):
+            self.attentions.append(MultiHeadAttention(self.n_heads, self.dim, config=config))
+            self.layer_norm1.append(nn.LayerNorm(self.dim, eps=config.layer_norm_eps))
+            self.ffns.append(nn.TransformerFFN(self.dim, self.hidden_dim, self.dim, config=config))
+            self.layer_norm2.append(nn.LayerNorm(self.dim, eps=config.layer_norm_eps))
+
+        # TODO cross-check need for pruned heads?
+
+        self.init_weights()
+        self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand(1, -1))
+
+    def get_input_embeddings(self):
+        return self.embeddings
+
+    def set_input_embeddings(self, new_input_embeddings):
+        self.embeddings = new_embeddings
+
+    # TODO cross-check need to implement prune heads logic
+
+    def forward(
+            self,
+            input_ids=None,
+            attention_mask=None,
+            langs=None,
+            token_type_ids=None,
+            position_ids=None,
+            lengths=None,
+            cache=None,
+            head_mask=None,
+            inputs_embeds=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
+            ):
+
+
 
 class XLMForSequenceClassification(XLMPretrainedModel):
     def __init__(self, config):
