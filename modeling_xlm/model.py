@@ -1,3 +1,32 @@
+class XLMModel(XLMPretrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+
+        # encoder / decoder, output layer
+        self.is_encoder = config.is_encoder
+        self.is_decoder = not config.is_encoder
+        if self.is_decoder:
+            raise NotImplementedError('XLM can be only used as an encoder')
+        self.causal = config.causal
+
+        # dictionary / languages
+        self.n_langs = config.n_langs
+        self.use_lang_emb = config.use_lang_emb
+        self.n_words = config.n_words
+        self.eos_index = config.eos_index
+        self.pad_index = config.pad_index
+
+        # model parameters TODO cross-check?
+        self.dim = config.emb_dim # 512 by default
+        self.hidden_dim = config.hidden_dim # 2048 by default
+        self.n_heads = config.n_heads # 8 by default
+        self.dropout = config.dropout
+        self.attention_dropout = config.attention_dropout
+        assert self.dim % self.n_heads == 0 , "transformer dim must be a multiple of n_heads"
+
+        # 
+
+
 class XLMForSequenceClassification(XLMPretrainedModel):
     def __init__(self, config):
         super().__init__(config)
