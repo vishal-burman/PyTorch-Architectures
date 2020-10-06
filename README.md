@@ -1,5 +1,7 @@
 # PyTorch-Architectures
 
+### Note: This is a personal experimentation repo where I break apart implementations from different repos and libraries for my personal understanding of various architectures and understand dimension changes in PyTorch through different layers.
+
 ## Vision:
 
 LeNet: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/LeNet-CIFAR10.ipynb
