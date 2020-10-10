@@ -123,6 +123,36 @@ class XLMModel(XLMPretrainedModel):
         tensor = F.dropout(tensor, p=self.dropout, training=self.training)
         tensor *= mask.unsqueeze(-1).to(tensor.dtype)
 
+        # transformer layers
+        hidden_states = () if output_hidden_states else None
+        # TODO needed?
+        attentions = () if output_attentions else None
+        for i in range(self.n_layers):
+            # TODO check if needed?
+            if output_hidden_states:
+                hidden_states = hidden_states + (tensor,)
+
+            # self attention
+            attn_outputs = self.attention[i](
+                    tensor,
+                    attn_mask,
+                    cache=cache,
+                    head_mask=head_mask[i],
+                    output_attentions=output_attentions,
+                    )
+            attn = attn_outputs[0]
+            # TODO check if needed?
+            if output_attentions:
+                attentions = attentions + (attn_outputs[1:],)
+            attn = F.dropout(attn, p=self.dropout, training=self.training)
+            tensor = tensor + attn
+            tensor = self.layer_norm[i](tensor)
+
+            # FFN
+            tensor = tensor + self.ffns[i](tensor)
+            tensor = self.layer_norm2[i](tensor)
+            tensor *= mask.unsqueeze(-1).to(dtype=tensor.dtype)
+
 
 
 
