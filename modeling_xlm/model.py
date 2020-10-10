@@ -153,6 +153,18 @@ class XLMModel(XLMPretrainedModel):
             tensor = self.layer_norm2[i](tensor)
             tensor *= mask.unsqueeze(-1).to(dtype=tensor.dtype)
 
+        # Add last hidden state TODO check if needed?
+        if output_hidden_states:
+            hidden_states = hidden_states + (tensor,)
+
+        # Update cache length TODO check if needed?
+        if cache is not None:
+            cache['slen'] += tensor.size(1)
+
+        # TODO check if needed?
+        if not return_dict:
+            return tuple(v for v in [tensor, hidden_states, attentions] if v is not None)
+
 
 
 
