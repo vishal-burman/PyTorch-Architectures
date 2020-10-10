@@ -21,3 +21,7 @@ DenseNet121: Work in progress...
 BERT: https://github.com/vishal-burman/PyTorch-Architectures/blob/master/modeling_bert/test_sample.ipynb
 
 GPT: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_openai/test_sample_OpenAI.ipynb
+
+## Miscellaneous:
+
+Knowledge Distillation: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/Knowledge_Distillation.ipynb
