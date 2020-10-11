@@ -84,17 +84,17 @@ class XLMModel(XLMPretrainedModel):
 
     def forward(
             self,
-            input_ids=None,
-            attention_mask=None,
-            langs=None,
-            token_type_ids=None,
-            position_ids=None,
-            lengths=None,
-            cache=None,
-            head_mask=None,
-            inputs_embeds=None,
-            output_attentions=None,
-            output_hidden_states=None,
+            input_ids=None, # input_ids ~ [batch_size, max_len]
+            attention_mask=None, # attention_mask ~ [batch_size, max_len]
+            langs=None, # langs ~ None
+            token_type_ids=None, # token_type_ids ~ None
+            position_ids=None, # position_ids ~ None
+            lengths=None, # lengths ~ None
+            cache=None, # cache ~ None
+            head_mask=None, # head_mask ~ None
+            inputs_embeds=None, # inputs_embeds ~ None
+            output_attentions=None, # output_attentions ~ None
+            output_hidden_states=None, # output_hidden_states ~ None
             return_dict=None,
             ):
 
@@ -205,9 +205,9 @@ class XLMForSequenceClassification(XLMPretrainedModel):
 
     def forward(
             self,
-            input_ids=None,
-            attention_mask=None,
-            langs=None,
+            input_ids=None, # input_ids ~ [batch_size, max_len]
+            attention_mask=None, #attention_mask ~ [batch_size, max_len]
+            langs=None, # langs ~ optional(None)
             token_type_ids=None,
             position_ids=None,
             lengths=None,
@@ -223,17 +223,17 @@ class XLMForSequenceClassification(XLMPretrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         transformer_outputs = self.transformer(
-                input_ids,
-                attention_mask=attention_mask,
-                langs=langs,
-                token_type_ids=token_type_ids,
-                position_ids=position_ids,
-                lengths=lengths,
-                cache=cache,
-                head_mask=head_mask,
-                inputs_embeds=inputs_embeds,
-                output_attentions=output_attentions,
-                output_hidden_states=output_hidden_states,
+                input_ids, # input_ids ~ [batch_size, max_len]
+                attention_mask=attention_mask, # attention_mask ~ [batch_size, max_len]
+                langs=langs, # langs ~ None
+                token_type_ids=token_type_ids, # token_type_ids ~ None
+                position_ids=position_ids, # position_ids ~ None
+                lengths=lengths, # lengths ~ None
+                cache=cache, # cache ~ None
+                head_mask=head_mask, # head_mask ~ None
+                inputs_embeds=inputs_embeds, # inputs_embeds ~ None
+                output_attentions=output_attentions, # output_attentions ~ None
+                output_hidden_states=output_hidden_states, # output_hidden_states ~ None
                 return_dict=return_dict,
                 )
 
