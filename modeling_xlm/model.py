@@ -1,3 +1,33 @@
+def get_masks(
+        slen, # slen ~ max_len
+        lengths,  # lengths ~ [max_len - count of pad tokens]  || len(lengths) = batch_size
+        causal,  # False
+        padding_mask=None, # padding_mask ~ [batch_size, max_len]
+        ):
+    """
+    Generate hidden states mask, and optionally an attention mask
+    """
+    # alen ~ [1, max_len]
+    alen = torch.arange(slen, dtype=torch.long, device=lengths.device)
+    # padding_mask ~ [batch_size, max_len]
+    if padding_mask is not None:
+        # mask ~ [batch_size, max_len]
+        mask = padding_mask
+    else: # TODO check needed?
+        assert lengths.max().item() <= slen
+        mask = alen < lengths[:, None]
+    
+    # bs ~ batch_size
+    bs = lengths.size(0)
+    if causal: # TODO check needed?
+        attn_mask = alen[None, None, :].repeat(bs, slen, 1) <= alen[None, :, None]
+    else:
+        # attn_mask ~ [batch_size, max_len]
+        attn_mask = mask
+
+    assert mask.size() == (bs, slen)
+    return mask, attn_mask
+
 class XLMPretrainedModel(PretrainedModel):
     config_class = XLMConfig
     # TODO check if needed?
@@ -98,23 +128,30 @@ class XLMModel(XLMPretrainedModel):
             return_dict=None,
             ):
 
+        # output_attentions ~ False
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        # output_hidden_states ~ False
         output_hidden_states = (
                 output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
                 )
+        # TODO check needed?
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
+        # input_ids ~ [batch_size, max_len]
         if input_ids is not None:
+            # bs ~ batch_size  || slen ~ max_len
             bs, slen = input_ids.size()
-        else:
+        else: # TODO check needed?
             bs, slen = inputs_embeds.size()[:-1]
 
+        # device ~ cuda or cpu(depends on user)
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
         if lengths is None:
             if input_ids is not None:
+                # lengths ~ [max_len - (count of pad tokens)]  || len(lengths) == batch_size
                 lengths = (input_ids != self.pad_index).sum(dim=1).long()
-            else:
+            else: # TODO check needed?
                 lengths = torch.tensor([slen] * bs, device=device)
 
         # check inputs
