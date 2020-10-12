@@ -70,9 +70,9 @@ class XLMModel(XLMPretrainedModel):
         self.pad_index = config.pad_index
 
         # model parameters TODO cross-check?
-        self.dim = config.emb_dim # 512 by default
-        self.hidden_dim = config.hidden_dim # 2048 by default
-        self.n_heads = config.n_heads # 8 by default
+        self.dim = config.emb_dim 
+        self.hidden_dim = self.dim * 4 
+        self.n_heads = config.n_heads 
         self.dropout = config.dropout
         self.attention_dropout = config.attention_dropout
         assert self.dim % self.n_heads == 0 , "transformer dim must be a multiple of n_heads"
@@ -159,6 +159,8 @@ class XLMModel(XLMPretrainedModel):
         assert lengths.max().item() <= slen
 
         # generate masks TODO
+        # mask ~ [batch_size, max_len]
+        # attn_mask ~ [batch_size, max_len]
         mask, attn_mask = get_masks(slen, lengths, self.causal, padding_mask=attention_mask)
 
         # do not recompute cached elements TODO needed ?
@@ -171,21 +173,30 @@ class XLMModel(XLMPretrainedModel):
             attn_mask = attn_mask[:, -_slen:]
 
         # embeddings
+        # input_embeds ~ None
         if inputs_embeds is None:
+            # inputs_embeds ~ [batch_size, max_len, emb_dim]
             inputs_embeds = self.embedding(input_ids)
 
+        # tensor ~ [batch_size, max_len, emb_size]
         tensor = inputs_embeds + self.position_embeddings(position_ids).expand_as(inputs_embeds)
+        # TODO check needed? --> doesn't get accessed
         if langs is not None and self.use_lang_emb and self.n_langs > 1:
             tensor = tensor + self.lang_embeddings(langs)
+        # TODO check needed? --> doesn't get accessed
         if token_type_ids is not None:
             tensor = tensor + self.embeddings(token_type_ids)
+        # tensor ~ [batch_size, max_len, emb_size]
         tensor = self.layer_norm(tensor)
+        # tensor ~ [batch_size, max_len, emb_size]
         tensor = F.dropout(tensor, p=self.dropout, training=self.training)
+        # tensor ~ [batch_size, max_len, emb_size]
         tensor *= mask.unsqueeze(-1).to(tensor.dtype)
 
         # transformer layers
+        # hidden_states ~ None TODO check --> not accessed
         hidden_states = () if output_hidden_states else None
-        # TODO needed?
+        # TODO needed? check --> not accessed
         attentions = () if output_attentions else None
         for i in range(self.n_layers):
             # TODO check if needed?
