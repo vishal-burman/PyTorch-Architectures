@@ -25,3 +25,5 @@ GPT: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blo
 ## Miscellaneous:
 
 Knowledge Distillation: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/Knowledge_Distillation.ipynb
+
+T5 Add-Sub: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/T5_Math_Add_Sub.ipynb 
