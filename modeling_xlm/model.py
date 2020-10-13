@@ -28,6 +28,78 @@ def get_masks(
     assert mask.size() == (bs, slen)
     return mask, attn_mask
 
+class MultiHeadAttention(nn.Module):
+    
+    NEW_ID = itertools.count()
+
+    def __init__(self, n_heads, dim, config):
+        super().__init__()
+        self.layer_id = next(MultiHeadAttention.NEW_ID)
+        self.dim = dim
+        self.n_heads = n_heads
+        self.dropout = config.attention_dropout
+        assert self.dim % self.n_heads == 0
+
+        self.q_lin = nn.Linear(dim, dim)
+        self.k_lin = nn.Linear(dim, dim)
+        self.v_lin = nn.Linear(dim, dim)
+        self.out_lin = nn.Linear(dim, dim)
+
+    def forward(self, input, mask, kv=None, cache=None, head_mask=None, output_attentions=False):
+        
+        bs, qlen, dim = input.size()
+        # TODO check needed
+        if kv is None:
+            klen = qlen if cache is None else cache['slen'] + qlen
+        else:
+            klen = kv.size(1)
+        n_heads = self.n_heads
+        dim_per_head = self.dim // n_heads
+        mask_reshape = (bs, 1, qlen, klen) if mask.dim() == 3 else (bs, 1, 1, klen)
+
+        def shape(x):
+            """ projection """
+            return x.view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2)
+
+        def unshape(x):
+            """ compute context """
+            return x.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * dim_per_head)
+
+        q = shape(self.q_lin(input))
+        if kv is None:
+            k = shape(self.k_lin(input))
+            v = shape(self.v_lin(input))
+        # TODO check_needed
+        elif cache is None or self.layer_id is not in cache:
+            k = v = kv
+            k = shape(self.k_lin(k))
+            v = shape(self.v_lin(k))
+
+        q = q / math.sqrt(dim_per_head)
+        scores = torch.matmul(q, k.transpose(2, 3))
+        mask = (mask == 0).view(mask_reshape).expand_as(scores)
+        scores.masked_fill_(mask, -float("inf"))
+
+        weights = F.softmax(scores.float(), dim=-1).type_as(scores)
+        weights = F.dropout(weights, p=self.dropout, training=self.training)
+
+        # Mask heads if we want to
+        # TODO check needed
+        if head_mask is not None:
+            weights = weights * head_mask
+
+        context = torch.matmul(weights, v)
+        context = unshape(context)
+
+        outputs = (self.out_lin(context),)
+        # TODO check needed
+        if output_attentions:
+            outputs = outputs + (weights,)
+        return outputs
+
+
+
+
 class XLMPretrainedModel(PretrainedModel):
     config_class = XLMConfig
     # TODO check if needed?
@@ -205,11 +277,11 @@ class XLMModel(XLMPretrainedModel):
 
             # self attention
             attn_outputs = self.attention[i](
-                    tensor,
-                    attn_mask,
-                    cache=cache,
-                    head_mask=head_mask[i],
-                    output_attentions=output_attentions,
+                    tensor, # tensor ~ [batch_size, max_len, emb_size]
+                    attn_mask, # attn_mask ~ [batch_size, max_len]
+                    cache=cache, # cache ~ None --> check needed TODO
+                    head_mask=head_mask[i], # head_mask ~ None --> check needed TODO
+                    output_attentions=output_attentions, # output_attentions ~ None --> check needed TODO
                     )
             attn = attn_outputs[0]
             # TODO check if needed?
