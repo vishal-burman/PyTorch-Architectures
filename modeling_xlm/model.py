@@ -45,16 +45,28 @@ class MultiHeadAttention(nn.Module):
         self.v_lin = nn.Linear(dim, dim)
         self.out_lin = nn.Linear(dim, dim)
 
-    def forward(self, input, mask, kv=None, cache=None, head_mask=None, output_attentions=False):
+    def forward(
+            self, 
+            input,  # input ~ [batch_size, max_len, emb_size]
+            mask,  # mask ~ [batch_size, max_len]
+            kv=None,  # kv ~ None
+            cache=None, # cache ~ None
+            head_mask=None, # head_mask ~ None
+            output_attentions=False # output_attentions ~ False
+            ):
         
         bs, qlen, dim = input.size()
         # TODO check needed
+        # kv ~ None
         if kv is None:
             klen = qlen if cache is None else cache['slen'] + qlen
         else:
             klen = kv.size(1)
+        # n_heads ~ 16
         n_heads = self.n_heads
+        # dim_per_head ~ 2048 // 16 --> 128
         dim_per_head = self.dim // n_heads
+        # mask.dim() = 2 --> mask_reshape ~ (bs, 1, 1, klen) where klen = max_len
         mask_reshape = (bs, 1, qlen, klen) if mask.dim() == 3 else (bs, 1, 1, klen)
 
         def shape(x):
