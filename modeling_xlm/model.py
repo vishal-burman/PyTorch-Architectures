@@ -62,9 +62,9 @@ class MultiHeadAttention(nn.Module):
             klen = qlen if cache is None else cache['slen'] + qlen
         else:
             klen = kv.size(1)
-        # n_heads ~ 16
+        # n_heads ~ 8 
         n_heads = self.n_heads
-        # dim_per_head ~ 2048 // 16 --> 128
+        # dim_per_head ~ 1024 // 8 --> 128
         dim_per_head = self.dim // n_heads
         # mask.dim() = 2 --> mask_reshape ~ (bs, 1, 1, klen) where klen = max_len
         mask_reshape = (bs, 1, qlen, klen) if mask.dim() == 3 else (bs, 1, 1, klen)
@@ -77,9 +77,13 @@ class MultiHeadAttention(nn.Module):
             """ compute context """
             return x.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * dim_per_head)
 
+        # q ~ [batch_size, n_heads, max_len, dim_per_head]
         q = shape(self.q_lin(input))
+        # kv ~ None
         if kv is None:
+            # k ~ [batch_size, n_heads, max_len, dim_per_head] 
             k = shape(self.k_lin(input))
+            # v ~ [batch_size, n_heads, max_len, dim_per_head] 
             v = shape(self.v_lin(input))
         # TODO check_needed
         elif cache is None or self.layer_id is not in cache:
@@ -87,12 +91,19 @@ class MultiHeadAttention(nn.Module):
             k = shape(self.k_lin(k))
             v = shape(self.v_lin(k))
 
+        # q ~ [batch_size, n_heads, max_len, dim_per_head] 
         q = q / math.sqrt(dim_per_head)
+        # q ~ [batch_size, n_heads, max_len, dim_per_head]
+        # k.T(2, 3) ~ [batch_size, n_heads, dim_per_head, max_len]
+        # scores ~ [batch_size, n_heads, max_len, max_len]
         scores = torch.matmul(q, k.transpose(2, 3))
+        # mask ~ [batch_size, n_heads, max_len, max_len]
         mask = (mask == 0).view(mask_reshape).expand_as(scores)
         scores.masked_fill_(mask, -float("inf"))
 
+        # weights ~ [batch_size, n_heads, max_len, max_len]
         weights = F.softmax(scores.float(), dim=-1).type_as(scores)
+        # weights ~ [batch_size, n_heads, max_len, max_len]
         weights = F.dropout(weights, p=self.dropout, training=self.training)
 
         # Mask heads if we want to
@@ -100,13 +111,18 @@ class MultiHeadAttention(nn.Module):
         if head_mask is not None:
             weights = weights * head_mask
 
+        # weights ~ [batch_size, n_heads, max_len, max_len] | v ~ [batch_size, n_heads, max_len, dim_per_head]
+        # context ~ [batch_size, n_heads, max_len, dim_per_head]
         context = torch.matmul(weights, v)
+        # context = [batch_size, 2, n_heads * dim_per_head]
         context = unshape(context)
 
+        # outputs ~ ([batch_size, max_len, emb_dim])
         outputs = (self.out_lin(context),)
         # TODO check needed
         if output_attentions:
             outputs = outputs + (weights,)
+        # outputs ~ ([batch_size, max_len, emb_size])
         return outputs
 
 

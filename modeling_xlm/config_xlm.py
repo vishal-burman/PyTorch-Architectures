@@ -3,9 +3,9 @@ class XLMConfig:
     def __init__(
             self,
             vocab_size=30145,
-            emb_dim=2048,
-            n_layers=12,
-            n_heads=16,
+            emb_dim=1024,
+            n_layers=6,
+            n_heads=8,
             dropout=0.1,
             attention_dropout=0.1,
             gelu_activation=True,
