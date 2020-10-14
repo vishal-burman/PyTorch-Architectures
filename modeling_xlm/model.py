@@ -346,8 +346,11 @@ class XLMModel(XLMPretrainedModel):
             tensor = self.layer_norm[i](tensor)
 
             # FFN
+            # tensor ~ [batch_size, max_len, emb_size]
             tensor = tensor + self.ffns[i](tensor)
+            # tensor ~ [batch_size, max_len, emb_size]
             tensor = self.layer_norm2[i](tensor)
+            # tensor ~ [batch_size, max_len, emb_size]
             tensor *= mask.unsqueeze(-1).to(dtype=tensor.dtype)
 
         # Add last hidden state TODO check if needed?
@@ -396,6 +399,7 @@ class XLMForSequenceClassification(XLMPretrainedModel):
 
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
+        # transformer_output ~ ([batch_size, max_len, emb_size])
         transformer_outputs = self.transformer(
                 input_ids, # input_ids ~ [batch_size, max_len]
                 attention_mask=attention_mask, # attention_mask ~ [batch_size, max_len]
