@@ -129,7 +129,7 @@ class TransformerFFN(nn.Module):
     def __init__(self, in_dim, dim_hidden, out_dim, config):
         super().__init__()
         self.dropout = config.dropout
-        self.lin_1 = nn.Linear(in_dim, out_dim)
+        self.lin_1 = nn.Linear(in_dim, dim_hidden)
         self.lin_2 = nn.Linear(dim_hidden, out_dim)
         self.act = gelu if config.gelu_activation else F.relu
         self.chunk_size_feed_forward = config.chunk_size_feed_forward
@@ -139,9 +139,13 @@ class TransformerFFN(nn.Module):
             self, 
             input, # input ~ [batch_size, max_len, emb_size]
             ):
+        # x ~ [batch_size, max_len, dim_hidden] where dim_hidden = emb_dim * 4
         x = self.lin_1(input)
+        # x ~ [batch_size, max_len, dim_hidden]
         x = self.act(x)
+        # x ~ [batch_size, max_len, emb_dim]
         x = self.lin_2(x)
+        # x ~ [batch_size, max_len, emb_dim]
         x = F.dropout(x, p=self.dropout, training=self.training)
         return x 
 
@@ -213,7 +217,7 @@ class XLMModel(XLMPretrainedModel):
         for _ in range(self.n_layers):
             self.attentions.append(MultiHeadAttention(self.n_heads, self.dim, config=config))
             self.layer_norm1.append(nn.LayerNorm(self.dim, eps=config.layer_norm_eps))
-            self.ffns.append(nn.TransformerFFN(self.dim, self.hidden_dim, self.dim, config=config))
+            self.ffns.append(TransformerFFN(self.dim, self.hidden_dim, self.dim, config=config))
             self.layer_norm2.append(nn.LayerNorm(self.dim, eps=config.layer_norm_eps))
 
         # TODO cross-check need for pruned heads?
