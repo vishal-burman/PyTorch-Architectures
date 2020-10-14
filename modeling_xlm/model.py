@@ -125,7 +125,25 @@ class MultiHeadAttention(nn.Module):
         # outputs ~ ([batch_size, max_len, emb_size])
         return outputs
 
+class TransformerFFN(nn.Module):
+    def __init__(self, in_dim, dim_hidden, out_dim, config):
+        super().__init__()
+        self.dropout = config.dropout
+        self.lin_1 = nn.Linear(in_dim, out_dim)
+        self.lin_2 = nn.Linear(dim_hidden, out_dim)
+        self.act = gelu if config.gelu_activation else F.relu
+        self.chunk_size_feed_forward = config.chunk_size_feed_forward
+        self.seq_len_dim = 1
 
+    def forward(self, input):
+        return apply_chunking_to_forward(self.ff_chunk, self.chunk_size_feed_forward, self.seq_len_dim, input)
+
+    def ff_chunk(self, input):
+        x = self.lin_1(input)
+        x = self.act(x)
+        x = self.lin_2(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        return x
 
 
 class XLMPretrainedModel(PretrainedModel):
@@ -304,6 +322,7 @@ class XLMModel(XLMPretrainedModel):
                 hidden_states = hidden_states + (tensor,)
 
             # self attention
+            # attn_outputs ~ ([batch_size, max_len, emb_size])
             attn_outputs = self.attention[i](
                     tensor, # tensor ~ [batch_size, max_len, emb_size]
                     attn_mask, # attn_mask ~ [batch_size, max_len]
@@ -311,12 +330,16 @@ class XLMModel(XLMPretrainedModel):
                     head_mask=head_mask[i], # head_mask ~ None --> check needed TODO
                     output_attentions=output_attentions, # output_attentions ~ None --> check needed TODO
                     )
+            # attn ~ [batch_size, max_len, emb_size]
             attn = attn_outputs[0]
             # TODO check if needed?
             if output_attentions:
                 attentions = attentions + (attn_outputs[1:],)
+            # attn ~ [batch_size, max_len, emb_size]
             attn = F.dropout(attn, p=self.dropout, training=self.training)
+            # tensor ~ [batch_size, max_len, emb_size]
             tensor = tensor + attn
+            # tensor ~ [batch_size, max_len, emb_size]
             tensor = self.layer_norm[i](tensor)
 
             # FFN
