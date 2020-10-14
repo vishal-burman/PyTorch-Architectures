@@ -135,16 +135,15 @@ class TransformerFFN(nn.Module):
         self.chunk_size_feed_forward = config.chunk_size_feed_forward
         self.seq_len_dim = 1
 
-    def forward(self, input):
-        return apply_chunking_to_forward(self.ff_chunk, self.chunk_size_feed_forward, self.seq_len_dim, input)
-
-    def ff_chunk(self, input):
+    def forward(
+            self, 
+            input, # input ~ [batch_size, max_len, emb_size]
+            ):
         x = self.lin_1(input)
         x = self.act(x)
         x = self.lin_2(x)
         x = F.dropout(x, p=self.dropout, training=self.training)
-        return x
-
+        return x 
 
 class XLMPretrainedModel(PretrainedModel):
     config_class = XLMConfig
