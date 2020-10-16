@@ -1,8 +1,11 @@
+import itertools
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss
+from config_xlm import XLMConfig
 
+config = XLMConfig()
 gelu = F.gelu
 
 class MultiHeadAttention(nn.Module):
@@ -92,7 +95,6 @@ class TransformerFFN(nn.Module):
         self.lin_1 = nn.Linear(in_dim, dim_hidden)
         self.lin_2 = nn.Linear(dim_hidden, out_dim)
         self.act = gelu if config.gelu_activation else F.relu
-        self.chunk_size_feed_forward = config.chunk_size_feed_forward
         self.seq_len_dim = 1
 
     def forward(
@@ -141,13 +143,14 @@ class XLMModel(XLMPretrainedModel):
         super().__init__(config)
 
         # dictionary / languages
-        self.n_words = config.n_words
+        self.n_words = config.vocab_size
         self.pad_index = config.pad_index
 
         # model parameters 
         self.dim = config.emb_dim 
         self.hidden_dim = self.dim * 4 
-        self.n_heads = config.n_heads 
+        self.n_heads = config.n_heads
+        self.n_layers = config.n_layers
         self.dropout = config.dropout
         self.attention_dropout = config.attention_dropout
         assert self.dim % self.n_heads == 0 , "transformer dim must be a multiple of n_heads"
@@ -202,7 +205,7 @@ class XLMModel(XLMPretrainedModel):
         
         # embeddings
         # inputs_embeds ~ [batch_size, max_len, emb_dim]
-        inputs_embeds = self.embedding(input_ids)
+        inputs_embeds = self.embeddings(input_ids)
 
         # tensor ~ [batch_size, max_len, emb_size]
         tensor = inputs_embeds + self.position_embeddings(position_ids).expand_as(inputs_embeds)
