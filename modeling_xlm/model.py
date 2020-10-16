@@ -257,7 +257,7 @@ class XLMForSequenceClassification(XLMPretrainedModel):
         self.num_labels = config.num_labels
 
         self.transformer = XLMModel(config)
-        self.summary = nn.Linear(config.emb_dim, config.num_classes)
+        self.summary = nn.Linear(config.emb_dim, config.num_labels)
         self.first_dropout = nn.Dropout(config.summary_first_dropout)
 
         self.init_weights()
