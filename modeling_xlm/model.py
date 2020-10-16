@@ -1,3 +1,10 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn import CrossEntropyLoss
+
+gelu = F.gelu
+
 class MultiHeadAttention(nn.Module):
     
     NEW_ID = itertools.count()
