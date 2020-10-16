@@ -37,6 +37,7 @@ class XLMConfig:
             bos_token_id=0,
             output_attentions=False,
             output_hidden_states=False,
+            num_labels=2,
             ):
 
         self.vocab_size = vocab_size
@@ -74,3 +75,4 @@ class XLMConfig:
         self.bos_token_id = bos_token_id
         self.output_attentions = output_attentions
         self.output_hidden_states = output_hidden_states
+        self.num_labels = num_labels

@@ -365,8 +365,27 @@ class XLMModel(XLMPretrainedModel):
         if not return_dict:
             return tuple(v for v in [tensor, hidden_states, attentions] if v is not None)
 
+class SequenceSummary(nn.Module):
+    
+    """ Computes a single vector summary of a sequence of hidden states """
 
+    def __init__(self, config):
+        super().__init__()
+        self.summary = nn.Linear(config.emb_dim, config.num_classes)
+        self.first_dropout = nn.Dropout(config.summary_first_dropout)
 
+    def forward(
+            self, 
+            hidden_states, # hidden_states ~ [batch_size, max_len, emb_size]
+            ):
+        # output ~ [batch_size, emb_size]
+        output = hidden_states[:, 0]
+        
+        # output ~ [batch_size, emb_size]
+        output = self.first_dropout(output)
+        # output ~ [batch_size, num_labels]
+        output = self.summary(output)
+        return output
 
 class XLMForSequenceClassification(XLMPretrainedModel):
     def __init__(self, config):
@@ -415,6 +434,7 @@ class XLMForSequenceClassification(XLMPretrainedModel):
                 return_dict=return_dict,
                 )
 
+        # output ~ [batch_size, max_len, emb_size]
         output = transformer_outputs[0]
         logits = self.sequence_summary(output)
 
