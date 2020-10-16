@@ -1,3 +1,5 @@
+import pdb
+import math
 import itertools
 import torch
 import torch.nn as nn
@@ -203,6 +205,9 @@ class XLMModel(XLMPretrainedModel):
         # attn_mask ~ [batch_size, max_len]
         mask, attn_mask = attention_mask, attention_mask 
         
+        # position_ids
+        position_ids = self.position_ids[:, :slen]
+
         # embeddings
         # inputs_embeds ~ [batch_size, max_len, emb_dim]
         inputs_embeds = self.embeddings(input_ids)
@@ -210,7 +215,7 @@ class XLMModel(XLMPretrainedModel):
         # tensor ~ [batch_size, max_len, emb_size]
         tensor = inputs_embeds + self.position_embeddings(position_ids).expand_as(inputs_embeds)
         # tensor ~ [batch_size, max_len, emb_size]
-        tensor = self.layer_norm(tensor)
+        tensor = self.layer_norm_emb(tensor)
         # tensor ~ [batch_size, max_len, emb_size]
         tensor = F.dropout(tensor, p=self.dropout, training=self.training)
         # tensor ~ [batch_size, max_len, emb_size]
@@ -221,7 +226,7 @@ class XLMModel(XLMPretrainedModel):
 
             # self attention
             # attn_outputs ~ ([batch_size, max_len, emb_size])
-            attn_outputs = self.attention[i](
+            attn_outputs = self.attentions[i](
                     tensor, # tensor ~ [batch_size, max_len, emb_size]
                     attn_mask, # attn_mask ~ [batch_size, max_len]
                     )
@@ -233,7 +238,7 @@ class XLMModel(XLMPretrainedModel):
             # tensor ~ [batch_size, max_len, emb_size]
             tensor = tensor + attn
             # tensor ~ [batch_size, max_len, emb_size]
-            tensor = self.layer_norm[i](tensor)
+            tensor = self.layer_norm1[i](tensor)
 
             # FFN
             # tensor ~ [batch_size, max_len, emb_size]
@@ -243,7 +248,7 @@ class XLMModel(XLMPretrainedModel):
             # tensor ~ [batch_size, max_len, emb_size]
             tensor *= mask.unsqueeze(-1).to(dtype=tensor.dtype)
 
-        return tuple(v for v in [tensor, hidden_states, attentions] if v is not None)
+        return tuple(v for v in [tensor] if v is not None)
 
 class XLMForSequenceClassification(XLMPretrainedModel):
     def __init__(self, config):

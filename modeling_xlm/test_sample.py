@@ -20,4 +20,4 @@ mask = torch.tensor(tokens['attention_mask'], dtype=torch.long).unsqueeze(0)
 model = XLMModel(config).to(device)
 
 output = model(input_ids=ids.to(device), attention_mask=mask.to(device))
-print(output.shape)
+print(output[0].shape)
