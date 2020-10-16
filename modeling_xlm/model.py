@@ -365,37 +365,15 @@ class XLMModel(XLMPretrainedModel):
         if not return_dict:
             return tuple(v for v in [tensor, hidden_states, attentions] if v is not None)
 
-class SequenceSummary(nn.Module):
-    
-    """ Computes a single vector summary of a sequence of hidden states """
-
-    def __init__(self, config):
-        super().__init__()
-        self.summary = nn.Linear(config.emb_dim, config.num_classes)
-        self.first_dropout = nn.Dropout(config.summary_first_dropout)
-
-    def forward(
-            self, 
-            hidden_states, # hidden_states ~ [batch_size, max_len, emb_size]
-            ):
-        # output ~ [batch_size, emb_size]
-        output = hidden_states[:, 0]
-        
-        # output ~ [batch_size, emb_size]
-        output = self.first_dropout(output)
-        # output ~ [batch_size, num_labels]
-        output = self.summary(output)
-        return output
-
 class XLMForSequenceClassification(XLMPretrainedModel):
     def __init__(self, config):
         super().__init__(config)
+        
         self.num_labels = config.num_labels
 
-        # TODO
         self.transformer = XLMModel(config)
-        # TODO needed?
-        self.sequence_summary = SequenceSummary(config)
+        self.summary = nn.Linear(config.emb_dim, config.num_classes)
+        self.first_dropout = nn.Dropout(config.summary_first_dropout)
 
         self.init_weights()
 
@@ -436,7 +414,12 @@ class XLMForSequenceClassification(XLMPretrainedModel):
 
         # output ~ [batch_size, max_len, emb_size]
         output = transformer_outputs[0]
-        logits = self.sequence_summary(output)
+        # logits ~ [batch_size, emb_size]
+        logits = output[:, 0]
+        # logits ~ [batch_size, emb_size]
+        logits = self.first_dropout(logits)
+        # logits ~ [batch_size, num_labels]
+        logits = self.summary(logits)
 
         loss = None
         if labels is not None:
