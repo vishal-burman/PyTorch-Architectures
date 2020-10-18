@@ -4,7 +4,7 @@ class XLMConfig:
             self,
             vocab_size=30145,
             emb_dim=1024,
-            n_layers=6,
+            n_layers=3, # high overfitting even on 6 layers
             n_heads=8,
             dropout=0.1,
             attention_dropout=0.1,
