@@ -319,3 +319,39 @@ class XLMForSequenceClassification(XLMPretrainedModel):
 
         output = (logits,)
         return ((loss,) + output) if loss is not None else output
+
+class XLMWithLMHeadModel(XLMPretrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.transformer = XLMModel(config)
+        # TODO --> module needs to be implemented
+        self.pred_layer = XLMPredLayer(config)
+
+        self.init_weights()
+
+    def forward(
+            self,
+            input_ids=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            lengths=None,
+            inputs_embeds=None,
+            ):
+
+        # transformer_outputs ~ ([batch_size, max_len, emb_size])
+        transformer_outputs = self.transformer(
+                input_ids, # input_ids ~ [batch_size, max_len]
+                attention_mask=attention_mask, # attention_mask ~ [batch_size, max_len]
+                token_type_ids=token_type_ids, # token_type_ids ~ None
+                position_ids=position_ids, # position_ids ~ None
+                lengths=lengths, # lengths ~ None
+                inputs_embeds=inputs_embeds, # inputs_embeds ~ None
+                )
+
+        # output ~ [batch_size, max_len, emb_size]
+        output = transformer_outputs[0]
+        # TODO
+        outputs = self.pred_layer(output, labels)
+        return outputs
