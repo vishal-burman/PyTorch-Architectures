@@ -3,7 +3,7 @@ class XLMConfig:
     def __init__(
             self,
             vocab_size=30145,
-            emb_dim=1024,
+            emb_dim=512,
             n_layers=3, # high overfitting even on 6 layers
             n_heads=8,
             dropout=0.1,

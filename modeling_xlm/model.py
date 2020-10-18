@@ -309,7 +309,7 @@ class XLMForSequenceClassification(XLMPretrainedModel):
         # output ~ [batch_size, max_len, emb_size]
         output = transformer_outputs[0]
         # output ~ [batch_size, num_labels]
-        output = self.sequence_summary(output)
+        logits = self.sequence_summary(output)
         
 
         loss = None
