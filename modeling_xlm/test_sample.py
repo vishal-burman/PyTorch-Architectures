@@ -61,7 +61,7 @@ else:
 
     texts = texts[1:]
 
-    texts_train = texts[:10000]
+    texts_train = texts[:100]
 
     texts_valid = texts[10000:10100]
 
