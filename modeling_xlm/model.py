@@ -331,10 +331,9 @@ class XLMPredLayer(nn.Module):
         self.pad_index = config.pad_index
         dim = config.emb_dim
 
-        self.proj = nn.Linear(dim, self.n_words, bias=True)
+        self.proj = nn.Linear(dim, config.n_words, bias=True)
 
-    def forward(self, 
-            x, y=None):
+    def forward(self, x, y=None):
         """ Compute the loss and optionally the scores"""
         outputs = ()
         scores = self.proj(x)
@@ -349,6 +348,7 @@ class XLMWithLMHeadModel(XLMPretrainedModel):
         super().__init__(config)
 
         self.transformer = XLMModel(config)
+        # TODO --> module needs to be implemented
         self.pred_layer = XLMPredLayer(config)
 
         self.init_weights()
@@ -361,7 +361,6 @@ class XLMWithLMHeadModel(XLMPretrainedModel):
             position_ids=None,
             lengths=None,
             inputs_embeds=None,
-            labels=None,
             ):
 
         # transformer_outputs ~ ([batch_size, max_len, emb_size])
