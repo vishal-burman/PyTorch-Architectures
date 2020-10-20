@@ -334,14 +334,19 @@ class XLMPredLayer(nn.Module):
         self.proj = nn.Linear(dim, self.n_words, bias=True)
 
     def forward(self, 
-            x, y=None):
+            x, # x ~ [batch_size, max_len, emb_size]
+            y=None, # y ~ [batch_size, max_len]
+            ):
         """ Compute the loss and optionally the scores"""
         outputs = ()
+        # scores ~ [batch_size, max_len, vocab_size]
         scores = self.proj(x)
+        # outputs = ([batch_size, max_len, vocab_size])
         outputs = (scores,) + outputs
         if y is not None:
             loss = F.cross_entropy(scores.view(-1, self.n_words), y.view(-1), reduction='elementwise_mean')
             outputs = (loss,) + outputs
+        # outputs ~ (loss, [batch_size, max_len, vocab_size])
         return outputs
 
 class XLMWithLMHeadModel(XLMPretrainedModel):
@@ -376,6 +381,6 @@ class XLMWithLMHeadModel(XLMPretrainedModel):
 
         # output ~ [batch_size, max_len, emb_size]
         output = transformer_outputs[0]
-        # TODO
+        # outputs ~ (loss, [batch_size, max_len, vocab_size])
         outputs = self.pred_layer(output, labels)
         return outputs

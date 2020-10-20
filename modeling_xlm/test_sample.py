@@ -114,8 +114,6 @@ for epoch in range(EPOCHS):
     
     logits = model(input_ids=ids, attention_mask=mask, labels=labels)
     loss = logits[0]
-    print(logits[1].shape)
-    sys.exit("Break")
 
     # LOGGING
     if idx % 100 == 0:
