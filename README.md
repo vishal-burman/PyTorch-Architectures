@@ -22,6 +22,8 @@ BERT: https://github.com/vishal-burman/PyTorch-Architectures/blob/master/modelin
 
 GPT: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_openai/test_sample_OpenAI.ipynb
 
+XLM: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_xlm/test_sample_XLM.ipynb
+
 ## Miscellaneous:
 
 Knowledge Distillation: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/Knowledge_Distillation.ipynb
