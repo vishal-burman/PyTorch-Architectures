@@ -12,7 +12,7 @@ VGG16: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/b
 
 VGG19: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/VGG19-CIFAR10.ipynb
 
-DenseNet121: Work in progress...
+DenseNet121: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/DenseNet_121_CIFAR10.ipynb
 
 
 
