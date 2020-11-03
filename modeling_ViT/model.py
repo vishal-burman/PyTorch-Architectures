@@ -1,6 +1,19 @@
 import torch
 import torch.nn as nn
 
+class FeedForward(nn.Module):
+    def __init__(self, dim, hidden_dim, dropout=0.):
+        super().__init__()
+        self.net = nn.Sequential(
+                nn.Linear(dim, hidden_dim),
+                nn.GeLU(),
+                nn.Dropout(dropout),
+                nn.Linear(hidden_dim, dim),
+                nn.Dropout(dropout),
+                )
+    def forward(self, x):
+        return self.net(x)
+
 class Attention(nn.Module):
     def __init__(self, dim, heads=8, dropout=0.):
         super().__init__()
@@ -14,8 +27,15 @@ class Attention(nn.Module):
                 )
 
     def forward(self, x, mask=None): # x ~ [batch_size, (img_size // patch_size) + 1, dim] || mask ~ [batch_size, img_size // patch_size, img_size // patch_size]
-        b, n, _, h = *x.shape, self.heads
-        qkv = self.to_qkv(x).chunk(3, dim=-1)
+        b, n, dim, h = *x.shape, self.heads
+        qkv = self.to_qkv(x).chunk(3, dim=-1) # tuple(3 items) item ~ [batch_size, (img_size) // patch_size) + 1, dim]
+        q, k, v = map(lambda t: t.reshape(b, n, h, dim // h).transpose(1, 2), qkv)
+        dots = (q @ k.transpose(-2, -1)) * self.scale
+
+        attn = dots.softmax(dim=-1)
+        out = attn @ v
+        out = self.to_out(out)
+        return out
 
 class ViT(nn.Module):
     def __init__(self, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, channels=3, dropout=0., emb_dropout=0.)
