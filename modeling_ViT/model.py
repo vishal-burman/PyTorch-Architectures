@@ -9,7 +9,7 @@ class Residual(nn.Module):
         return self.fn(x, **kwargs)
 
 class PreNorm(nn.Module):
-    def __init__(self, fn):
+    def __init__(self, dim, fn):
         super().__init__()
         self.norm = nn.LayerNorm(dim)
         self.fn = fn
@@ -21,7 +21,7 @@ class FeedForward(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
                 nn.Linear(dim, hidden_dim),
-                nn.GeLU(),
+                nn.GELU(),
                 nn.Dropout(dropout),
                 nn.Linear(hidden_dim, dim),
                 nn.Dropout(dropout),
@@ -41,7 +41,7 @@ class Attention(nn.Module):
                 nn.Dropout(dropout),
                 )
 
-    def forward(self, x, mask=None): # x ~ [batch_size, (img_size // patch_size) + 1, dim] || mask ~ [batch_size, img_size // patch_size, img_size // patch_size]
+    def forward(self, x): # x ~ [batch_size, (img_size // patch_size) + 1, dim] || mask ~ [batch_size, img_size // patch_size, img_size // patch_size]
         b, n, dim, h = *x.shape, self.heads
         qkv = self.to_qkv(x).chunk(3, dim=-1) # tuple(3 items) item ~ [batch_size, (img_size) // patch_size) + 1, dim]
         q, k, v = map(lambda t: t.reshape(b, n, h, dim // h).transpose(1, 2), qkv)
@@ -53,38 +53,37 @@ class Attention(nn.Module):
         return out
 
 class ViT(nn.Module):
-    def __init__(self, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, channels=3, dropout=0., emb_dropout=0.)
-    super().__init__()
-    num_patches = (image_size // patch_size) ** 2
-    patch_dim = channels * patch_size ** 2
-    self.patch_size = patch_size
+    def __init__(self, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, channels=3, dropout=0., emb_dropout=0.):
+        super().__init__()
+        num_patches = (image_size // patch_size) ** 2
+        patch_dim = channels * patch_size ** 2
+        self.patch_size = patch_size
 
-    self.pos_embedding = nn.Parameter(torch.randn(1, num_patches+1, dim))
-    self.patch_to_embedding = nn.Linear(patch_dim, dim)
-    self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
-    self.dropout = nn.Dropout(emb_dropout)
+        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches+1, dim))
+        self.patch_to_embedding = nn.Linear(patch_dim, dim)
+        self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
+        self.dropout = nn.Dropout(emb_dropout)
 
-    self.transformer = Transformer(dim, depth, heads, mlp_dim, dropout)
-    self.to_cls_token = nn.Identity()
+        self.to_cls_token = nn.Identity()
 
-    self.mlp_head = nn.Sequential(
-            nn.LayerNorm(dim),
-            nn.Linear(dim, mlp_dim),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(mlp_dim, num_classes),
-            )
+        self.mlp_head = nn.Sequential(
+                nn.LayerNorm(dim),
+                nn.Linear(dim, mlp_dim),
+                nn.GELU(),
+                nn.Dropout(dropout),
+                nn.Linear(mlp_dim, num_classes),
+                )
 
-    self.proj = nn.Conv2d(in_channels=3, out_channels=patch_dim, kernel_size=self.patch_size, stride=self.patch_size)
+        self.proj = nn.Conv2d(in_channels=3, out_channels=patch_dim, kernel_size=self.patch_size, stride=self.patch_size)
 
-    self.layers = nn.ModuleList([])
-    for _ in range(depth):
-        self.layers.append([
-            Residual(Prenorm(dim, Attention(dim, heads=heads, dropout=dropout))),
-            Residual(Prenorm(dim, FeedForward(dim, mlp_dim, dropout=dropout))),
-            ])
+        self.layers = nn.ModuleList([])
+        for _ in range(depth):
+            self.layers.append(nn.ModuleList([
+                Residual(PreNorm(dim, Attention(dim, heads=heads, dropout=dropout))),
+                Residual(PreNorm(dim, FeedForward(dim, mlp_dim, dropout=dropout))),
+                ]))
 
-    def forward(self, img, mask=None): # img ~ [batch_size, channels, height, width] || mask ~ [batch_size, img_size // patch_size, img_size // patch_size]
+    def forward(self, img): # img ~ [batch_size, channels, height, width]
         x = self.proj(x).flatten(2).transpose(1, 2) # x ~ [batch_size, img_size // patch_size, patch_dim]
         x = self.patch_to_embedding(x) # x ~ [batch_size, img_size // patch_size, dim]
         b, n, _ = x.shape # b ~ batch_size || n ~ img_size // patch_size
@@ -95,7 +94,7 @@ class ViT(nn.Module):
         x = self.dropout(x) # x ~ [batch_size, (img_size // patch_size) + 1, dim]
 
         for attn, ff in self.layers:
-            x = attn(x, mask=mask)
+            x = attn(x)
             x = ff(x)
 
         x = self.to_cls_token(x[:, 0])
