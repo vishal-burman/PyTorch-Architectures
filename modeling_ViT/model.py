@@ -35,7 +35,7 @@ class Attention(nn.Module):
         self.heads = heads
         self.scale = dim ** -0.5
 
-        self.qkv = nn.Linear(dim, dim*3, bias=False)
+        self.to_qkv = nn.Linear(dim, dim*3, bias=False)
         self.to_out = nn.Sequential(
                 nn.Linear(dim, dim),
                 nn.Dropout(dropout),
@@ -48,7 +48,7 @@ class Attention(nn.Module):
         dots = (q @ k.transpose(-2, -1)) * self.scale
 
         attn = dots.softmax(dim=-1)
-        out = attn @ v
+        out = (attn @ v).transpose(1, 2).reshape(b, n, -1)
         out = self.to_out(out)
         return out
 
@@ -84,7 +84,7 @@ class ViT(nn.Module):
                 ]))
 
     def forward(self, img): # img ~ [batch_size, channels, height, width]
-        x = self.proj(x).flatten(2).transpose(1, 2) # x ~ [batch_size, img_size // patch_size, patch_dim]
+        x = self.proj(img).flatten(2).transpose(1, 2) # x ~ [batch_size, img_size // patch_size ^ 2, patch_dim]
         x = self.patch_to_embedding(x) # x ~ [batch_size, img_size // patch_size, dim]
         b, n, _ = x.shape # b ~ batch_size || n ~ img_size // patch_size
 
