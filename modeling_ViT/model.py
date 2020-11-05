@@ -26,8 +26,8 @@ class FeedForward(nn.Module):
                 nn.Linear(hidden_dim, dim),
                 nn.Dropout(dropout),
                 )
-    def forward(self, x):
-        return self.net(x)
+    def forward(self, x): # x ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
+        return self.net(x) # return ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
 
 class Attention(nn.Module):
     def __init__(self, dim, heads=8, dropout=0.):
@@ -41,15 +41,15 @@ class Attention(nn.Module):
                 nn.Dropout(dropout),
                 )
 
-    def forward(self, x): # x ~ [batch_size, (img_size // patch_size) + 1, dim] || mask ~ [batch_size, img_size // patch_size, img_size // patch_size]
+    def forward(self, x): # x ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim] 
         b, n, dim, h = *x.shape, self.heads
-        qkv = self.to_qkv(x).chunk(3, dim=-1) # tuple(3 items) item ~ [batch_size, (img_size) // patch_size) + 1, dim]
-        q, k, v = map(lambda t: t.reshape(b, n, h, dim // h).transpose(1, 2), qkv)
-        dots = (q @ k.transpose(-2, -1)) * self.scale
+        qkv = self.to_qkv(x).chunk(3, dim=-1) # tuple(3 items) item ~ [batch_size, (img_size) // patch_size) ** 2 + 1, dim]
+        q, k, v = map(lambda t: t.reshape(b, n, h, dim // h).transpose(1, 2), qkv) # q, k, v ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
+        dots = (q @ k.transpose(-2, -1)) * self.scale # dots ~ [batch_size, (img_size // patch_size) ** 2 + 1, (img_size // patch_size) ** 2 + 1]
 
-        attn = dots.softmax(dim=-1)
-        out = (attn @ v).transpose(1, 2).reshape(b, n, -1)
-        out = self.to_out(out)
+        attn = dots.softmax(dim=-1) # attn ~ [batch_size, (img_size // patch_size) ** 2 + 1, (img_size // patch_size) ** 2 + 1]
+        out = (attn @ v).transpose(1, 2).reshape(b, n, -1) # out ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
+        out = self.to_out(out) # out ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
         return out
 
 class ViT(nn.Module):
@@ -84,18 +84,17 @@ class ViT(nn.Module):
                 ]))
 
     def forward(self, img): # img ~ [batch_size, channels, height, width]
-        x = self.proj(img).flatten(2).transpose(1, 2) # x ~ [batch_size, img_size // patch_size ^ 2, patch_dim]
-        x = self.patch_to_embedding(x) # x ~ [batch_size, img_size // patch_size, dim]
-        b, n, _ = x.shape # b ~ batch_size || n ~ img_size // patch_size
+        x = self.proj(img).flatten(2).transpose(1, 2) # x ~ [batch_size, (img_size // patch_size) ** 2, patch_dim]
+        x = self.patch_to_embedding(x) # x ~ [batch_size, (img_size // patch_size) ** 2, dim]
+        b, n, _ = x.shape # b ~ batch_size || n ~ (img_size // patch_size) ^ 2
 
         cls_tokens = self.cls_token.expand(b, -1, -1) # cls_tokens ~ [batch_size, 1, dim]
-        x = torch.cat((cls_tokens, x), dim=1) # x ~ [batch_size, (img_size // patch_size) + 1, dim]
-        x += self.pos_embedding[:, :(n+1)] # x ~ [batch_size, (img_size // patch_size) + 1, dim]
-        x = self.dropout(x) # x ~ [batch_size, (img_size // patch_size) + 1, dim]
+        x = torch.cat((cls_tokens, x), dim=1) # x ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
+        x += self.pos_embedding[:, :(n+1)] # x ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
+        x = self.dropout(x) # x ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
 
         for attn, ff in self.layers:
-            x = attn(x)
-            x = ff(x)
-
-        x = self.to_cls_token(x[:, 0])
-        return self.mlp_head(x)
+            x = attn(x) # x ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
+            x = ff(x) # x ~ [batch_size, (img_size // patch_size) ** 2 + 1, dim]
+        x = self.to_cls_token(x[:, 0]) # x ~ [batch_size, dim] 
+        return self.mlp_head(x) # return ~ [batch_size, num_classes]
