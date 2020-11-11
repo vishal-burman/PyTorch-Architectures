@@ -1,6 +1,25 @@
 import torch
 import torch.nn as nn
 
+class GPT2Model(GPT2PretrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.wte = nn.Embedding(config.vocab_size, config.n_embd)
+        self.wpe = nn.Embedding(config.n_positions, config.n_embd)
+        self.drop = nn.Dropout(config.embd_pdrop)
+        # TODO
+        self.h = nn.ModuleList([Block(config.n_ctx, config, scale=True) for _ in range(config.n_layer)])
+        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
+        # TODO
+        self.init_weights()
+
+    def forward(self, input_ids, attention_mask):
+        input_shape = input_ids.size()
+        input_ids = input_ids.view(-1, input_shape[-1])
+        batch_size = input_ids.shape[0]
+
+
+
 class GPT2ForSequenceClassification(GPT2PretrainedModel):
     def __init__(self, config):
         super().__init__(config)
