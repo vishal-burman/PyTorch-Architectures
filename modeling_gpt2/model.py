@@ -15,6 +15,10 @@ class Block(nn.Module):
         attn_outputs = self.attn(self.ln_1(hidden_states), attention_mask=attention_mask)
         attn_output = attn_outputs[1:]
         hidden_states = attn_output + hidden_states # residual connection
+        feed_forward_hidden_states = self.mlp(self.ln_2(hidden_states))
+        hidden_states = hidden_states + feed_forward_hidden_states
+        outputs = [hidden_states] + outputs
+        return outputs
 
 class GPT2Model(GPT2PretrainedModel):
     def __init__(self, config):
