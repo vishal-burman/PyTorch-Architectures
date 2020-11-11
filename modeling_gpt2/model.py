@@ -1,6 +1,21 @@
 import torch
 import torch.nn as nn
 
+class Block(nn.Module):
+    def __init__(self, n_ctx, config, scale=False):
+        super().__init__()
+        hidden_size = config.n_embd
+        inner_dim = 4 * hidden_size
+        self.ln_1 = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
+        self.attn = Attention(hidden_size, n_ctx, config, scale)
+        self.ln_2 = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
+        self.mlp = MLP(inner_dim, config)
+    
+    def forward(self, hidden_states, attention_mask=None):
+        attn_outputs = self.attn(self.ln_1(hidden_states), attention_mask=attention_mask)
+        attn_output = attn_outputs[1:]
+        hidden_states = attn_output + hidden_states # residual connection
+
 class GPT2Model(GPT2PretrainedModel):
     def __init__(self, config):
         super().__init__(config)
