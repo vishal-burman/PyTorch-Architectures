@@ -25,6 +25,12 @@ class GPT2Model(GPT2PretrainedModel):
         hidden_states = inputs_embeds + position_embeds
         hidden_states = self.drop(hidden_states)
         output_shape = input_shape + (hidden_states.size(-1),)
+        for i, block in enumerate(self.h):
+            outputs = block(hidden_states, attention_mask=attention_mask)
+            hidden_states, present = outputs[:2]
+        hidden_states = self.ln_f(hidden_states)
+        hidden_states = hidden_states.view(*output_shape)
+        return tuple(v for v in [hidden_states] if v is not None)
 
 class GPT2ForSequenceClassification(GPT2PretrainedModel):
     def __init__(self, config):
