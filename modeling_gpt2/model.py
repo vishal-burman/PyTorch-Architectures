@@ -17,8 +17,14 @@ class GPT2Model(GPT2PretrainedModel):
         input_shape = input_ids.size()
         input_ids = input_ids.view(-1, input_shape[-1])
         batch_size = input_ids.shape[0]
-
-
+        position_ids = torch.arange(0, input_shape[-1], dtype=torch.long, device=input_ids.device).unsqueeze(0).view(-1, input_shape[-1])
+        attention_mask = attention_mask[:, None, None, :]
+        attention_mask = (1.0 - attention_mask) * -10000.0
+        inputs_embeds = self.wte(input_ids)
+        position_embeds = self.wpe(position_ids)
+        hidden_states = inputs_embeds + position_embeds
+        hidden_states = self.drop(hidden_states)
+        output_shape = input_shape + (hidden_states.size(-1),)
 
 class GPT2ForSequenceClassification(GPT2PretrainedModel):
     def __init__(self, config):
