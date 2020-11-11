@@ -16,7 +16,18 @@ class Attention(nn.Module):
         self.resid_dropout = nn.Dropout(config.resid_pdrop)
 
     def _attn(self, q, k, v, attention_mask=None):
-        pass
+        w = torch.matmul(q, k)
+        if self.scale:
+            w = w / (float(v.size(-1)) ** 0.5)
+        nd, ns = w.size(-2), w.size(-1)
+        mask = self.bias[:, :, ns - nd : ns, :ns]
+        w = torch.where(mask.bool(), w, self.masked_bias.to(w.dtype))
+        w = w + attention_mask
+        w = nn.Softmax(dim=-1)(w)
+        w = self.attn_dropout(w)
+        outputs = [torch.matmul(w, v)]
+        return outputs
+
 
 class MLP(nn.Module):
     def __init__(self, n_state, config):
