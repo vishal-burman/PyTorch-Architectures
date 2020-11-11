@@ -28,6 +28,31 @@ class Attention(nn.Module):
         outputs = [torch.matmul(w, v)]
         return outputs
 
+    def split_heads(self, x, k=False):
+        new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
+        x = x.view(*new_x_shape)
+        if k:
+            return x.permute(0, 2, 3, 1)
+        else:
+            return x.permute(0, 2, 1, 3)
+
+    def merge_heads(self, x):
+        x = x.permute(0, 2, 1, 3).contiguous()
+        new_x_shape = x.size()[:-2] + (x.size(-2) * x.size(-1),)
+        return x.view(*new_x_shape)
+
+    def forward(self, hidden_states, attention_mask=None):
+        query, key, value = self.c_attn(hidden_states).split(self.split_size, dim=2)
+        query = self.split_heads(query)
+        key = self.split_heads(key, k=True)
+        value = self.split_heads(value)
+        attn_outputs = self._attn(query, key, value, attention_mask)
+        a = attn_outputs[0]
+        a = self.merge_heads(a)
+        a = self.c_proj(a)
+        a = self.resid_dropout(a)
+        outputs = [a, present] + attn_outputs[1:]
+        return outputs
 
 class MLP(nn.Module):
     def __init__(self, n_state, config):
