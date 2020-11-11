@@ -24,6 +24,8 @@ GPT: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blo
 
 XLM: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_xlm/test_sample_XLM.ipynb
 
+GPT2: Work in progress...
+
 ## Miscellaneous:
 
 Knowledge Distillation: https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/Knowledge_Distillation.ipynb
