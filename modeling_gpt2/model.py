@@ -41,7 +41,7 @@ class Attention(nn.Module):
         new_x_shape = x.size()[:-2] + (x.size(-2) * x.size(-1),)
         return x.view(*new_x_shape)
 
-    def forward(self, hidden_states, attention_mask=None):
+    def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, seq_len, emb_dim] || attention_mask ~ [batch_size, seq_len]
         query, key, value = self.c_attn(hidden_states).split(self.split_size, dim=2)
         query = self.split_heads(query)
         key = self.split_heads(key, k=True)
@@ -78,7 +78,7 @@ class Block(nn.Module):
         self.ln_2 = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
         self.mlp = MLP(inner_dim, config)
     
-    def forward(self, hidden_states, attention_mask=None):
+    def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, seq_len, emb_dim] || attention_mask ~ [batch_size, seq_len]
         attn_outputs = self.attn(self.ln_1(hidden_states), attention_mask=attention_mask)
         attn_output = attn_outputs[1:]
         hidden_states = attn_output + hidden_states # residual connection
@@ -106,10 +106,10 @@ class GPT2Model(GPT2PretrainedModel):
         position_ids = torch.arange(0, input_shape[-1], dtype=torch.long, device=input_ids.device).unsqueeze(0).view(-1, input_shape[-1]) # position_ids ~ [1, seq_len]
         attention_mask = attention_mask[:, None, None, :] # attention_mask ~ [batch_size, 1, 1, seq_len]
         attention_mask = (1.0 - attention_mask) * -10000.0 # attention_mask ~ [batch_size, 1, 1, seq_len]
-        inputs_embeds = self.wte(input_ids)
-        position_embeds = self.wpe(position_ids)
-        hidden_states = inputs_embeds + position_embeds
-        hidden_states = self.drop(hidden_states)
+        inputs_embeds = self.wte(input_ids) # inputs_embeds ~ [batch_size, seq_len, emb_dim]
+        position_embeds = self.wpe(position_ids) # position_embeds ~ [batch_size, seq_len, emb_dim]
+        hidden_states = inputs_embeds + position_embeds # hidden_states ~ [batch_size, seq_len, emb_dim]
+        hidden_states = self.drop(hidden_states) # hidden_states ~ [batch_size, seq_len, emb_dim]
         output_shape = input_shape + (hidden_states.size(-1),)
         for i, block in enumerate(self.h):
             outputs = block(hidden_states, attention_mask=attention_mask)
