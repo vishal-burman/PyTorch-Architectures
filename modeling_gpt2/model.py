@@ -26,15 +26,7 @@ class Attention(nn.Module):
         w = nn.Softmax(dim=-1)(w)
         w = self.attn_dropout(w)
         outputs = [torch.matmul(w, v)]
-        return outputs
-
-    def split_heads(self, x, k=False):
-        new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
-        x = x.view(*new_x_shape)
-        if k:
-            return x.permute(0, 2, 3, 1)
-        else:
-            return x.permute(0, 2, 1, 3)
+        return outputs 
 
     def merge_heads(self, x):
         x = x.permute(0, 2, 1, 3).contiguous()
@@ -42,10 +34,11 @@ class Attention(nn.Module):
         return x.view(*new_x_shape)
 
     def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, seq_len, emb_dim] || attention_mask ~ [batch_size, seq_len]
-        query, key, value = self.c_attn(hidden_states).split(self.split_size, dim=2)
-        query = self.split_heads(query)
-        key = self.split_heads(key, k=True)
-        value = self.split_heads(value)
+        bs, seq_len = hidden_states.shape[:2]
+        query, key, value = self.c_attn(hidden_states).split(self.split_size, dim=2) # query, key, value ~ [batch_size, seq_len, emb_dim]
+        query = query.reshape(bs, seq_len, self.n_head, -1) # query ~ [batch_size, seq_len, n_head, emb_dim // n_head]
+        key = key.reshape(bs, seq_len, -1, self.n_head) # key ~ [batch_size, seq_len, emb_dim // n_head, n_head]
+        value = value.reshape(bs, seq_len, self.n_head, -1) # value ~ [batch_size, seq_len, n_head, emb_dim // n_head]
         attn_outputs = self._attn(query, key, value, attention_mask)
         a = attn_outputs[0]
         a = self.merge_heads(a)
