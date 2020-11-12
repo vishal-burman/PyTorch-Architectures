@@ -99,13 +99,13 @@ class GPT2Model(GPT2PretrainedModel):
         # TODO
         self.init_weights()
 
-    def forward(self, input_ids, attention_mask):
-        input_shape = input_ids.size()
-        input_ids = input_ids.view(-1, input_shape[-1])
-        batch_size = input_ids.shape[0]
-        position_ids = torch.arange(0, input_shape[-1], dtype=torch.long, device=input_ids.device).unsqueeze(0).view(-1, input_shape[-1])
-        attention_mask = attention_mask[:, None, None, :]
-        attention_mask = (1.0 - attention_mask) * -10000.0
+    def forward(self, input_ids, attention_mask): # input_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len]
+        input_shape = input_ids.size() # input_shape ~ [batch_size, seq_len]
+        input_ids = input_ids.view(-1, input_shape[-1]) # input_ids ~ [batch_size, seq_len] TODO needed?
+        batch_size = input_ids.shape[0] 
+        position_ids = torch.arange(0, input_shape[-1], dtype=torch.long, device=input_ids.device).unsqueeze(0).view(-1, input_shape[-1]) # position_ids ~ [1, seq_len]
+        attention_mask = attention_mask[:, None, None, :] # attention_mask ~ [batch_size, 1, 1, seq_len]
+        attention_mask = (1.0 - attention_mask) * -10000.0 # attention_mask ~ [batch_size, 1, 1, seq_len]
         inputs_embeds = self.wte(input_ids)
         position_embeds = self.wpe(position_ids)
         hidden_states = inputs_embeds + position_embeds
@@ -128,7 +128,7 @@ class GPT2ForSequenceClassification(GPT2PretrainedModel):
         # TODO
         self.init_weights()
 
-    def forward(self, input_ids, attention_mask):
+    def forward(self, input_ids, attention_mask): # inputs_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len]
         transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask)
         hidden_states = transformer_outputs[0]
         logits = self.score(hidden_states)
