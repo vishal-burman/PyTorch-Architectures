@@ -1,3 +1,4 @@
+import pdb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -23,7 +24,7 @@ class Attention(nn.Module):
             w = w / (float(v.size(-1)) ** 0.5) # w ~ [batch_size, n_head, seq_len, seq_len]
         nd, ns = w.size(-2), w.size(-1) # TODO needed?
         mask = self.bias[:, :, ns - nd : ns, :ns] # mask ~ [1, 1, seq_len, seq_len]
-        w = w * b + self.masked_bias * (1 - b) # w ~ [batch_size, n_head, seq_len, seq_len]
+        w = w * mask + self.masked_bias * (1 - mask) # w ~ [batch_size, n_head, seq_len, seq_len]
         w = w + attention_mask # w ~ [batch_size, n_head, seq_len, seq_len]
         w = self.attn_dropout(F.softmax(w, dim=-1)) # w ~ [batch_size, n_head, seq_len, seq_len]
         outputs = [torch.matmul(w, v)] # outputs [[batch_size, n_head, seq_len, emb_size // n_head]]
@@ -86,6 +87,7 @@ class GPT2Model(nn.Module):
         self.ln_f = nn.LayerNorm(768, eps=1e-5)
 
     def forward(self, input_ids, attention_mask): # input_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len]
+        #pdb.set_trace()
         input_shape = input_ids.size() # input_shape ~ [batch_size, seq_len]
         input_ids = input_ids.view(-1, input_shape[-1]) # input_ids ~ [batch_size, seq_len] TODO needed?
         batch_size = input_ids.shape[0] 
