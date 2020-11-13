@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils import Conv1D, gelu_new
 
 class Attention(nn.Module):
     def __init__(self, nx, n_ctx, config, scale=False):
@@ -48,7 +49,7 @@ class MLP(nn.Module):
         nx = config.n_embd
         self.c_fc = Conv1D(n_state, nx)
         self.c_proj = Conv1D(nx, n_state)
-        self.act = ACT2FN[config.activation_function]
+        self.act = gelu_new
         self.dropout = nn.Dropout(config.resid_pdrop)
     
     def forward(self, x): # x ~ [batch_size, seq_len, emb_size]
@@ -75,7 +76,7 @@ class Block(nn.Module):
         outputs = [hidden_states] # outputs [[batch_size, seq_len, emb_size]]
         return outputs
 
-class GPT2Model(GPT2PretrainedModel):
+class GPT2Model(nn.Module):
     def __init__(self, config):
         super().__init__(config)
         self.wte = nn.Embedding(config.vocab_size, config.n_embd)
@@ -105,7 +106,7 @@ class GPT2Model(GPT2PretrainedModel):
         hidden_states = hidden_states.view(*output_shape) # hidden_states ~ [batch_size, seq_len, emb_size] TODO needed?
         return tuple(v for v in [hidden_states] if v is not None)
 
-class GPT2ForSequenceClassification(GPT2PretrainedModel):
+class GPT2ForSequenceClassification(GPT2Model):
     def __init__(self, config):
         super().__init__(config)
         self.num_labels = config.num_labels
