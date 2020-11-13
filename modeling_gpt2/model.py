@@ -4,14 +4,13 @@ import torch.nn.functional as F
 from utils import Conv1D, gelu_new
 
 class Attention(nn.Module):
-    def __init__(self, nx, n_ctx, scale=False):
+    def __init__(self, nx, n_ctx):
         super().__init__()
         n_state = nx
         self.register_buffer("bias", torch.tril(torch.ones((n_ctx, n_ctx), dtype=torch.uint8)).view(1, 1, n_ctx, n_ctx))
         self.register_buffer("masked_bias", torch.tensor(-1e4))
         self.n_head = 12
         self.split_size = n_state
-        self.scale = scale
         self.c_attn = Conv1D(3 * n_state, nx)
         self.c_proj = Conv1D(n_state, nx)
         self.attn_dropout = nn.Dropout(0.1)
@@ -19,8 +18,7 @@ class Attention(nn.Module):
 
     def _attn(self, q, k, v, attention_mask=None): # q, v ~ [batch_size, n_head, seq_len, emb_size // n_head] || k ~ [batch_size, n_head, emb_size // n_head, seq_len]
         w = torch.matmul(q, k) # w ~ [batch_size, n_head, seq_len, seq_len]
-        if self.scale:
-            w = w / (float(v.size(-1)) ** 0.5) # w ~ [batch_size, n_head, seq_len, seq_len]
+        w = w / (float(v.size(-1)) ** 0.5) # w ~ [batch_size, n_head, seq_len, seq_len]
         nd, ns = w.size(-2), w.size(-1) # TODO needed?
         mask = self.bias[:, :, ns - nd : ns, :ns] # mask ~ [1, 1, seq_len, seq_len]
         w = w * mask + self.masked_bias * (1 - mask) # w ~ [batch_size, n_head, seq_len, seq_len]
@@ -58,12 +56,12 @@ class MLP(nn.Module):
         return self.dropout(h2)
 
 class Block(nn.Module):
-    def __init__(self, n_ctx, scale=False):
+    def __init__(self, n_ctx):
         super().__init__()
         hidden_size = 768
         inner_dim = 4 * hidden_size
         self.ln_1 = nn.LayerNorm(hidden_size, eps=1e-5)
-        self.attn = Attention(hidden_size, n_ctx, scale)
+        self.attn = Attention(hidden_size, n_ctx)
         self.ln_2 = nn.LayerNorm(hidden_size, eps=1e-5)
         self.mlp = MLP(inner_dim)
     
@@ -82,7 +80,7 @@ class GPT2Classify(nn.Module):
         self.wte = nn.Embedding(50257, 768)
         self.wpe = nn.Embedding(1024, 768)
         self.drop = nn.Dropout(0.1)
-        self.h = nn.ModuleList([Block(1024, scale=True) for _ in range(3)])
+        self.h = nn.ModuleList([Block(1024) for _ in range(3)])
         self.ln_f = nn.LayerNorm(768, eps=1e-5)
         self.score = nn.Linear(768, 2, bias=False)
 
