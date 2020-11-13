@@ -76,7 +76,7 @@ class Block(nn.Module):
         outputs = [hidden_states] # outputs [[batch_size, seq_len, emb_size]]
         return outputs
 
-class GPT2Model(nn.Module):
+class GPT2Classify(nn.Module):
     def __init__(self):
         super().__init__()
         self.wte = nn.Embedding(50257, 768)
@@ -84,8 +84,9 @@ class GPT2Model(nn.Module):
         self.drop = nn.Dropout(0.1)
         self.h = nn.ModuleList([Block(1024, scale=True) for _ in range(3)])
         self.ln_f = nn.LayerNorm(768, eps=1e-5)
+        self.score = nn.Linear(768, 2, bias=False)
 
-    def forward(self, input_ids, attention_mask): # input_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len]
+    def forward(self, input_ids, attention_mask, labels=None): # input_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len]
         input_shape = input_ids.size() # input_shape ~ [batch_size, seq_len]
         input_ids = input_ids.view(-1, input_shape[-1]) # input_ids ~ [batch_size, seq_len] TODO needed?
         batch_size = input_ids.shape[0] 
@@ -102,24 +103,11 @@ class GPT2Model(nn.Module):
             hidden_states = outputs[0] # hidden_states ~ [batch_size, seq_len, emb_size]
         hidden_states = self.ln_f(hidden_states) # hidden_states ~ [batch_size, seq_len, emb_size]
         hidden_states = hidden_states.view(*output_shape) # hidden_states ~ [batch_size, seq_len, emb_size] TODO needed?
-        return tuple(v for v in [hidden_states] if v is not None)
-
-class GPT2ForSequenceClassification(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.num_labels = 2
-        self.transformer = GPT2Model()
-        self.score = nn.Linear(768, self.num_labels, bias=False)
-
-    def forward(self, input_ids, attention_mask, labels=None): # inputs_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len] || labels ~ [batch_size, 1]
-        transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask) # transformer_outputs ~ ([batch_size, seq_len, emb_size])
-        hidden_states = transformer_outputs[0] # hidden_states ~ [batch_size, seq_len, emb_size]
-        logits = self.score(hidden_states) # logits ~ [batch_size, seq_len, num_labels]
-        batch_size, sequence_length = input_ids.shape[:2]
-        pooled_logits = logits[range(batch_size), -1] # pooled_logits ~ [batch_size, num_labels]
+        logits = self.score(hidden_states) # logits ~ [batch_size, seq_len, num_classes]
+        pooled_logits = logits[range(input_ids.size(0)), -1] # pooled_logits ~ [batch_size, num_classes]
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
-            loss = loss_fct(pooled_logits.view(-1, self.num_labels), labels.view(-1))
-        output = (pooled_logits,) + transformer_outputs[1:] # output ~ ([batch_size, num_labels])
+            loss = loss_fct(pooled_logits.view(-1, 2), labels.view(-1))
+        output = (pooled_logits,) # output ~ ([batch_size, num_classes])
         return ((loss,) + output) if loss is not None else output # return ~ (loss, [batch_size, num_labels])
