@@ -4,18 +4,18 @@ import torch.nn.functional as F
 from utils import Conv1D, gelu_new
 
 class Attention(nn.Module):
-    def __init__(self, nx, n_ctx, config, scale=False):
+    def __init__(self, nx, n_ctx, scale=False):
         super().__init__()
         n_state = nx
         self.register_buffer("bias", torch.tril(torch.ones((n_ctx, n_ctx), dtype=torch.uint8)).view(1, 1, n_ctx, n_ctx))
         self.register_buffer("masked_bias", torch.tensor(-1e4))
-        self.n_head = config.n_head
+        self.n_head = 12
         self.split_size = n_state
         self.scale = scale
         self.c_attn = Conv1D(3 * n_state, nx)
         self.c_proj = Conv1D(n_state, nx)
-        self.attn_dropout = nn.Dropout(config.attn_pdrop)
-        self.resid_dropout = nn.Dropout(config.resid_pdrop)
+        self.attn_dropout = nn.Dropout(0.1)
+        self.resid_dropout = nn.Dropout(0.1)
 
     def _attn(self, q, k, v, attention_mask=None): # q, v ~ [batch_size, n_head, seq_len, emb_size // n_head] || k ~ [batch_size, n_head, emb_size // n_head, seq_len]
         w = torch.matmul(q, k) # w ~ [batch_size, n_head, seq_len, seq_len]
@@ -44,13 +44,13 @@ class Attention(nn.Module):
         return outputs
 
 class MLP(nn.Module):
-    def __init__(self, n_state, config):
+    def __init__(self, n_state):
         super().__init__()
-        nx = config.n_embd
+        nx = 768
         self.c_fc = Conv1D(n_state, nx)
         self.c_proj = Conv1D(nx, n_state)
         self.act = gelu_new
-        self.dropout = nn.Dropout(config.resid_pdrop)
+        self.dropout = nn.Dropout(0.1)
     
     def forward(self, x): # x ~ [batch_size, seq_len, emb_size]
         h = self.act(self.c_fc(x)) # h ~ [batch_size, seq_len, 4 * emb_size]
@@ -58,14 +58,14 @@ class MLP(nn.Module):
         return self.dropout(h2)
 
 class Block(nn.Module):
-    def __init__(self, n_ctx, config, scale=False):
+    def __init__(self, n_ctx, scale=False):
         super().__init__()
-        hidden_size = config.n_embd
+        hidden_size = 768
         inner_dim = 4 * hidden_size
-        self.ln_1 = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
-        self.attn = Attention(hidden_size, n_ctx, config, scale)
-        self.ln_2 = nn.LayerNorm(hidden_size, eps=config.layer_norm_epsilon)
-        self.mlp = MLP(inner_dim, config)
+        self.ln_1 = nn.LayerNorm(hidden_size, eps=1e-5)
+        self.attn = Attention(hidden_size, n_ctx, scale)
+        self.ln_2 = nn.LayerNorm(hidden_size, eps=1e-5)
+        self.mlp = MLP(inner_dim)
     
     def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, seq_len, emb_dim] || attention_mask ~ [batch_size, 1, 1, seq_len]
         attn_outputs = self.attn(self.ln_1(hidden_states), attention_mask=attention_mask) # attn_outputs ~ [[batch_size, seq_len, emb_dim]]
@@ -77,15 +77,13 @@ class Block(nn.Module):
         return outputs
 
 class GPT2Model(nn.Module):
-    def __init__(self, config):
-        super().__init__(config)
-        self.wte = nn.Embedding(config.vocab_size, config.n_embd)
-        self.wpe = nn.Embedding(config.n_positions, config.n_embd)
-        self.drop = nn.Dropout(config.embd_pdrop)
-        self.h = nn.ModuleList([Block(config.n_ctx, config, scale=True) for _ in range(config.n_layer)])
-        self.ln_f = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
-        # TODO
-        self.init_weights()
+    def __init__(self):
+        super().__init__()
+        self.wte = nn.Embedding(50257, 768)
+        self.wpe = nn.Embedding(1024, 768)
+        self.drop = nn.Dropout(0.1)
+        self.h = nn.ModuleList([Block(1024, scale=True) for _ in range(3)])
+        self.ln_f = nn.LayerNorm(768, eps=1e-5)
 
     def forward(self, input_ids, attention_mask): # input_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len]
         input_shape = input_ids.size() # input_shape ~ [batch_size, seq_len]
@@ -106,22 +104,19 @@ class GPT2Model(nn.Module):
         hidden_states = hidden_states.view(*output_shape) # hidden_states ~ [batch_size, seq_len, emb_size] TODO needed?
         return tuple(v for v in [hidden_states] if v is not None)
 
-class GPT2ForSequenceClassification(GPT2Model):
-    def __init__(self, config):
-        super().__init__(config)
-        self.num_labels = config.num_labels
-        self.transformer = GPT2Model
-        self.score = nn.Linear(config.n_embd, self.num_labels, bias=False)
-        # TODO
-        self.init_weights()
+class GPT2ForSequenceClassification(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.num_labels = 2
+        self.transformer = GPT2Model()
+        self.score = nn.Linear(768, self.num_labels, bias=False)
 
-    def forward(self, input_ids, attention_mask): # inputs_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len]
+    def forward(self, input_ids, attention_mask, labels=None): # inputs_ids ~ [batch_size, seq_len] || attention_mask ~ [batch_size, seq_len] || labels ~ [batch_size, 1]
         transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask) # transformer_outputs ~ ([batch_size, seq_len, emb_size])
         hidden_states = transformer_outputs[0] # hidden_states ~ [batch_size, seq_len, emb_size]
         logits = self.score(hidden_states) # logits ~ [batch_size, seq_len, num_labels]
         batch_size, sequence_length = input_ids.shape[:2]
-        sequence_lengths = torch.ne(input_ids, self.config.pad_token_id).sum(-1) - 1
-        pooled_logits = logits[range(batch_size), sequence_lengths] # pooled_logits ~ [batch_size, num_labels]
+        pooled_logits = logits[range(batch_size), -1] # pooled_logits ~ [batch_size, num_labels]
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
