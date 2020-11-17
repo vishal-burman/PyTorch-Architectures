@@ -139,30 +139,20 @@ class XLMPretrainedModel(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-
 class XLMModel(XLMPretrainedModel):
     def __init__(self, config):
         super().__init__(config)
-
-        # dictionary / languages
         self.n_words = config.vocab_size
         self.pad_index = config.pad_index
-
-        # model parameters 
         self.dim = config.emb_dim 
         self.hidden_dim = self.dim * 4 
         self.n_heads = config.n_heads
         self.n_layers = config.n_layers
         self.dropout = config.dropout
         self.attention_dropout = config.attention_dropout
-        assert self.dim % self.n_heads == 0 , "transformer dim must be a multiple of n_heads"
-
-        # embeddings
         self.position_embeddings = nn.Embedding(config.max_position_embeddings, self.dim)
         self.embeddings = nn.Embedding(self.n_words, self.dim, padding_idx=self.pad_index)
         self.layer_norm_emb = nn.LayerNorm(self.dim, eps=config.layer_norm_eps)
-
-        # transformer layers
         self.attentions = nn.ModuleList()
         self.layer_norm1 = nn.ModuleList()
         self.ffns = nn.ModuleList()
@@ -177,77 +167,25 @@ class XLMModel(XLMPretrainedModel):
         self.init_weights()
         self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand(1, -1))
 
-    def forward(
-            self,
-            input_ids=None, # input_ids ~ [batch_size, max_len]
-            attention_mask=None, # attention_mask ~ [batch_size, max_len]
-            token_type_ids=None, # token_type_ids ~ None
-            position_ids=None, # position_ids ~ None
-            lengths=None, # lengths ~ None
-            inputs_embeds=None, # inputs_embeds ~ None
-            ):
- 
-        # input_ids ~ [batch_size, max_len] 
-        # bs ~ batch_size  || slen ~ max_len
-        bs, slen = input_ids.size()
-
-        # device ~ cuda or cpu(depends on user)
-        device = input_ids.device if input_ids is not None else inputs_embeds.device
-
-        # lengths ~ [max_len - (count of pad tokens)]  || len(lengths) == batch_size
-        lengths = (input_ids != self.pad_index).sum(dim=1).long()
-            
-        # check inputs
-        assert lengths.size(0) == bs
-        assert lengths.max().item() <= slen
-
-        # mask ~ [batch_size, max_len]
-        # attn_mask ~ [batch_size, max_len]
-        mask, attn_mask = attention_mask, attention_mask 
-        
-        # position_ids
-        position_ids = self.position_ids[:, :slen]
-
-        # embeddings
-        # inputs_embeds ~ [batch_size, max_len, emb_dim]
-        inputs_embeds = self.embeddings(input_ids)
-
-        # tensor ~ [batch_size, max_len, emb_size]
-        tensor = inputs_embeds + self.position_embeddings(position_ids).expand_as(inputs_embeds)
-        # tensor ~ [batch_size, max_len, emb_size]
-        tensor = self.layer_norm_emb(tensor)
-        # tensor ~ [batch_size, max_len, emb_size]
-        tensor = F.dropout(tensor, p=self.dropout, training=self.training)
-        # tensor ~ [batch_size, max_len, emb_size]
-        tensor *= mask.unsqueeze(-1).to(tensor.dtype)
-
-        # transformer layers
-        for i in range(self.n_layers):
-
-            # self attention
-            # attn_outputs ~ ([batch_size, max_len, emb_size])
-            attn_outputs = self.attentions[i](
-                    tensor, # tensor ~ [batch_size, max_len, emb_size]
-                    attn_mask, # attn_mask ~ [batch_size, max_len]
-                    )
-
-            # attn ~ [batch_size, max_len, emb_size]
-            attn = attn_outputs[0]
-            # attn ~ [batch_size, max_len, emb_size]
-            attn = F.dropout(attn, p=self.dropout, training=self.training)
-            # tensor ~ [batch_size, max_len, emb_size]
-            tensor = tensor + attn
-            # tensor ~ [batch_size, max_len, emb_size]
-            tensor = self.layer_norm1[i](tensor)
-
-            # FFN
-            # tensor ~ [batch_size, max_len, emb_size]
-            tensor = tensor + self.ffns[i](tensor)
-            # tensor ~ [batch_size, max_len, emb_size]
-            tensor = self.layer_norm2[i](tensor)
-            # tensor ~ [batch_size, max_len, emb_size]
-            tensor *= mask.unsqueeze(-1).to(dtype=tensor.dtype)
-
+    def forward(self, input_ids=None, attention_mask=None): # input_ids, attention_mask ~ [batch_size, max_len]
+        bs, slen = input_ids.size() # bs ~ batch_size || slen ~ max_len
+        lengths = (input_ids != self.pad_index).sum(dim=1).long() # lengths ~ [max_len - (count of pad_tokens)]  & len(lengths) ~ batch_size
+        mask, attn_mask = attention_mask, attention_mask # mask, attn_mask ~ [batch_size, max_len] 
+        position_ids = self.position_ids[:, :slen] # position_ids ~ [batch_size, max_len]
+        inputs_embeds = self.embeddings(input_ids) # inputs_embeds ~ [batch_size, max_len, emb_dim]
+        tensor = inputs_embeds + self.position_embeddings(position_ids).expand_as(inputs_embeds) # tensor ~ [batch_size, max_len, emb_dim]
+        tensor = self.layer_norm_emb(tensor) # tensor ~ [batch_size, max_len, emb_dim]
+        tensor = F.dropout(tensor, p=self.dropout, training=self.training) # tensor ~ [batch_size, max_len, emb_dim]
+        tensor *= mask.unsqueeze(-1).to(tensor.dtype) # tensor ~ [batch_size, max_len, emb_dim]
+        for i in range(self.n_layers): 
+            attn_outputs = self.attentions[i](tensor,  attn_mask) # attn_outputs ~ ([batch_size, max_len, emb_size])
+            attn = attn_outputs[0] # attn ~ [batch_size, max_len, emb_size]
+            attn = F.dropout(attn, p=self.dropout, training=self.training) # attn ~ [batch_size, max_len, emb_size]
+            tensor = tensor + attn # tensor ~ [batch_size, max_len, emb_size]
+            tensor = self.layer_norm1[i](tensor) # tensor ~ [batch_size, max_len, emb_size]
+            tensor = tensor + self.ffns[i](tensor) # tensor ~ [batch_size, max_len, emb_size]
+            tensor = self.layer_norm2[i](tensor) # tensor ~ [batch_size, max_len, emb_size]
+            tensor *= mask.unsqueeze(-1).to(dtype=tensor.dtype) # tensor ~ [batch_size, max_len, emb_size]
         return tuple(v for v in [tensor] if v is not None)
 
 class XLMPredLayer(nn.Module):
