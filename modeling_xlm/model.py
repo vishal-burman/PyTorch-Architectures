@@ -97,22 +97,13 @@ class TransformerFFN(nn.Module):
         self.lin_1 = nn.Linear(in_dim, dim_hidden)
         self.lin_2 = nn.Linear(dim_hidden, out_dim)
         self.act = gelu if config.gelu_activation else F.relu
-        self.seq_len_dim = 1
 
-    def forward(
-            self, 
-            input, # input ~ [batch_size, max_len, emb_size]
-            ):
-        # x ~ [batch_size, max_len, dim_hidden] where dim_hidden = emb_dim * 4
-        x = self.lin_1(input)
-        # x ~ [batch_size, max_len, dim_hidden]
-        x = self.act(x)
-        # x ~ [batch_size, max_len, emb_dim]
-        x = self.lin_2(x)
-        # x ~ [batch_size, max_len, emb_dim]
-        x = F.dropout(x, p=self.dropout, training=self.training)
+    def forward(self, input): # input ~ [batch_size, max_len, emb_size]
+        x = self.lin_1(input) # x ~ [batch_size, max_len, dim_hidden] where dim_hidden = emb_dim * 4
+        x = self.act(x) # x ~ [batch_size, max_len, dim_hidden]
+        x = self.lin_2(x) # x ~ [batch_size, max_len, emb_dim]
+        x = F.dropout(x, p=self.dropout, training=self.training) # x ~ [batch_size, max_len, emb_dim]
         return x 
-
 
 class XLMModel(nn.Module):
     def __init__(self, config):
