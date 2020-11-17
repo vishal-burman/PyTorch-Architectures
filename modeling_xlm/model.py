@@ -251,33 +251,21 @@ class XLMModel(XLMPretrainedModel):
         return tuple(v for v in [tensor] if v is not None)
 
 class XLMPredLayer(nn.Module):
-    """
-    Prediction layer
-    """
     def __init__(self, config):
         super().__init__()
-        self.asm = config.asm
         self.n_words = config.vocab_size
         self.pad_index = config.pad_index
         dim = config.emb_dim
-
         self.proj = nn.Linear(dim, self.n_words, bias=True)
 
-    def forward(self, 
-            x, # x ~ [batch_size, max_len, emb_size]
-            y=None, # y ~ [batch_size, max_len]
-            ):
-        """ Compute the loss and optionally the scores"""
+    def forward(self, x, y=None): #x ~ [batch_size, max_len, emb_size] || y ~ [batch_size, max_len]
         outputs = ()
-        # scores ~ [batch_size, max_len, vocab_size]
-        scores = self.proj(x)
-        # outputs = ([batch_size, max_len, vocab_size])
-        outputs = (scores,) + outputs
+        scores = self.proj(x) # scores ~ [batch_size, max_len, vocab_size]
+        outputs = (scores,) + outputs # outputs ~ ([batch_size, max_len, vocab_size])
         if y is not None:
             loss = F.cross_entropy(scores.view(-1, self.n_words), y.view(-1), reduction='elementwise_mean')
             outputs = (loss,) + outputs
-        # outputs ~ (loss, [batch_size, max_len, vocab_size])
-        return outputs
+        return outputs # outputs ~ (loss, [batch_size, max_len, vocab_size])
 
 class XLMWithLMHeadModel(XLMPretrainedModel):
     def __init__(self, config):
