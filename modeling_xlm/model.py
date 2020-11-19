@@ -1,20 +1,12 @@
-import math
-import itertools
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn import CrossEntropyLoss
 from config_xlm import XLMConfig
 config = XLMConfig()
-gelu = F.gelu
 
 class MultiHeadAttention(nn.Module):
-    
-    NEW_ID = itertools.count()
-
     def __init__(self, n_heads, dim, config):
         super().__init__()
-        self.layer_id = next(MultiHeadAttention.NEW_ID)
         self.dim = dim
         self.n_heads = n_heads
         self.dropout = config.attention_dropout
@@ -29,26 +21,18 @@ class MultiHeadAttention(nn.Module):
         n_heads = self.n_heads
         dim_per_head = self.dim // n_heads
         mask_reshape = (bs, 1, 1, klen)
-
-        def shape(x):
-            """ projection """
-            return x.view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2)
-
-        def unshape(x):
-            """ compute context """
-            return x.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * dim_per_head)
         
-        q = shape(self.q_lin(input)) # q ~ [batch_size, n_heads, max_len, dim_per_head]
-        k = shape(self.k_lin(input)) # k ~ [batch_size, n_heads, max_len, dim_per_head]
-        v = shape(self.v_lin(input)) # v ~ [batch_size, n_heads, max_len, dim_per_head]
-        q = q / math.sqrt(dim_per_head) # q ~ [batch_size, n_heads, max_len, dim_per_head]
+        q = self.q_lin(input).view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2) # q ~ [batch_size, n_heads, max_len, dim_per_head]
+        k = self.k_lin(input).view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2) # k ~ [batch_size, n_heads, max_len, dim_per_head]
+        v = self.v_lin(input).view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2) # v ~ [batch_size, n_heads, max_len, dim_per_head]
+        q = q / torch.sqrt(dim_per_head) # q ~ [batch_size, n_heads, max_len, dim_per_head]
         scores = torch.matmul(q, k.transpose(2, 3)) # scores ~ [batch_size, n_heads, max_len, max_len]
         mask = (mask == 0).view(mask_reshape).expand_as(scores) # mask ~ [batch_size, n_heads, max_len, max_len]
         scores.masked_fill_(mask, -float("inf"))
         weights = F.softmax(scores.float(), dim=-1).type_as(scores) # weights ~ [batch_size, n_heads, max_len, max_len]
         weights = F.dropout(weights, p=self.dropout, training=self.training) # weights ~ [batch_size, n_heads, max_len, max_len]
         context = torch.matmul(weights, v) # context ~ [batch_size, n_heads, max_len, dim_per_head]
-        context = unshape(context) # context = [batch_size, 2, n_heads * dim_per_head]
+        context = context.transpose(1, 2).contiguous().view(bs, -1, self.n_heads * dim_per_head) # context = [batch_size, 2, n_heads * dim_per_head]
         outputs = (self.out_lin(context),) # outputs ~ ([batch_size, max_len, emb_dim])
         return outputs # outputs ~ ([batch_size, max_len, emb_size])
 
@@ -58,7 +42,7 @@ class TransformerFFN(nn.Module):
         self.dropout = config.dropout
         self.lin_1 = nn.Linear(in_dim, dim_hidden)
         self.lin_2 = nn.Linear(dim_hidden, out_dim)
-        self.act = gelu if config.gelu_activation else F.relu
+        self.act = F.gelu
 
     def forward(self, input): # input ~ [batch_size, max_len, emb_size]
         x = self.lin_1(input) # x ~ [batch_size, max_len, dim_hidden] where dim_hidden = emb_dim * 4
