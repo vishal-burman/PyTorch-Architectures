@@ -154,31 +154,13 @@ class Block(nn.Module):
         self.mlp = MLP(4*nx, config)
         self.ln_2 = nn.LayerNorm(nx, eps=config.layer_norm_epsilon)
 
-    def forward(self, 
-            x, # x ~ [batch_size, max_len, emb_size]
-            attention_mask=None, # attention_mask ~ [batch_size, 1, 1, max_len]
-            head_mask=None, # head_mask ~ None 
-            output_attentions=False):
-
-        # attn_outputs ~ [[batch_size, max_len, 768]] where emb_size = 768
-        attn_outputs = self.attn(
-                x,
-                attention_mask=attention_mask,
-                head_mask=head_mask,
-                output_attentions=output_attentions,
-                )
-        # a ~ [batch_size, max_len, 768]
-        a = attn_outputs[0]
-
-        # n ~ [batch_size, max_len, 768]
-        n = self.ln_1(x + a)
-        # m ~ [batch_size, max_len, 768]
-        m = self.mlp(n)
-        # h ~ [batch_size, max_len, 768]
-        h = self.ln_2(n + m)
-
-        # outputs ~ [[batch_size, max_len, 768]]
-        outputs = [h] + attn_outputs[1:]
+    def forward(self, x, attention_mask=None):
+        attn_outputs = self.attn(x, attention_mask=attention_mask) # attn_outputs ~ [[batch_size, max_len, 768]] where emb_size = 768
+        a = attn_outputs[0] # a ~ [batch_size, max_len, 768]
+        n = self.ln_1(x + a) # n ~ [batch_size, max_len, 768]
+        m = self.mlp(n) # m ~ [batch_size, max_len, 768]
+        h = self.ln_2(n + m) # h ~ [batch_size, max_len, 768]
+        outputs = [h] + attn_outputs[1:] # outputs ~ [[batch_size, max_len, 768]]
         return outputs
 
 class OpenAIGPTModel(nn.Module):
