@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -25,7 +26,7 @@ class MultiHeadAttention(nn.Module):
         q = self.q_lin(input).view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2) # q ~ [batch_size, n_heads, max_len, dim_per_head]
         k = self.k_lin(input).view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2) # k ~ [batch_size, n_heads, max_len, dim_per_head]
         v = self.v_lin(input).view(bs, -1, self.n_heads, dim_per_head).transpose(1, 2) # v ~ [batch_size, n_heads, max_len, dim_per_head]
-        q = q / torch.sqrt(dim_per_head) # q ~ [batch_size, n_heads, max_len, dim_per_head]
+        q = q / math.sqrt(dim_per_head) # q ~ [batch_size, n_heads, max_len, dim_per_head]
         scores = torch.matmul(q, k.transpose(2, 3)) # scores ~ [batch_size, n_heads, max_len, max_len]
         mask = (mask == 0).view(mask_reshape).expand_as(scores) # mask ~ [batch_size, n_heads, max_len, max_len]
         scores.masked_fill_(mask, -float("inf"))
@@ -53,7 +54,7 @@ class TransformerFFN(nn.Module):
 
 class XLMModel(nn.Module):
     def __init__(self, config):
-        super().__init__(config)
+        super().__init__()
         self.n_words = config.vocab_size
         self.pad_index = config.pad_index
         self.dim = config.emb_dim 
@@ -76,7 +77,6 @@ class XLMModel(nn.Module):
             self.ffns.append(TransformerFFN(self.dim, self.hidden_dim, self.dim, config=config))
             self.layer_norm2.append(nn.LayerNorm(self.dim, eps=config.layer_norm_eps))
 
-        self.init_weights()
         self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand(1, -1))
 
     def forward(self, input_ids=None, attention_mask=None): # input_ids, attention_mask ~ [batch_size, max_len]
@@ -113,16 +113,15 @@ class XLMPredLayer(nn.Module):
         scores = self.proj(x) # scores ~ [batch_size, max_len, vocab_size]
         outputs = (scores,) + outputs # outputs ~ ([batch_size, max_len, vocab_size])
         if y is not None:
-            loss = F.cross_entropy(scores.view(-1, self.n_words), y.view(-1), reduction='elementwise_mean')
+            loss = F.cross_entropy(scores.view(-1, self.n_words), y.view(-1), reduction='mean')
             outputs = (loss,) + outputs
         return outputs # outputs ~ (loss, [batch_size, max_len, vocab_size])
 
-class XLMWithLMHeadModel(XLMPretrainedModel):
+class XLMWithLMHeadModel(nn.Module):
     def __init__(self, config):
-        super().__init__(config)
+        super().__init__()
         self.transformer = XLMModel(config)
         self.pred_layer = XLMPredLayer(config)
-        self.init_weights()
 
     def forward(self, input_ids=None, attention_mask=None, labels=None): #input_ids, attention_mask ~ [batch_size, max_len] || label ~ [batch_size]
         transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask) # transformer_outputs ~ ([batch_size, max_len, emb_size])
