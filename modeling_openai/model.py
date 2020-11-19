@@ -127,7 +127,6 @@ class Attention(nn.Module):
         outputs = [a] + attn_outputs[1:]
         return outputs
 
-
 class MLP(nn.Module):
     def __init__(self, n_state, config):
         super().__init__()
@@ -138,11 +137,8 @@ class MLP(nn.Module):
         self.dropout = nn.Dropout(config.resid_pdrop)
 
     def forward(self, x): # x ~ [batch_size, max_len, 768]
-
-        # h ~ [batch_size, max_len, 768]
-        h = self.act(self.c_fc(x))
-        # h2 ~ [batch_size, max_len, 768]
-        h2 = self.c_proj(h)
+        h = self.act(self.c_fc(x)) # h ~ [batch_size, max_len, 768]
+        h2 = self.c_proj(h) # h2 ~ [batch_size, max_len, 768]
         return self.dropout(h2)
 
 class Block(nn.Module):
