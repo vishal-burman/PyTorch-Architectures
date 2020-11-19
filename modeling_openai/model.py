@@ -181,23 +181,6 @@ class Block(nn.Module):
         outputs = [h] + attn_outputs[1:]
         return outputs
 
-class OpenAIGPTPretrainedModel(PretrainedModel):
-    config_class = OpenAIGPTConfig
-    base_model_prefix = "transformer"
-    authorized_missing_keys = [r"position_ids"]
-
-    def _init_weights(self, module):
-        """
-        Initialize the weights
-        """
-        if isinstance(module, (nn.Linear, nn.Embedding, Conv1D)):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
-            if isinstance(module, (nn.Linear, Conv1D)) and module.bias is not None:
-                module.bias.data.zero_()
-        elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
-
 class OpenAIGPTModel(nn.Module):
     def __init__(self, config):
         super().__init__()
