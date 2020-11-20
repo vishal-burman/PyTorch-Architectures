@@ -1,130 +1,48 @@
-import sys
-import pdb
 import math
 import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
-from activations import gelu_new, swish
-from utils import Conv1D, PretrainedModel
+from utils import Conv1D, gelu_new
 from config_openai import OpenAIGPTConfig
-
-ACT_FNS = {"relu": nn.ReLU, "swish": swish, "gelu": gelu_new}
 
 class Attention(nn.Module):
     def __init__(self, nx, n_ctx, config, scale=False):
         super().__init__()
-        # n_state ~ 768 where nx = n_embed = 768
-        n_state = nx
-
-        assert n_state % config.n_head == 0
+        n_state = nx # n_state ~ 768 where nx = n_embed = 768
         self.register_buffer("bias", torch.tril(torch.ones(n_ctx, n_ctx)).view(1, 1, n_ctx, n_ctx))
-        # self.n_head ~ 12
-        self.n_head = config.n_head
-        # self.split_size ~ 768
-        self.split_size = n_state
-        # scale ~ True
-        self.scale = scale
-
+        self.n_head = config.n_head # self.n_head ~ 12
+        self.split_size = n_state # self.split_size ~ 768
+        self.scale = scale # scale ~ True
         self.c_attn = Conv1D(n_state * 3, nx)
         self.c_proj = Conv1D(n_state, nx)
         self.attn_dropout = nn.Dropout(config.attn_pdrop)
         self.resid_dropout = nn.Dropout(config.resid_pdrop)
         self.pruned_heads = set()
 
-    def _attn(
-            self, 
-            q, # q ~ [batch_size, 12, max_len, 64] 
-            k, # k ~ [batch_size, 12, 64, max_len]
-            v, # v ~ [batch_size, 12, max_len, 64]
-            attention_mask=None, # attention_mask ~ [batch_size, 1, 1, max_len]
-            head_mask=None, 
-            output_attentions=False):
-
-        # w ~ [batch_size, 12, max_len, max_len]
-        w = torch.matmul(q, k)
-        if self.scale:
-            # w ~ [batch_size, 12, max_len, max_len]
-            w = w / math.sqrt(v.size(-1))
-        # b ~ [batch_size, 12, max_len, max_len]
-        b = self.bias[:, :, :w.size(-2), :w.size(-1)]
-        # w ~ [batch_size, 12, max_len, max_len]  ~ unidirectional attention
-        w = w * b + -1e4 * (1-b)
-
-        if attention_mask is not None:
-            # Apply the attention mask
-            # w ~ [batch_size, 12, max_len, max_len]
-            w = w + attention_mask
-
-        # w ~ [batch_size, 12, max_len, max_len]
-        w = nn.Softmax(dim=-1)(w)
-        # w ~ [batch_size, 12, max_len, max_len]
-        w = self.attn_dropout(w)
-
-        # Mask heads if we want to
-        # head_mask ~ None
-        if head_mask is not None:
-            w = w * head_mask
-
-        # outputs ~ [[batch_size, 12, max_len, 64]]
-        outputs = [torch.matmul(w, v)]
-        # output_attentions ~ False
-        if output_attentions:
-            outputs.append(w)
+    def _attn(self, q, k, v, attention_mask=None) # q, v ~ [batch_size, num_heads, max_len, emb_size // num_heads] k ~ [batch_size, num_heads, emb_size //num_heads, max_len]
+        w = torch.matmul(q, k) # w ~ [batch_size, 12, max_len, max_len]
+        w = w / math.sqrt(v.size(-1)) # w ~ [batch_size, 12, max_len, max_len]
+        b = self.bias[:, :, :w.size(-2), :w.size(-1)] # b ~ [batch_size, 12, max_len, max_len]
+        w = w * b + -1e4 * (1-b) # w ~ [batch_size, 12, max_len, max_len]  ~ unidirectional attention
+        w = w + attention_mask # w ~ [batch_size, 12, max_len, max_len]
+        w = nn.Softmax(dim=-1)(w) # w ~ [batch_size, 12, max_len, max_len]
+        w = self.attn_dropout(w) # w ~ [batch_size, 12, max_len, max_len] 
+        outputs = [torch.matmul(w, v)] # outputs ~ [[batch_size, 12, max_len, 64]]
         return outputs
 
-    def merge_heads(self, x): # x ~ [batch_size, 12, max_len, 64]
-        # x ~ [batch_size, max_len, 12, 64]
-        x = x.permute(0, 2, 1, 3).contiguous()
-        # new_x_shape ~ [batch_size, max_len, 768]
-        new_x_shape = x.size()[:-2] + (x.size(-2) * x.size(-1),)
-        # x ~ [batch_size, max_len, 768]
-        return x.view(*new_x_shape)
-
-    def split_heads(self, x, k=False):
-        # new_x_shape ~ [batch_size, max_len, 12, 64] where n_head = 12
-        new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
-        # x ~ [batch_size, max_len, 12, 64]
-        x = x.view(*new_x_shape)
-        if k:
-            # x ~ [batch_size, 12, 64, max_len]
-            return x.permute(0, 2, 3, 1)
-        else:
-            # x ~ [batch_size, 12, max_len, 64]
-            return x.permute(0, 2, 1, 3)
-
-    def forward(self, 
-            x, # x ~ [batch_size, max_len, emb_size]
-            attention_mask=None, # attention_mask ~ [batch_size, 1, 1, max_len]
-            head_mask=None, # head_mask ~ None
-            output_attentions=False):
-
-        # x ~ [batch_size, max_len, n_state * 3] where (n_state * 3 = 2034)
-        x = self.c_attn(x)
-        # query ~ [batch_size, max_len, emb_size]
-        # key ~ [batch_size, max_len, emb_size]
-        # value ~ [batch_size, max_len, emb_size]
-        query, key, value = x.split(self.split_size, dim=2)
-        # query ~ [batch_size, 12, max_len, 64]
-        query = self.split_heads(query)
-        # key ~ [batch_size, 12, 64, max_len]
-        key = self.split_heads(key, k=True)
-        # value ~ [batch_size, 12, max_len, 64]
-        value = self.split_heads(value)
-
-        # attn_outputs ~ [[batch_size, 12, max_len, 64]]
-        attn_outputs = self._attn(query, key, value, attention_mask, head_mask, output_attentions)
-        # a ~ [batch_size, 12, max_len, 64]
-        a = attn_outputs[0]
-
-        # a ~ [batch_size, max_len, 768]
-        a = self.merge_heads(a)
-        # a ~ [batch_size, max_len, 768]
-        a = self.c_proj(a)
-        # a ~ [batch_size, max_len, 768]
-        a = self.resid_dropout(a)
-
-        # outputs ~ [[batch_size, max_len, 768]]
-        outputs = [a] + attn_outputs[1:]
+    def forward(self, x, attention_mask=None) # x ~ [batch_size, max_len, emb_size] && attention_mask ~ [batch_size, 1, 1, max_len]
+        bs, slen = x.shape[:2] # bs ~ batch_size, slen ~ max_len
+        x = self.c_attn(x) # x ~ [batch_size, max_len, n_state * 3] where (n_state * 3 = 2034)
+        query, key, value = x.split(self.split_size, dim=2) # query, key, value ~ [batch_size, max_len, emb_size]
+        query = query.view(bs, slen, self.n_head, -1).permute(0, 2, 1, 3) # query ~ [batch_size, 12, max_len, 64] 
+        key = key.view(bs, slen, self.n_head, -1).permute(0, 2, 3, 1) # key ~ [batch_size, 12, 64, max_len]
+        value = value.view(bs, slen, self.n_head, -1).permute(0, 2, 1, 3) # value ~ [batch_size, 12, max_len, 64]
+        attn_outputs = self._attn(query, key, value, attention_mask) # attn_outputs ~ [[batch_size, 12, max_len, 64]]
+        a = attn_outputs[0] # a ~ [batch_size, 12, max_len, 64]
+        a = a.permute(0, 2, 1, 3).contiguous().view(bs, slen, -1) # a ~ [batch_size, max_len, 768]
+        a = self.c_proj(a) # a ~ [batch_size, max_len, 768]
+        a = self.resid_dropout(a) # a ~ [batch_size, max_len, 768]
+        outputs = [a] + attn_outputs[1:] # outputs ~ [[batch_size, max_len, 768]]
         return outputs
 
 class MLP(nn.Module):
