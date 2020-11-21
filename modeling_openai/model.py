@@ -19,7 +19,7 @@ class Attention(nn.Module):
         self.resid_dropout = nn.Dropout(config.resid_pdrop)
         self.pruned_heads = set()
 
-    def _attn(self, q, k, v, attention_mask=None) # q, v ~ [batch_size, num_heads, max_len, emb_size // num_heads] k ~ [batch_size, num_heads, emb_size //num_heads, max_len]
+    def _attn(self, q, k, v, attention_mask=None): # q, v ~ [batch_size, num_heads, max_len, emb_size // num_heads] k ~ [batch_size, num_heads, emb_size //num_heads, max_len]
         w = torch.matmul(q, k) # w ~ [batch_size, 12, max_len, max_len]
         w = w / math.sqrt(v.size(-1)) # w ~ [batch_size, 12, max_len, max_len]
         b = self.bias[:, :, :w.size(-2), :w.size(-1)] # b ~ [batch_size, 12, max_len, max_len]
@@ -30,7 +30,7 @@ class Attention(nn.Module):
         outputs = [torch.matmul(w, v)] # outputs ~ [[batch_size, 12, max_len, 64]]
         return outputs
 
-    def forward(self, x, attention_mask=None) # x ~ [batch_size, max_len, emb_size] && attention_mask ~ [batch_size, 1, 1, max_len]
+    def forward(self, x, attention_mask=None): # x ~ [batch_size, max_len, emb_size] && attention_mask ~ [batch_size, 1, 1, max_len]
         bs, slen = x.shape[:2] # bs ~ batch_size, slen ~ max_len
         x = self.c_attn(x) # x ~ [batch_size, max_len, n_state * 3] where (n_state * 3 = 2034)
         query, key, value = x.split(self.split_size, dim=2) # query, key, value ~ [batch_size, max_len, emb_size]
@@ -51,7 +51,7 @@ class MLP(nn.Module):
         nx = config.n_embd
         self.c_fc = Conv1D(n_state, nx)
         self.c_proj = Conv1D(nx, n_state)
-        self.act = ACT_FNS[config.afn]
+        self.act = gelu_new
         self.dropout = nn.Dropout(config.resid_pdrop)
 
     def forward(self, x): # x ~ [batch_size, max_len, 768]
