@@ -82,95 +82,33 @@ class BertEmbeddings(nn.Module):
 class BertSelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
-
-        if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
-            # TODO
-            print("Error!!!")
-        # self.num_attention_heads ~ 12
-        self.num_attention_heads = config.num_attention_heads
-        # self.attention_head_size ~ int(768/12) ~ 64
-        self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
-        # self.all_head_size ~ 768
-        self.all_head_size = self.num_attention_heads * self.attention_head_size
-
+        self.num_attention_heads = config.num_attention_heads # self.num_attention_heads ~ 12
+        self.attention_head_size = int(config.hidden_size / config.num_attention_heads) # self.attention_head_size ~ int(768/12) ~ 64
+        self.all_head_size = self.num_attention_heads * self.attention_head_size # self.all_head_size ~ 768
         self.query = nn.Linear(config.hidden_size, self.all_head_size)
         self.key = nn.Linear(config.hidden_size, self.all_head_size)
         self.value = nn.Linear(config.hidden_size, self.all_head_size)
-
         self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
 
-    def transpose_for_scores(self, x):
-        # x ~ [batch_size, max_seq_len, emb_size]
-        # new_x_shape ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size) # num_attention_heads * attention_head_size = emb_size
-        # x ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
-        x = x.view(*new_x_shape)
-        # x.permute ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
-        return x.permute(0, 2, 1, 3)
-
-    def forward(self, 
-            hidden_states, # hidden_states ~ [batch_size, max_seq_len, hidden_size] 
-            attention_mask=None, #attention_mask ~ [batch_size, max_seq_len, hidden_size] 
-            head_mask=None, 
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            output_attention=False):
-
-        # mixed_query_layer ~ [batch_size, max_seq_len, emb_size] where emb_size = self.all_head_size
-        mixed_query_layer = self.query(hidden_states)
-
-        # encoder_hidden_states ~ None
-        if encoder_hidden_states is not None:
-            mixed_key_layer = self.key(encoder_hidden_states)
-            mixed_value_layer = self.value(encoder_hidden_states)
-            attention_mask = encoder_attention_mask
-        else:
-            # mixed_key_layer ~ [batch_size, max_seq_len, emb_size]
-            mixed_key_layer = self.key(hidden_states)
-            # mixed_value_layer ~ [batch_size, max_seq_len, emb_size]
-            mixed_value_layer = self.value(hidden_states)
-
-        # query_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
-        query_layer = self.transpose_for_scores(mixed_query_layer)
-        # key_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
-        key_layer = self.transpose_for_scores(mixed_key_layer)
-        # value_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
-        value_layer = self.transpose_for_scores(mixed_value_layer)
-
-        # attention_scores ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
-        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
-        # attention_scires ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
-        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
-
-        if attention_mask is not None:
-            # attention_scores ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
-            attention_scores = attention_scores + attention_mask
-
-        # attention_probs ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
-        attention_probs = nn.Softmax(dim=-1)(attention_scores)
-
-        # attention_probs ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
-        attention_probs = self.dropout(attention_probs)
-
-        if head_mask is not None:
-            attention_probs = attention_probs * head_mask
-
-        # context_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
-        context_layer = torch.matmul(attention_probs, value_layer)
-
-        # context_layer ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
-        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-
-        # new_context_layer_shape ~ [batch_size, max_seq_len, all_head_size] where all_head_size = emb_size
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
-
-        # context_layer ~ [batch_size, max_seq_len, all_head_size]
-        context_layer = context_layer.view(*new_context_layer_shape)
-
+    def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, max_len, emb_size] && attention_mask ~ [batch_size, 1, 1, seq_len]
+        bs, slen = hidden_states.shape[:2]
+        mixed_query_layer = self.query(hidden_states) # mixed_query_layer ~ [batch_size, max_seq_len, emb_size] 
+        mixed_key_layer = self.key(hidden_states) # mixed_key_layer ~ [batch_size, max_seq_len, emb_size]
+        mixed_value_layer = self.value(hidden_states) # mixed_value_layer ~ [batch_size, max_seq_len, emb_size]
+        query_layer = mixed_query_layer.view(bs, slen, self.num_attention_heads, -1).permute(0, 2, 1, 3) # query_layer ~ [batch_size, n_heads, max_len, emb_dim//n_heads]
+        key_layer = mixed_key_layer.view(bs, slen, self.num_attention_heads, -1).permute(0, 2, 1, 3) # key_layer ~ [batch_size, n_heads, max_len, emb_dim//n_heads]
+        value_layer = mixed_value_layer.view(bs, slen, self.num_attention_heads, -1).permute(0, 2, 1, 3) # value_layer ~ [batch_size, n_heads, max_len, emb_dim//n_heads]
+        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2)) # attention_scores ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
+        attention_scores = attention_scores / math.sqrt(self.attention_head_size) # attention_scires ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
+        attention_scores = attention_scores + attention_mask # attention_scores ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
+        attention_probs = nn.Softmax(dim=-1)(attention_scores) # attention_probs ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
+        attention_probs = self.dropout(attention_probs) # attention_probs ~ [batch_size, num_attention_heads, max_seq_len, max_seq_len]
+        context_layer = torch.matmul(attention_probs, value_layer) # context_layer ~ [batch_size, num_attention_heads, max_seq_len, attention_head_size]
+        context_layer = context_layer.permute(0, 2, 1, 3).contiguous() # context_layer ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
+        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,) # new_context_layer_shape ~ [batch_size, max_seq_len, emb_size]
+        context_layer = context_layer.view(*new_context_layer_shape) # context_layer ~ [batch_size, max_seq_len, emb_dim]
         outputs = (context_layer, attention_probs) if output_attention else (context_layer,)
-        
-        # outputs ~ ([batch_size, max_seq_len, all_head_size])
-        return outputs
+        return outputs # outputs ~ ([batch_size, max_seq_len, all_head_size])
 
 class BertSelfOutput(nn.Module):
     def __init__(self, config):
@@ -194,22 +132,6 @@ class BertAttention(nn.Module):
         super().__init__()
         self.self = BertSelfAttention(config)
         self.output = BertSelfOutput(config)
-        self.pruned_heads = set()
-
-    def prune_heads(self, heads):
-        if len(heads) == 0:
-            return
-        heads, index = find_pruneable_heads_and_indices(heads, self.self.num_attention_heads, self.self.attention_head_size, self.pruned_heads)
-
-        # Prune Linear Layers
-        self.self.query = prune_linear_layer(self.self.query, index)
-        self.self.key = prune_linear_layer(self.self.key, index)
-        self.self.value = prune_linear_layer(self.output.dense, index, dim=1)
-
-        # Update hyper params and store pruned heads
-        self.self.num_attention_heads = self.self.num_attention_heads - len(heads)
-        self.self.all_head_size = self.self.attention_head_size * self.self.num_attention_heads
-        self.pruned_heads = self.pruned_heads.union(heads)
 
     def forward(self,
             hidden_states, # hidden_states ~ [batch_size, max_seq_len, hidden_size]
@@ -219,8 +141,8 @@ class BertAttention(nn.Module):
             encoder_attention_mask=None,
             output_attentions=False,):
 
-        # self.outputs ~ ([batch_size, max_seq_len, hidden_size]) where emb_size = hidden_size
-        self.outputs = self.self(hidden_states, attention_mask, head_mask, encoder_hidden_states, encoder_attention_mask, output_attentions)
+        
+        self.outputs = self.self(hidden_states, attention_mask) # self.outputs ~ ([batch_size, max_seq_len, emb_dim])
         # attention_output ~ [batch_size, max_seq_len, emb_size]
         attention_output = self.output(self.outputs[0], hidden_states)
         # outputs ~ ([batch_size, max_seq_len, hidden_size])
@@ -277,10 +199,8 @@ class BertLayer(nn.Module):
         return outputs
 
     def feed_forward_chunk(self, attention_output): # attention_output ~ [batch_size, max_seq_len, all_head_size]
-        # intermediate_output ~ [batch_size, max_seq_len, intermediate_size] where intermediate_size = 3072 TODO
-        intermediate_output = self.intermediate(attention_output)
-        # layer_output ~ [batch_size, max_seq_len, hidden_size] #TODO
-        layer_output = self.output(intermediate_output, attention_output)
+        intermediate_output = self.intermediate(attention_output) # intermediate_output ~ [batch_size, max_seq_len, intermediate_size]
+        layer_output = self.output(intermediate_output, attention_output) # layer_output ~ [batch_size, max_seq_len, hidden_size]
         return layer_output
 
 class BertEncoder(nn.Module):
