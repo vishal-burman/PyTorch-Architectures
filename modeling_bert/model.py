@@ -263,43 +263,17 @@ class BertOutput(nn.Module):
 class BertLayer(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.chunk_size_feed_forward = config.chunk_size_feed_forward
         self.seq_len_dim = 1
         self.attention = BertAttention(config)
-        self.is_decoder = config.is_decoder
-        self.add_cross_attention = config.add_cross_attention
-        if self.add_cross_attention:
-            assert self.is_decoder, f"{self} should be used as a decoder model if cross attention is added"
-            self.crossattention = BertAttention(config)
         self.intermediate = BertIntermediate(config)
         self.output = BertOutput(config)
 
-    def forward(self,
-            hidden_states, # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-            attention_mask=None, # [batch_size, max_seq_len, hidden_size]
-            head_mask=None, 
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            output_attentions=False):
-
-        # self_attention_outputs ~ ([batch_size, max_seq_len, all_head_size]) where all_head_size = hidden_size
-        self_attention_outputs = self.attention(hidden_states, attention_mask, head_mask, output_attentions=output_attentions)
-        # attention_output ~ [batch_size, max_seq_len, all_head_size]
-        attention_output = self_attention_outputs[0]
-        # outputs ~ [max_seq_len, all_head_size]
-        outputs = self_attention_outputs[1:]
-
-        # self.is_decoder ~ False encoder_hidden_states ~ None
-        if self.is_decoder and encoder_hidden_states is not None:
-            assert hasattr(self, 'crossattention'), f"some statement"
-            cross_attention_outputs = self.crossattention(attention_output, attention_mask, head_mask, encoder_hidden_states, encoder_attention_mask, output_attentions)
-            attention_output = cross_attention_outputs[0]
-            outputs = outputs + cross_attention_outputs[1:]
-
-        # layer_output ~ [batch_size, max_seq_len, hidden_size]
-        layer_output = apply_chunking_to_forward(self.feed_forward_chunk, self.chunk_size_feed_forward, self.seq_len_dim, attention_output)
-        # outputs ~ ([batch_size, max_seq_len, hidden_size])
-        outputs = (layer_output,) + outputs
+    def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, max_len, emb_dim] && attention_mask ~ [batch_size, 1, 1, max_len]
+        self_attention_outputs = self.attention(hidden_states, attention_mask) # self_attention_outputs ~ ([batch_size, max_seq_len, all_head_size]) where all_head_size = hidden_size
+        attention_output = self_attention_outputs[0] # attention_output ~ [batch_size, max_seq_len, all_head_size]
+        outputs = self_attention_outputs[1:] # outputs ~ [max_seq_len, all_head_size]
+        layer_output = self.feed_forward_chunk(attention_output) # layer_output ~ [batch_size, max_seq_len, hidden_size]
+        outputs = (layer_output,) + outputs # outputs ~ ([batch_size, max_seq_len, hidden_size])
         return outputs
 
     def feed_forward_chunk(self, attention_output): # attention_output ~ [batch_size, max_seq_len, all_head_size]
