@@ -381,42 +381,10 @@ class BertPooler(nn.Module):
         self.activation = nn.Tanh()
 
     def forward(self, hidden_states):
-        # first_token_tensor ~ [batch_size, emb_size]
-        first_token_tensor = hidden_states[:, 0]
-        # pooled_output ~ [batch_size, emb_size]
-        pooled_output = self.dense(first_token_tensor)
-        # pooled_output ~ [batch_size, emb_size]
-        pooled_output = self.activation(pooled_output)
+        first_token_tensor = hidden_states[:, 0] # first_token_tensor ~ [batch_size, emb_size]
+        pooled_output = self.dense(first_token_tensor) # pooled_output ~ [batch_size, emb_size]
+        pooled_output = self.activation(pooled_output) # pooled_output ~ [batch_size, emb_size]
         return pooled_output
-
-class BertPredictionHeadTransform(nn.Module):
-    def  __init__(self, config):
-        super().__init__()
-        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        if isinstance(config.hidden_act, str):
-            self.transform_act_fn = ACT2FN[config.hidden_act]
-        else:
-            self.transform_act_fn = config.hidden_act
-        self.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
-
-    def forward(self, hidden_states):
-        hidden_states = self.dense(hidden_states)
-        hidden_states = self.transform_act_fn(hidden_states)
-        hidden_states = self.LayerNorm(hidden_states)
-        return hidden_states
-
-class BertLMPredictionHead(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.transform = BertPredictionHeadTransform(config)
-        self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
-        self.bias = nn.Parameter(torch.zeros(config.vocab_size))
-        self.decoder.bias = self.bias
-
-    def forward(self, hidden_states):
-        hidden_states = self.transform(hidden_states)
-        hidden_states = self.decoder(hidden_states)
-        return hidden_states
 
 class BertModel(nn.Module):
     def __init__(self, config):
