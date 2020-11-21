@@ -315,64 +315,12 @@ class BertEncoder(nn.Module):
         self.config = config
         self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
 
-    def forward(self,
-            hidden_states, # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-            attention_mask=None, # attention_mask ~ [batch_size, max_seq_len, hidden_size]
-            head_mask=None, # head_mask ~ [None] * num_hidden_layers
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            output_attentions=False,
-            output_hidden_states=False,
-            return_dict=True):
-
-        # all_hidden_states ~ False
-        all_hidden_states = () if output_hidden_states else None
-        # all_attentions ~ False
-        all_attentions = () if output_attentions else None
-        for i, layer_module in enumerate(self.layer): # self.layer ~ BertLayer
-            # output_hidden_states ~ False
-            if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
-
-            # gradient_checkpointing ~ False
-            if getattr(self.config, "gradient_checkpointing", False):
-
-                def create_custom_forward(module):
-                    def custom_forward(*inputs):
-                        return module(*inputs, output_attentions)
-
-                    return custom_forward
-
-                # layer_outputs ~ ([batch_size, max_seq_len, hidden_size])
-                layer_outputs = torch.utils.checkpoint.checkpoint(
-                        create_custom_forward(layer_module),
-                        hidden_states, # [batch_size, max_seq_len, emb_size]
-                        attention_mask, # [batch_size, extra, extra, max_seq_len]
-                        head_mask[i], # head_mask ~ [None] * num_hidden_layers
-                        encoder_hidden_states, # None
-                        encoder_attention_mask, # None
-                        )
-            else:
-                layer_outputs = layer_module(
-                        hidden_states,
-                        attention_mask,
-                        head_mask[i],
-                        encoder_hidden_states,
-                        encoder_attention_mask,
-                        output_attentions,
-                        )
-            # hidden_states ~ [batch_size, max_seq_len, emb_size]
-            hidden_states = layer_outputs[0]
-            # output_attentions ~ False
-            if output_attentions:
-                all_attentions = all_attentions + (layer_outputs[1],)
-
-
-        # output_hidden_states ~ False
-        if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
-
-        return tuple(v for v in [hidden_states, all_hidden_states, all_attentions] if v is not None)
+    def forward(self, hidden_states,  attention_mask=None) # hidden_states ~ [batch_size, max_len, emb_dim] #attention_mask ~ [batch_size, 1, 1, seq_len])
+        for i, layer_module in enumerate(self.layer): # self.layer ~ BertLayer 
+            layer_outputs = layer_module(hidden_states, attention_mask)
+            
+            hidden_states = layer_outputs[0] # hidden_states ~ [batch_size, max_seq_len, emb_size]
+        return tuple(v for v in [hidden_states] if v is not None)
 
 class BertPooler(nn.Module):
     def __init__(self, config):
