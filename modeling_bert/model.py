@@ -435,7 +435,7 @@ class BertPreTrainedModel(PretrainedModel):
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
 
-class BertModel(BertPreTrainedModel):
+class BertModel(nn.Module):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
@@ -444,101 +444,14 @@ class BertModel(BertPreTrainedModel):
         self.encoder = BertEncoder(config)
         self.pooler = BertPooler(config)
 
-        # TODO Not needed for sequence classification
-        self.init_weights()
-
-    def get_input_embeddings(self):
-        return self.embeddings.word_embeddings
-
-    def set_input_embeddings(self, value):
-        self.embeddings.word_embeddings = value
-
-    def _prune_heads(self, heads_to_prune):
-        """Prunes heads of the model"""
-        for layer, heads in heads_to_prune.items():
-            self.encoder.layer[layer].attention.prune_heads(heads)
-
-    def forward(
-            self,
-            input_ids=None,
-            attention_mask=None,
-            token_type_ids=None,
-            position_ids=None,
-            head_mask=None,
-            inputs_embeds=None,
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            output_attentions=None,
-            output_hidden_states=None,
-            return_dict=None,
-            ):
-
-        # output_attentions ~ False
-        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        # output_hidden_states ~ False
-        output_hidden_states = (output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states)
-        # return_dict ~ False
-        return_dict = return_dict if return_dict is not None else self.config.return_dict
-
-        if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("Both input_ids and input_embeds cannot exist at the same time")
-        elif input_ids is not None:
-            # input_shape ~ (batch_size, max_seq_len)
-            input_shape = input_ids.size()
-        elif input_embeds is not None:
-            input_shape = input_embeds.size()[:-1]
-        else:
-            raise ValueError("You have to specify either input_ids or input_embeds")
-
-        device = input_ids.device if input_ids is not None else input_embeds.device
-
-        if attention_mask is None:
-            # attention_mask ~ [batch_size, max_seq_len]
-            attention_mask = torch.ones(input_shape, device=device)
-        if token_type_ids is None:
-            # token_type_ids ~ [batch_size, max_seq_len]
-            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
-
-        
-        # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
-        extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape, device)
-
-        # self.config.is_decoder ~ False & encoder_hidden_states ~ None
-        if self.config.is_decoder and encoder_hidden_states is not None:
-            encoder_batch_size, encoder_sequence_length = encoder_hidden_states.size()
-            encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
-            if encoder_attention_mask is None:
-                encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)
-            encoder_extended_attention_mask = self.invert_attention_mask(encoder_attention_mask)
-        else:
-            encoder_extended_attention_mask = None
-
-        # head_mask ~ [None] * num_hidden_layers
-        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
-
-        # embedding_output ~ [batch_size, max_seq_len, emb_size]
-        embedding_output = self.embeddings(
-                input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
-                )
-
-        encoder_outputs = self.encoder(
-                embedding_output, # [batch_size, max_seq_len, emb_size]
-                attention_mask=extended_attention_mask, # [batch_size, extra, extra, max_seq_len]
-                head_mask=head_mask, # [None] * num_hidden_layers
-                encoder_hidden_states=encoder_hidden_states, # None
-                encoder_attention_mask=encoder_extended_attention_mask, # None
-                output_attentions=output_attentions, # False
-                output_hidden_states=output_hidden_states, # False
-                return_dict=return_dict,
-                )
-        
-        #sequence_output ~ [batch_size, max_seq_len, emb_size]
-        sequence_output = encoder_outputs[0]
-        # pooled_output ~ [batch_size, emb_size]
-        pooled_output = self.pooler(sequence_output)
-
-        # return ~ ([batch_size, max_seq_len, emb_size], [batch_size, emb_size])
-        return (sequence_output, pooled_output) + encoder_outputs[1:] 
+    def forward(self, input_ids=None, attention_mask=None):
+        input_shape = input_ids.size()
+        extended_attention_mask = attention_mask[input_shape[0], None, None, input_shape[1]] # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
+        embedding_output = self.embeddings(input_ids=input_ids, position_ids=position_ids) # embedding_output ~ [batch_size, max_seq_len, emb_size]
+        encoder_outputs = self.encoder(embedding_output, attention_mask=extended_attention_mask) #encoder_outputs ~ ([batch_size, max_len, emb_dim])
+        sequence_output = encoder_outputs[0] #sequence_output ~ [batch_size, max_seq_len, emb_size]
+        pooled_output = self.pooler(sequence_output) # pooled_output ~ [batch_size, emb_size]
+        return (sequence_output, pooled_output) + encoder_outputs[1:]  # return ~ ([batch_size, max_seq_len, emb_size], [batch_size, emb_size])
 
 class BertForSequenceClassification(nn.Module):
     def __init__(self, config):
