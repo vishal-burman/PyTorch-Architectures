@@ -418,23 +418,6 @@ class BertLMPredictionHead(nn.Module):
         hidden_states = self.decoder(hidden_states)
         return hidden_states
 
-class BertPreTrainedModel(PretrainedModel):
-    # TODO
-    config_class = BertConfig
-    #load_tf_weights = load_tf_weights_in_bert
-    base_model_prefix = "bert"
-    authorized_missing_keys = [r"position_ids"]
-
-    def _init_weights(self, module):
-        """Initialize the weights"""
-        if isinstance(module, (nn.Linear, nn.Embedding)):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
-        elif isinstance(module, BertLayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
-        if isinstance(module, nn.Linear) and module.bias is not None:
-            module.bias.data.zero_()
-
 class BertModel(nn.Module):
     def __init__(self, config):
         super().__init__(config)
