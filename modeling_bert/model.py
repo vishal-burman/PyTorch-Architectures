@@ -1,31 +1,10 @@
-import sys
-import pdb
-import math
-import os
-import warnings
-
 import torch
-import torch.utils.checkpoint
 from torch import nn
-from torch.nn import CrossEntropyLoss, MSELoss, BCEWithLogitsLoss
-
+from torch.nn import CrossEntropyLoss
 from activations import gelu, gelu_new, swish
-
 from config_bert import BertConfig
 from utils import PretrainedModel, apply_chunking_to_forward 
-#from utils import find_pruneable_heads_and_indices
-
 config = BertConfig()
-
-def mish(x):
-    """
-    Taken from https://arxiv.org/abs/1908.08681 (MISH activation function)
-
-    """
-    return x * torch.tanh(nn.functional.softplus(x))
-
-ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "gelu_new": gelu_new, "mish": mish}
-
 BertLayerNorm = torch.nn.LayerNorm
 
 class BertEmbeddings(nn.Module):
@@ -90,14 +69,10 @@ class BertSelfOutput(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
-        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-        hidden_states = self.dense(hidden_states)
-        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-        hidden_states = self.dropout(hidden_states)
-        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-        hidden_states = self.LayerNorm(hidden_states + input_tensor)
+        hidden_states = self.dense(hidden_states) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
+        hidden_states = self.dropout(hidden_states) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
+        hidden_states = self.LayerNorm(hidden_states + input_tensor) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
         return hidden_states
-
 
 class BertAttention(nn.Module):
     def __init__(self, config):
@@ -105,37 +80,21 @@ class BertAttention(nn.Module):
         self.self = BertSelfAttention(config)
         self.output = BertSelfOutput(config)
 
-    def forward(self,
-            hidden_states, # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-            attention_mask=None, # attention_mask ~ [batch_size, max_seq_len, hidden_size]
-            head_mask=None,
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            output_attentions=False,):
-
-        
+    def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, max_len, emb_size] && attention_mask ~ [batch_size, 1, 1, max_len]
         self.outputs = self.self(hidden_states, attention_mask) # self.outputs ~ ([batch_size, max_seq_len, emb_dim])
-        # attention_output ~ [batch_size, max_seq_len, emb_size]
-        attention_output = self.output(self.outputs[0], hidden_states)
-        # outputs ~ ([batch_size, max_seq_len, hidden_size])
-        outputs = (attention_output,) + self.outputs[1:]
+        attention_output = self.output(self.outputs[0], hidden_states) # attention_output ~ [batch_size, max_seq_len, emb_size]
+        outputs = (attention_output,) + self.outputs[1:] # outputs ~ ([batch_size, max_seq_len, hidden_size])
         return outputs
 
 class BertIntermediate(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
-        if isinstance(config.hidden_act, str):
-            # config.hidden_act ~ 'gelu'
-            self.intermediate_act_fn = ACT2FN[config.hidden_act]
-        else:
-            self.intermediate_act_fn = config.hidden_act
+        self.intermediate_act_fn = gelu_new 
 
-    def forward(self, hidden_states): # hidden_states ~ [batch_size, max_seq_len, all_head_size]
-        # hidden_states ~ [batch_size, max_seq_len, intermediate_size] where intermediate_size = 3072
-        hidden_states = self.dense(hidden_states)
-        # hidden_states ~ [batch_size, max_seq_len, intermediate_size]
-        hidden_states = self.intermediate_act_fn(hidden_states)
+    def forward(self, hidden_states): # hidden_states ~ [batch_size, max_seq_len, emb_size]
+        hidden_states = self.dense(hidden_states) # hidden_states ~ [batch_size, max_seq_len, intermediate_size]
+        hidden_states = self.intermediate_act_fn(hidden_states) # hidden_states ~ [batch_size, max_seq_len, intermediate_size]
         return hidden_states
 
 class BertOutput(nn.Module):
@@ -145,13 +104,10 @@ class BertOutput(nn.Module):
         self.LayerNorm = BertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
-    def forward(self, hidden_states, input_tensor): # hidden_states ~ [batch_size, max_seq_len, intermediate_size] & input_tensor ~ [batch_size, max_seq_len, all_head_size]
-        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-        hidden_states = self.dense(hidden_states)
-        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-        hidden_states = self.dropout(hidden_states)
-        # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-        hidden_states = self.LayerNorm(hidden_states + input_tensor)
+    def forward(self, hidden_states, input_tensor): # hidden_states ~ [batch_size, max_seq_len, intermediate_size] & input_tensor ~ [batch_size, max_seq_len, emb_dim]
+        hidden_states = self.dense(hidden_states) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
+        hidden_states = self.dropout(hidden_states) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
+        hidden_states = self.LayerNorm(hidden_states + input_tensor) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
         return hidden_states
 
 class BertLayer(nn.Module):
@@ -163,14 +119,14 @@ class BertLayer(nn.Module):
         self.output = BertOutput(config)
 
     def forward(self, hidden_states, attention_mask=None): # hidden_states ~ [batch_size, max_len, emb_dim] && attention_mask ~ [batch_size, 1, 1, max_len]
-        self_attention_outputs = self.attention(hidden_states, attention_mask) # self_attention_outputs ~ ([batch_size, max_seq_len, all_head_size]) where all_head_size = hidden_size
-        attention_output = self_attention_outputs[0] # attention_output ~ [batch_size, max_seq_len, all_head_size]
-        outputs = self_attention_outputs[1:] # outputs ~ [max_seq_len, all_head_size]
-        layer_output = self.feed_forward_chunk(attention_output) # layer_output ~ [batch_size, max_seq_len, hidden_size]
+        self_attention_outputs = self.attention(hidden_states, attention_mask) # self_attention_outputs ~ ([batch_size, max_seq_len, emb_dim]) 
+        attention_output = self_attention_outputs[0] # attention_output ~ [batch_size, max_seq_len, emb_dim]
+        outputs = self_attention_outputs[1:] # outputs ~ [max_seq_len, emb_dim]
+        layer_output = self.feed_forward_chunk(attention_output) # layer_output ~ [batch_size, max_seq_len, emb_dim]
         outputs = (layer_output,) + outputs # outputs ~ ([batch_size, max_seq_len, hidden_size])
         return outputs
 
-    def feed_forward_chunk(self, attention_output): # attention_output ~ [batch_size, max_seq_len, all_head_size]
+    def feed_forward_chunk(self, attention_output): # attention_output ~ [batch_size, max_seq_len, emb_dim]
         intermediate_output = self.intermediate(attention_output) # intermediate_output ~ [batch_size, max_seq_len, intermediate_size]
         layer_output = self.output(intermediate_output, attention_output) # layer_output ~ [batch_size, max_seq_len, hidden_size]
         return layer_output
@@ -184,7 +140,6 @@ class BertEncoder(nn.Module):
     def forward(self, hidden_states,  attention_mask=None) # hidden_states ~ [batch_size, max_len, emb_dim] #attention_mask ~ [batch_size, 1, 1, seq_len])
         for i, layer_module in enumerate(self.layer): # self.layer ~ BertLayer 
             layer_outputs = layer_module(hidden_states, attention_mask)
-            
             hidden_states = layer_outputs[0] # hidden_states ~ [batch_size, max_seq_len, emb_size]
         return tuple(v for v in [hidden_states] if v is not None)
 
