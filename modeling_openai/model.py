@@ -109,7 +109,7 @@ class OpenAIGPTLMHeadModel(nn.Module):
         self.transformer = OpenAIGPTModel(config)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
-    def forward(self, input_ids=None, attention_mask=None): 
+    def forward(self, input_ids=None, attention_mask=None, labels=None): 
         transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask) # transformer_outputs ~ ([batch_size, max_len, emb_size])
         hidden_states = transformer_outputs[0] # hidden_states ~ [batch_size, max_len, 768]
         lm_logits = self.lm_head(hidden_states) # hidden_states ~ [batch_size, max_len, vocab_size] where vocab_size = 40478
