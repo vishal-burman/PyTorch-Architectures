@@ -1,5 +1,4 @@
 import math
-import pdb
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
@@ -166,7 +165,6 @@ class BertModel(nn.Module):
         self.pooler = BertPooler(config)
 
     def forward(self, input_ids=None, attention_mask=None):
-        #pdb.set_trace()
         input_shape = input_ids.size()
         extended_attention_mask = attention_mask[:, None, None, :] # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
         embedding_output = self.embeddings(input_ids=input_ids) # embedding_output ~ [batch_size, max_seq_len, emb_size]
