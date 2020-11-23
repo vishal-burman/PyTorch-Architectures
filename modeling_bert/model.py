@@ -1,9 +1,10 @@
+import math
+import pdb
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
-from activations import gelu, gelu_new, swish
 from config_bert import BertConfig
-from utils import PretrainedModel, apply_chunking_to_forward 
+from utils import gelu_new 
 config = BertConfig()
 BertLayerNorm = torch.nn.LayerNorm
 
@@ -58,7 +59,7 @@ class BertSelfAttention(nn.Module):
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous() # context_layer ~ [batch_size, max_seq_len, num_attention_heads, attention_head_size]
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,) # new_context_layer_shape ~ [batch_size, max_seq_len, emb_size]
         context_layer = context_layer.view(*new_context_layer_shape) # context_layer ~ [batch_size, max_seq_len, emb_dim]
-        outputs = (context_layer, attention_probs) if output_attention else (context_layer,)
+        outputs = (context_layer,)
         return outputs # outputs ~ ([batch_size, max_seq_len, all_head_size])
 
 class BertSelfOutput(nn.Module):
@@ -137,7 +138,7 @@ class BertEncoder(nn.Module):
         self.config = config
         self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
 
-    def forward(self, hidden_states,  attention_mask=None) # hidden_states ~ [batch_size, max_len, emb_dim] #attention_mask ~ [batch_size, 1, 1, seq_len])
+    def forward(self, hidden_states,  attention_mask=None): # hidden_states ~ [batch_size, max_len, emb_dim] #attention_mask ~ [batch_size, 1, 1, seq_len])
         for i, layer_module in enumerate(self.layer): # self.layer ~ BertLayer 
             layer_outputs = layer_module(hidden_states, attention_mask)
             hidden_states = layer_outputs[0] # hidden_states ~ [batch_size, max_seq_len, emb_size]
@@ -157,7 +158,7 @@ class BertPooler(nn.Module):
 
 class BertModel(nn.Module):
     def __init__(self, config):
-        super().__init__(config)
+        super().__init__()
         self.config = config
 
         self.embeddings = BertEmbeddings(config)
@@ -165,8 +166,9 @@ class BertModel(nn.Module):
         self.pooler = BertPooler(config)
 
     def forward(self, input_ids=None, attention_mask=None):
+        #pdb.set_trace()
         input_shape = input_ids.size()
-        extended_attention_mask = attention_mask[input_shape[0], None, None, input_shape[1]] # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
+        extended_attention_mask = attention_mask[:, None, None, :] # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
         embedding_output = self.embeddings(input_ids=input_ids) # embedding_output ~ [batch_size, max_seq_len, emb_size]
         encoder_outputs = self.encoder(embedding_output, attention_mask=extended_attention_mask) #encoder_outputs ~ ([batch_size, max_len, emb_dim])
         sequence_output = encoder_outputs[0] #sequence_output ~ [batch_size, max_seq_len, emb_size]
@@ -175,7 +177,7 @@ class BertModel(nn.Module):
 
 class BertForSequenceClassification(nn.Module):
     def __init__(self, config):
-        super().__init__(config)
+        super().__init__()
         self.num_labels = config.num_labels
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
