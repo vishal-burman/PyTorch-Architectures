@@ -113,7 +113,6 @@ class BertOutput(nn.Module):
 class BertLayer(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.seq_len_dim = 1
         self.attention = BertAttention(config)
         self.intermediate = BertIntermediate(config)
         self.output = BertOutput(config)
@@ -122,14 +121,9 @@ class BertLayer(nn.Module):
         self_attention_outputs = self.attention(hidden_states, attention_mask) # self_attention_outputs ~ ([batch_size, max_seq_len, emb_dim]) 
         attention_output = self_attention_outputs[0] # attention_output ~ [batch_size, max_seq_len, emb_dim]
         outputs = self_attention_outputs[1:] # outputs ~ [max_seq_len, emb_dim]
-        layer_output = self.feed_forward_chunk(attention_output) # layer_output ~ [batch_size, max_seq_len, emb_dim]
+        layer_output = self.output(self.intermediate(attention_output), attention_output) # layer_output ~ [batch_size, max_seq_len, emb_dim]
         outputs = (layer_output,) + outputs # outputs ~ ([batch_size, max_seq_len, hidden_size])
         return outputs
-
-    def feed_forward_chunk(self, attention_output): # attention_output ~ [batch_size, max_seq_len, emb_dim]
-        intermediate_output = self.intermediate(attention_output) # intermediate_output ~ [batch_size, max_seq_len, intermediate_size]
-        layer_output = self.output(intermediate_output, attention_output) # layer_output ~ [batch_size, max_seq_len, hidden_size]
-        return layer_output
 
 class BertEncoder(nn.Module):
     def __init__(self, config):
@@ -139,8 +133,7 @@ class BertEncoder(nn.Module):
 
     def forward(self, hidden_states,  attention_mask=None): # hidden_states ~ [batch_size, max_len, emb_dim] #attention_mask ~ [batch_size, 1, 1, seq_len])
         for i, layer_module in enumerate(self.layer): # self.layer ~ BertLayer 
-            layer_outputs = layer_module(hidden_states, attention_mask)
-            hidden_states = layer_outputs[0] # hidden_states ~ [batch_size, max_seq_len, emb_size]
+            hidden_states = layer_module(hidden_states, attention_mask)[0]  # hidden_states ~ [batch_size, max_seq_len, emb_size]
         return tuple(v for v in [hidden_states] if v is not None)
 
 class BertPooler(nn.Module):
@@ -150,19 +143,16 @@ class BertPooler(nn.Module):
         self.activation = nn.Tanh()
 
     def forward(self, hidden_states):
-        first_token_tensor = hidden_states[:, 0] # first_token_tensor ~ [batch_size, emb_size]
-        pooled_output = self.dense(first_token_tensor) # pooled_output ~ [batch_size, emb_size]
-        pooled_output = self.activation(pooled_output) # pooled_output ~ [batch_size, emb_size]
-        return pooled_output
+        return self.activation(self.dense(hidden_states[:, 0])) # return ~ [batch_size, emb_size]
 
-class BertModel(nn.Module):
+class BertClassify(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.config = config
-
         self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
         self.pooler = BertPooler(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
 
     def forward(self, input_ids=None, attention_mask=None):
         input_shape = input_ids.size()
@@ -170,21 +160,7 @@ class BertModel(nn.Module):
         embedding_output = self.embeddings(input_ids=input_ids) # embedding_output ~ [batch_size, max_seq_len, emb_size]
         encoder_outputs = self.encoder(embedding_output, attention_mask=extended_attention_mask) #encoder_outputs ~ ([batch_size, max_len, emb_dim])
         sequence_output = encoder_outputs[0] #sequence_output ~ [batch_size, max_seq_len, emb_size]
-        pooled_output = self.pooler(sequence_output) # pooled_output ~ [batch_size, emb_size]
-        return (sequence_output, pooled_output) + encoder_outputs[1:]  # return ~ ([batch_size, max_seq_len, emb_size], [batch_size, emb_size])
-
-class BertForSequenceClassification(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.num_labels = config.num_labels
-        self.bert = BertModel(config)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
-
-    def forward(self, input_ids = None, attention_mask = None, labels = None):
-        outputs = self.bert(input_ids, attention_mask=attention_mask) # outputs ~ ([batch_size, max_seq_len, hidden_size], [batch_size, hidden_size])
-        pooled_output = outputs[1] # pooled_output ~ [batch_size, hidden_size]
-        pooled_output = self.dropout(pooled_output) # pooled_output ~ [batch_size, hidden_size]
+        pooled_output = self.dropout(self.pooler(sequence_output)) # pooled_output ~ [batch_size, emb_size]
         logits = self.classifier(pooled_output) # logits ~ [batch_size, num_labels]
         loss = None
         if labels is not None:
