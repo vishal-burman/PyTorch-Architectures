@@ -1,5 +1,7 @@
+from collections import OrderedDict
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 def _bn_function_factory(norm, relu, conv):
   def bn_function(*inputs):
