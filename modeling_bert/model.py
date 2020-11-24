@@ -93,8 +93,7 @@ class BertIntermediate(nn.Module):
         self.intermediate_act_fn = gelu_new 
 
     def forward(self, hidden_states): # hidden_states ~ [batch_size, max_seq_len, emb_size]
-        hidden_states = self.dense(hidden_states) # hidden_states ~ [batch_size, max_seq_len, intermediate_size]
-        hidden_states = self.intermediate_act_fn(hidden_states) # hidden_states ~ [batch_size, max_seq_len, intermediate_size]
+        hidden_states = self.intermediate_act_fn(self.dense(hidden_states)) # hidden_states ~ [batch_size, max_len, intermediate_size]
         return hidden_states
 
 class BertOutput(nn.Module):
@@ -148,6 +147,7 @@ class BertPooler(nn.Module):
 class BertClassify(nn.Module):
     def __init__(self, config):
         super().__init__()
+        self.num_labels = config.num_labels
         self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
         self.pooler = BertPooler(config)
@@ -155,7 +155,6 @@ class BertClassify(nn.Module):
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
 
     def forward(self, input_ids=None, attention_mask=None):
-        input_shape = input_ids.size()
         extended_attention_mask = attention_mask[:, None, None, :] # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
         embedding_output = self.embeddings(input_ids=input_ids) # embedding_output ~ [batch_size, max_seq_len, emb_size]
         encoder_outputs = self.encoder(embedding_output, attention_mask=extended_attention_mask) #encoder_outputs ~ ([batch_size, max_len, emb_dim])
