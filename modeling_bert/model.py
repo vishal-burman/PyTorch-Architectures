@@ -69,8 +69,7 @@ class BertSelfOutput(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
-        hidden_states = self.dense(hidden_states) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
-        hidden_states = self.dropout(hidden_states) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
+        hidden_states = self.dropout(self.dense(hidden_states)) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
         hidden_states = self.LayerNorm(hidden_states + input_tensor) # hidden_states ~ [batch_size, max_seq_len, hidden_size]
         return hidden_states
 
@@ -154,7 +153,7 @@ class BertClassify(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
 
-    def forward(self, input_ids=None, attention_mask=None):
+    def forward(self, input_ids=None, attention_mask=None, labels=None):
         extended_attention_mask = attention_mask[:, None, None, :] # extended_attention_mask ~ [batch_size, extra, extra, max_seq_len]
         embedding_output = self.embeddings(input_ids=input_ids) # embedding_output ~ [batch_size, max_seq_len, emb_size]
         encoder_outputs = self.encoder(embedding_output, attention_mask=extended_attention_mask) #encoder_outputs ~ ([batch_size, max_len, emb_dim])
