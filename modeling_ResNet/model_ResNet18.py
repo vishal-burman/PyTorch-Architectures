@@ -41,7 +41,7 @@ class ResNet(nn.Module):
 
         self.conv1 = nn.Conv2d(in_channels=in_dim, out_channels=64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
-        self.relu = nn.ReLU(in_place=True)
+        self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self.make_layer(block, 64, layers[0])
         self.layer2 = self.make_layer(block, 128, layers[1], stride=2)
@@ -60,11 +60,11 @@ class ResNet(nn.Module):
     
     def make_layer(self, block, planes, blocks, stride=1):
         downsample = None
-        if stride != 1 or self.in_planes != planes * block.expansion
-        downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes*block.expansion, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes*block.expansion)
-                )
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                    nn.Conv2d(self.inplanes, planes*block.expansion, kernel_size=1, stride=stride, bias=False),
+                    nn.BatchNorm2d(planes*block.expansion)
+                    )
         layers = []
         layers.append(block(self.inplanes, planes, stride=downsample))
         self.inplanes = planes * block.expansion
