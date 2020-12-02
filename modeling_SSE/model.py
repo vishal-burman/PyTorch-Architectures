@@ -16,13 +16,21 @@ class SelfAttention(nn.Module):
         self.W_s2 = nn.Linear(350, 30)
         self.fc_layer = nn.Linear(30*2*hidden_size, 2000)
         self.label = nn.Linear(2000, output_size)
-        # TODO --> initial states of LSTM
+        self.register_buffer('h_0', torch.zeros(2, self.batch_size, self.hidden_size))
+        self.register_buffer('c_0', torch.zeros(2, self.batch_size, self.hidden_size))
 
     def attention_net(self, lstm_output):
-        # TODO --> self-attention as described in the paper
-        pass
+        attn_weight_matrix = self.W_s2(F.tanh(self.W_s1(lstm_output)))
+        attn_weight_matrix = attn_weight_matrix.permute(0, 2, 1)
+        attn_weight_matrix = F.softmax(attn_weight_matrix, dim=2)
 
     def forward(self, x):
-        # TODO
-        pass
-
+        input = self.word_embeddings(x)
+        input = input.permute(1, 0, 2)
+        output, (h_n, c_n) = self.bilstm(input, (h_0, c_0))
+        output = output.permute(1, 0, 2)
+        attn_weight_matrix = self.attention_net(output)
+        hidden_matrix = attn_weight_matrix @ output
+        fc_out = self.fc_layer(hidden_matrix.view(-1, hidden_matrix.size(1) * hidden_matrix.size(2)))
+        logits = self.label(fc_out)
+        return logits
