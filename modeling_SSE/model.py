@@ -17,9 +17,11 @@ class SelfAttention(nn.Module):
         return output, att
 
 class BiLSTMSE(nn.Module):
-    def __init__(self, batch_size, vocab_size, emb_dim, hidden_dim, n_layers, natt_unit, natt_hops, nfc, n_class, drop_prob):
+    def __init__(self, batch_size, vocab_size, emb_dim, hidden_dim, n_layers, natt_unit, natt_hops, nfc, n_class, drop_prob, weights=None):
         super().__init__()
         self.embedding_layer = nn.Embedding(vocab_size, emb_dim)
+        if weights is not None:
+            self.embedding_layer.weights = nn.Parameter(weights, requires_grad=False)
         self.bilstm = nn.LSTM(input_size=emb_dim, hidden_size=hidden_dim, num_layers=n_layers, dropout=drop_prob, bidirectional=True)
         self.att_encoder = SelfAttention(hidden_dim, natt_unit, natt_hops, n_layers)
         self.dropout = nn.Dropout(p=drop_prob)
