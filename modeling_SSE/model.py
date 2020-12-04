@@ -3,41 +3,37 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class SelfAttention(nn.Module):
-    def __init__(self, batch_size, output_size, hidden_size, vocab_size, embedding_length, weights=None):
+    def __init__(self, hidden_dim, att_unit, att_hops, n_layers):
         super().__init__()
-        self.batch_size = batch_size
-        self.output_size = output_size
-        self.hidden_size = hidden_size
-        self.vocab_size = vocab_size
-        self.embedding_length = embedding_length
-        self.weights = weights
+        self.ut_dense = nn.Linear(hidden_dim * n_layers, att_unit, bias=False)
+        self.et_dense = nn.Linear(att_unit, att_hops, bias=False)
 
-        self.word_embeddings = nn.Embedding(self.vocab_size, self.embedding_length)
-        if self.weights is not None:
-            self.word_embeddings.weights = nn.Parameter(self.weights, requires_grad=False)
-        self.dropout = nn.Dropout(p=0.5)
-        self.bilstm = nn.LSTM(self.embedding_length, self.hidden_size, bidirectional=True)
-        self.W_s1 = nn.Linear(2*self.hidden_size, 64, bias=False)
-        self.W_s2 = nn.Linear(64, 1, bias=False)
-        self.fc_layer = nn.Linear(30*2*self.hidden_size, 3000)
-        self.label = nn.Linear(3000, self.output_size)
-        self.register_buffer("h_0", torch.zeros(2, self.batch_size, self.hidden_size))
-        self.register_buffer("c_0", torch.zeros(2, self.batch_size, self.hidden_size))
+    def forward(self, x): # x ~ [batch_size, seq_len, hidden_dim]
+        ut = self.ut_dense(x) # ut ~ [batch_size, seq_len, att_unit]
+        ut = torch.tanh(ut) # ut ~ [batch_size, seq_len, att_unit]
+        et = self.et_dense(ut) # et ~ [batch_size, seq_len, att_hops]
+        att = F.softmax(et.transpose(1, 2), dim=-1) # att ~ [batch_size, att_hops, seq_len]
+        output = att @ x # output ~ [batch_size, att_hops, hidden_dim]
+        return output, att
 
-    def attention_net(self, lstm_output):
-        lstm_output = self.dropout(lstm_output)
-        attn_weight_matrix = self.W_s2(torch.tanh(self.W_s1(lstm_output)))
-        attn_weight_matrix = attn_weight_matrix.permute(0, 2, 1)
-        attn_weight_matrix = F.softmax(attn_weight_matrix, dim=2)
-        return attn_weight_matrix
+class BiLSTMSE(nn.Module):
+    def __init__(self, batch_size, vocab_size, emb_dim, hidden_dim, n_layers, natt_unit, natt_hops, nfc, n_class, drop_prob):
+        super().__init__()
+        self.embedding_layer = nn.Embedding(vocab_size, emb_dim)
+        self.bilstm = nn.LSTM(input_size=emb_dim, hidden_size=hidden_dim, num_layers=n_layers, dropout=drop_prob, bidirectional=True)
+        self.att_encoder = SelfAttention(hidden_dim, natt_unit, natt_hops, n_layers)
+        self.dropout = nn.Dropout(p=drop_prob)
+        self.dense = nn.Linear(natt_hops * hidden_dim * n_layers, nfc)
+        self.tanh = nn.Tanh()
+        self.output_layer = nn.Linear(nfc, n_class)
+        self.register_buffer("h_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
+        self.register_buffer("c_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
 
     def forward(self, x):
-        input = self.word_embeddings(x)
-        input = input.permute(1, 0, 2)
-        output, (h_n, c_n) = self.bilstm(input, (self.h_0, self.c_0))
-        output = output.permute(1, 0, 2)
-        attn_weight_matrix = self.attention_net(output)
-        hidden_matrix = attn_weight_matrix @ output
-        fc_out = self.fc_layer(hidden_matrix.view(-1, hidden_matrix.size(1) * hidden_matrix.size(2)))
-        logits = self.label(fc_out)
-        return logits
+        inp_emb = self.embedding_layer(x) # inp_emb ~ [batch_size, seq_len, emb_dim]
+        h_output, (h_n, c_n) = self.bilstm(inp_emb.transpose(0, 1), (self.h_0, self.c_0)) # h_output ~ [seq_len, batch_size, hidden_dim * n_layers]
+        att_output, att = self.att_encoder(h_output.transpose(0, 1)) # att_output ~ [batch_size, att_hops, hidden_dim * n_layers]
+        dense_input = self.dropout(torch.flatten(att_output, start_dim=1)) # dense_input ~ [batch_size, att_hops * hidden_dim * n_layers]
+        dense_out = self.tanh(self.dense(dense_input)) # dense_out ~ [batch_size, nfc]
+        output = self.output_layer(self.dropout(dense_out)) # output ~ [batch_size, n_class]
+        return output, att
