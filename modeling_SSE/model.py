@@ -17,7 +17,7 @@ class SelfAttention(nn.Module):
         return output, att
 
 class BiLSTMSE(nn.Module):
-    def __init__(self, batch_size, vocab_size, emb_dim, hidden_dim, n_layers, natt_unit, natt_hops, nfc, n_class, drop_prob, weights=None):
+    def __init__(self, vocab_size, emb_dim, hidden_dim, n_layers, natt_unit, natt_hops, nfc, n_class, drop_prob, weights=None):
         super().__init__()
         self.embedding_layer = nn.Embedding(vocab_size, emb_dim)
         if weights is not None:
@@ -28,12 +28,12 @@ class BiLSTMSE(nn.Module):
         self.dense = nn.Linear(natt_hops * hidden_dim * n_layers, nfc)
         self.tanh = nn.Tanh()
         self.output_layer = nn.Linear(nfc, n_class)
-        self.register_buffer("h_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
-        self.register_buffer("c_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
+        #self.register_buffer("h_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
+        #self.register_buffer("c_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
 
     def forward(self, x):
         inp_emb = self.embedding_layer(x) # inp_emb ~ [batch_size, seq_len, emb_dim]
-        h_output, (h_n, c_n) = self.bilstm(inp_emb.transpose(0, 1), (self.h_0, self.c_0)) # h_output ~ [seq_len, batch_size, hidden_dim * n_layers]
+        h_output, (h_n, c_n) = self.bilstm(inp_emb.transpose(0, 1)) # h_output ~ [seq_len, batch_size, hidden_dim * n_layers]
         att_output, att = self.att_encoder(h_output.transpose(0, 1)) # att_output ~ [batch_size, att_hops, hidden_dim * n_layers]
         dense_input = self.dropout(torch.flatten(att_output, start_dim=1)) # dense_input ~ [batch_size, att_hops * hidden_dim * n_layers]
         dense_out = self.tanh(self.dense(dense_input)) # dense_out ~ [batch_size, nfc]
