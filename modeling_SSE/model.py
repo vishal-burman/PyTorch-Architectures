@@ -28,8 +28,6 @@ class BiLSTMSE(nn.Module):
         self.dense = nn.Linear(natt_hops * hidden_dim * n_layers, nfc)
         self.tanh = nn.Tanh()
         self.output_layer = nn.Linear(nfc, n_class)
-        #self.register_buffer("h_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
-        #self.register_buffer("c_0", torch.zeros(n_layers * 2, batch_size, hidden_dim))
 
     def forward(self, x):
         inp_emb = self.embedding_layer(x) # inp_emb ~ [batch_size, seq_len, emb_dim]
