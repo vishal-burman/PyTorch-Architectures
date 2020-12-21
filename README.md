@@ -16,6 +16,7 @@
 | OpenAI GPT2 | TBD | TBD |
 | Transformer XLM | TBD | TBD |
 | Structured Self-Attentive Sentence Embedding | TBD | In progress... |
+| TabTransformer | TBD | TBD |
 
 ------------------------------------------------------------------------------------
 
