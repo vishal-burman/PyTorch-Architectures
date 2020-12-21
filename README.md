@@ -10,13 +10,14 @@
 | AlexNet | TBD | TBD |
 | VGG16 | TBD | TBD |
 | DenseNet121 | TBD | TBD |
+| ResNet18 | TBD | In progress... |
 | ViT | TBD | TBD |
 | BERT | TBD | TBD |
 | OpenAI GPT | TBD | TBD |
 | OpenAI GPT2 | TBD | TBD |
 | Transformer XLM | TBD | TBD |
 | Structured Self-Attentive Sentence Embedding | TBD | In progress... |
-| TabTransformer | TBD | TBD |
+| TabTransformer | TBD | In progress... |
 
 ------------------------------------------------------------------------------------
 
