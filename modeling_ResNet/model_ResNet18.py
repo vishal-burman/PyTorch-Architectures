@@ -1,9 +1,11 @@
+import pdb
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 def conv3x3(in_planes, out_planes, stride=1):
-    return nn.Conv2d(in_channels=in_planes, out_channels=out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -20,14 +22,15 @@ class BasicBlock(nn.Module):
     def forward(self, x):
         residual = x
         out = self.conv1(x)
-        out = self.bn1(x)
-        out = self.relu(x)
-        out = self.conv2(x)
-        out = self.bn2(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
         if self.downsample is not None:
             residual = self.downsample(x)
         out += residual
         out = self.relu(out)
+        return out
 
 class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes, grayscale):
@@ -59,6 +62,7 @@ class ResNet(nn.Module):
                 m.bias.data.zero_()
     
     def make_layer(self, block, planes, blocks, stride=1):
+        # layer1 ~ block, planes=64, blocks=2, stride=1
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -66,7 +70,7 @@ class ResNet(nn.Module):
                     nn.BatchNorm2d(planes*block.expansion)
                     )
         layers = []
-        layers.append(block(self.inplanes, planes, stride=downsample))
+        layers.append(block(self.inplanes, planes, stride, downsample))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
             layers.append(block(self.inplanes, planes))
