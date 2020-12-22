@@ -9,10 +9,25 @@ class Attention(nn.Module):
         pass
 
 class Transformer(nn.Module):
-    def __init__(self,):
-        pass
-    def forward(self):
-        pass
+    def __init__(self, num_tokens, dim, depth, heads, dim_head, attn_dropout, ff_dropout):
+        super().__init__()
+        self.embeds = nn.Embedding(num_tokens, dim)
+        self.layers = nn.ModuleList([])
+
+        for _ in range(depth):
+            self.layers.append(nn.ModuleList([
+                Residual(Prenorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = attn_dropout))),
+                Residual(Prenorm(dim, FeedForward(dim, dropout = ff_dropout))),
+                ]))
+
+    def forward(self, x):
+        x = self.embeds(x)
+
+        for attn, ff in self.layers:
+            x = attn(x)
+            x = ff(x)
+
+        return x
 
 # TODO enclose init in config
 class TabTransformer(nn.Module):
