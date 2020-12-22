@@ -3,10 +3,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Attention(nn.Module):
-    def __init__(self):
-        pass
-    def forward(self):
-        pass
+    def __init__(self, dim, heads=8, dim_head=16, dropout=0.):
+        super().__init__()
+        inner_dim = dim_head * heads
+        self.heads = heads
+        self.scale = dim_heads ** -0.5
+        self.to_qkv = nn.Linear(dim, inner_dim, bias=False)
+        self.to_out = nn.Linear(inner_dim, dim)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x): # x ~ [batch_size, num_categ, dim]
+        h = self.heads
+        q, k, v = self.to_qkv(x).chunk(3, dim=-1)
+        # TODO reshape q, k, v to include heads
 
 class Transformer(nn.Module):
     def __init__(self, num_tokens, dim, depth, heads, dim_head, attn_dropout, ff_dropout):
@@ -20,8 +29,8 @@ class Transformer(nn.Module):
                 Residual(Prenorm(dim, FeedForward(dim, dropout = ff_dropout))),
                 ]))
 
-    def forward(self, x):
-        x = self.embeds(x)
+    def forward(self, x): # x ~ [batch_size, num_categ]
+        x = self.embeds(x) # x ~ [batch_size, num_categ, dim]
 
         for attn, ff in self.layers:
             x = attn(x)
@@ -76,9 +85,9 @@ class TabTransformer(nn.Module):
         all_dimensions = [input_size, *hidden_dimensions, dim_out]
         self.mlp = MLP(all_dimensions, act = mlp_act)
     
-    def forward(self, x_categ, x_cont):
+    def forward(self, x_categ, x_cont): # x_categ ~ [batch_size, num_categ], x_cont ~ [batch_size, num_cont]
         assert x_categ.shape[-1] == self.num_categories
-        x_categ += self.categories_offset
+        x_categ += self.categories_offset # x_categ ~ [batch_size, x_categ]
         x = self.transformer(x_categ)
         flat_categ = x.flatten(1)
         if exists(self.continuous_mean_std):
