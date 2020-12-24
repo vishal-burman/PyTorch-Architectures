@@ -14,8 +14,16 @@ class Attention(nn.Module):
 
     def forward(self, x): # x ~ [batch_size, num_categ, dim]
         h = self.heads
-        q, k, v = self.to_qkv(x).chunk(3, dim=-1)
-        # TODO reshape q, k, v to include heads
+        bs, num_categ = x.shape[:2] # bs ~ batch_size, num_categ ~ num_categ
+        q, k, v = self.to_qkv(x).chunk(3, dim=-1) # q, k, v ~ [batch_size, num_categ, inner_dim]
+        q, k, v = map(lambda x: x.reshape(bs, num_categ, h, -1).transpose(1, 2), (q, k, v)) # q, k, v ~ [batch_size, heads, num_categ, inner_dim//heads]
+        sim = (q @ k.transpose(-1, -2)) * self.scale # sim ~ [batch_size, heads, num_categ, num_categ]
+        attn = sim.softmax(dim=-1) # attn ~ [batch_size, heads, num_categ, num_categ]
+        attn = self.dropout(attn) # attn ~ [batch_size, heads, num_categ, num_categ]
+        out =  attn @ v # out ~ [batch_size, heads, num_categ, inner_dim//heads]
+        out = out.reshape(bs, num_categ, -1) # [batch_size, num_categ, inner_dim]
+        out = self.to_out(out) # out ~ [batch_size, num_categ, dim]
+        return out
 
 class Transformer(nn.Module):
     def __init__(self, num_tokens, dim, depth, heads, dim_head, attn_dropout, ff_dropout):
