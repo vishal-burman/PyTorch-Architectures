@@ -58,12 +58,10 @@ class Transformer(nn.Module):
 
     def forward(self, x): # x ~ [batch_size, num_categ]
         x = self.embeds(x) # x ~ [batch_size, num_categ, dim]
-
         for attn, ff in self.layers:
             x = attn(x) # x ~ [batch_size, num_categ, dim]
-            x = ff(x)
-
-        return x
+            x = ff(x) # x ~ [batch_size, num_categ, dim]
+        return x # return ~ [batch_size, num_categ, dim]
 
 # TODO enclose init in config
 class TabTransformer(nn.Module):
@@ -114,9 +112,9 @@ class TabTransformer(nn.Module):
     
     def forward(self, x_categ, x_cont): # x_categ ~ [batch_size, num_categ], x_cont ~ [batch_size, num_cont]
         assert x_categ.shape[-1] == self.num_categories
-        x_categ += self.categories_offset # x_categ ~ [batch_size, x_categ]
-        x = self.transformer(x_categ)
-        flat_categ = x.flatten(1)
+        x_categ += self.categories_offset # x_categ ~ [batch_size, num_categ]
+        x = self.transformer(x_categ) # x ~ [batch_size, num_categ, dim]
+        flat_categ = x.flatten(1) # flat_categ ~ [batch_size, num_categ * dim]
         if exists(self.continuous_mean_std):
             mean, std = self.continuous_mean_std.unbind(dim=-1)
             x_cont = (x_cont - mean) / std
