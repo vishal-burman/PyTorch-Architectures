@@ -2,6 +2,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class FeedForward(nn.Module):
+    def __init__(self, dim, mult=4, dropout=0.):
+        super().__init__()
+        self.net = nn.Sequential(
+                nn.Linear(dim, dim * mult),
+                GEGLU(),
+                nn.Dropout(dropout),
+                nn.Linear(dim * mult, dim),
+                )
+    def forward(self, x): # x ~ [batch_size, num_categ, dim]
+        return self.net(x) # return ~ [batch_size, num_categ, dim]
+
 class Attention(nn.Module):
     def __init__(self, dim, heads=8, dim_head=16, dropout=0.):
         super().__init__()
@@ -41,7 +53,7 @@ class Transformer(nn.Module):
         x = self.embeds(x) # x ~ [batch_size, num_categ, dim]
 
         for attn, ff in self.layers:
-            x = attn(x)
+            x = attn(x) # x ~ [batch_size, num_categ, dim]
             x = ff(x)
 
         return x
