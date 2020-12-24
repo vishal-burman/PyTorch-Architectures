@@ -2,15 +2,22 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class GEGLU(nn.Module):
+
+    def forward(self, x):
+        x, gates = x.chunk(2, dim=-1) # x, gates ~ [batch_size, num_categ, dim * mult]
+        return x * F.gelu(gates) # return ~ [batch_size, num_categ, dim * mult]
+
 class FeedForward(nn.Module):
     def __init__(self, dim, mult=4, dropout=0.):
         super().__init__()
         self.net = nn.Sequential(
-                nn.Linear(dim, dim * mult),
+                nn.Linear(dim, dim * mult * 2),
                 GEGLU(),
                 nn.Dropout(dropout),
                 nn.Linear(dim * mult, dim),
                 )
+
     def forward(self, x): # x ~ [batch_size, num_categ, dim]
         return self.net(x) # return ~ [batch_size, num_categ, dim]
 
