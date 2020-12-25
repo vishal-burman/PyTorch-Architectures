@@ -63,6 +63,24 @@ class Transformer(nn.Module):
             x = ff(x) # x ~ [batch_size, num_categ, dim]
         return x # return ~ [batch_size, num_categ, dim]
 
+class MLP(nn.Module):
+    def __init__(self, dims, act=None):
+        super().__init__()
+        dims_pairs = list(zip(dims[:-1], dims[1:]))
+        layers = []
+        for ind, (dim_in, dim_out) in enumerate(dims_pairs):
+            is_last = ind >= (len(dims) - 1)
+            linear = nn.Linear(dim_in, dim_out)
+            layers.append(linear)
+            if is_last:
+                continue
+            act = default(act, nn.ReLU())
+            layers.append(act)
+        self.mlp = nn.Sequential(*layers)
+
+    def forward(self, x): # x ~ [batch_size, num_categ * dim + num_cont]
+        return self.mlp(x) # x ~ [batch_size, dim_out]
+
 # TODO enclose init in config
 class TabTransformer(nn.Module):
     def __init__(
@@ -88,15 +106,15 @@ class TabTransformer(nn.Module):
         self.num_unique_categories = sum(categories)
         self.num_special_tokens = num_special_tokens
         total_tokens = self.num_unique_categories + num_special_tokens
-        categories_offset = F.pad(torch.tensor(list(categories)), (1, 0), value = num_special_tokens)
-        categories_offset = categories_offset.cumsum(dim=-1)[:-1]
+        categories_offset = F.pad(torch.tensor(list(categories)), (1, 0), value = num_special_tokens) # categories_offset ~ [num_categ + 1]
+        categories_offset = categories_offset.cumsum(dim=-1)[:-1] # categories_offset ~ [num_categ]
         self.register_buffer('categories_offset', categories_offset)
         if exists(continuous_mean_std):
             self.register_buffer('continuous_mean_std', continuous_mean_std)
         self.norm = nn.LayerNorm(num_continuous)
         self.num_continuous = num_continuous
         self.transformer = Transformer(
-                num_tokens = num_tokens,
+                num_tokens = total_tokens,
                 dim = dim,
                 depth = depth,
                 heads = heads,
@@ -117,7 +135,7 @@ class TabTransformer(nn.Module):
         flat_categ = x.flatten(1) # flat_categ ~ [batch_size, num_categ * dim]
         if exists(self.continuous_mean_std):
             mean, std = self.continuous_mean_std.unbind(dim=-1)
-            x_cont = (x_cont - mean) / std
-        normed_cont = self.norm(x_cont)
-        x = torch.cat((flat_categ,normed_cont), dim=-1)
-        return self.mlp(x)
+            x_cont = (x_cont - mean) / std # x_cont ~ [batch_size, num_cont]
+        normed_cont = self.norm(x_cont) # normed_cont ~ [batch_size, num_cont]
+        x = torch.cat((flat_categ, normed_cont), dim=-1) # x ~ [batch_size, (num_categ * dim) + num_cont]
+        return self.mlp(x) # return ~ [batch_size, dim_out]
