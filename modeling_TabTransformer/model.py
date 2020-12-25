@@ -2,6 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class PreNorm(nn.Module):
+    def __init__(self, dim, fn):
+        self.norm = nn.LayerNorm(dim)
+        self.fn = fn
+
+    def forward(self, x, **kwargs):
+        return self.fn(self.norm(x), **kwargs)
+
 class GEGLU(nn.Module):
 
     def forward(self, x):
