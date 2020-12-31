@@ -59,7 +59,7 @@ class Attention(nn.Module):
         sim = (q @ k.transpose(-1, -2)) * self.scale # sim ~ [batch_size, heads, num_categ, num_categ]
         attn = sim.softmax(dim=-1) # attn ~ [batch_size, heads, num_categ, num_categ]
         attn = self.dropout(attn) # attn ~ [batch_size, heads, num_categ, num_categ]
-        out =  attn @ v # out ~ [batch_size, heads, num_categ, inner_dim//heads]
+        out =  (attn @ v).transpose(1, 2) # out ~ [batch_size, heads, num_categ, inner_dim//heads]
         out = out.reshape(bs, num_categ, -1) # [batch_size, num_categ, inner_dim]
         out = self.to_out(out) # out ~ [batch_size, num_categ, dim]
         return out
