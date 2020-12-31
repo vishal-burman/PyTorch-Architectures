@@ -2,11 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-def exists(val):
-    return val is not None
-
 def default(val, d):
-    return val if exists(val) else d
+    return val if val is not None else d
 
 class Residual(nn.Module):
     def __init__(self, fn):
@@ -50,7 +47,7 @@ class Attention(nn.Module):
         inner_dim = dim_head * heads
         self.heads = heads
         self.scale = dim_head ** -0.5
-        self.to_qkv = nn.Linear(dim, inner_dim, bias=False)
+        self.to_qkv = nn.Linear(dim, inner_dim * 3, bias=False)
         self.to_out = nn.Linear(inner_dim, dim)
         self.dropout = nn.Dropout(dropout)
 
@@ -132,8 +129,10 @@ class TabTransformer(nn.Module):
         categories_offset = F.pad(torch.tensor(list(categories)), (1, 0), value = num_special_tokens) # categories_offset ~ [num_categ + 1]
         categories_offset = categories_offset.cumsum(dim=-1)[:-1] # categories_offset ~ [num_categ]
         self.register_buffer('categories_offset', categories_offset)
-        if exists(continuous_mean_std):
+        if continuous_mean_std is not None:
             self.register_buffer('continuous_mean_std', continuous_mean_std)
+        else:
+            self.register_buffer('continuous_mean_std', None)
         self.norm = nn.LayerNorm(num_continuous)
         self.num_continuous = num_continuous
         self.transformer = Transformer(
@@ -156,7 +155,7 @@ class TabTransformer(nn.Module):
         x_categ += self.categories_offset # x_categ ~ [batch_size, num_categ]
         x = self.transformer(x_categ) # x ~ [batch_size, num_categ, dim]
         flat_categ = x.flatten(1) # flat_categ ~ [batch_size, num_categ * dim]
-        if exists(self.continuous_mean_std):
+        if self.continuous_mean_std is not None:
             mean, std = self.continuous_mean_std.unbind(dim=-1)
             x_cont = (x_cont - mean) / std # x_cont ~ [batch_size, num_cont]
         normed_cont = self.norm(x_cont) # normed_cont ~ [batch_size, num_cont]
