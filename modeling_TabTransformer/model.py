@@ -18,6 +18,7 @@ class Residual(nn.Module):
 
 class PreNorm(nn.Module):
     def __init__(self, dim, fn):
+        super().__init__()
         self.norm = nn.LayerNorm(dim)
         self.fn = fn
 
@@ -48,7 +49,7 @@ class Attention(nn.Module):
         super().__init__()
         inner_dim = dim_head * heads
         self.heads = heads
-        self.scale = dim_heads ** -0.5
+        self.scale = dim_head ** -0.5
         self.to_qkv = nn.Linear(dim, inner_dim, bias=False)
         self.to_out = nn.Linear(inner_dim, dim)
         self.dropout = nn.Dropout(dropout)
@@ -74,8 +75,8 @@ class Transformer(nn.Module):
 
         for _ in range(depth):
             self.layers.append(nn.ModuleList([
-                Residual(Prenorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = attn_dropout))),
-                Residual(Prenorm(dim, FeedForward(dim, dropout = ff_dropout))),
+                Residual(PreNorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = attn_dropout))),
+                Residual(PreNorm(dim, FeedForward(dim, dropout = ff_dropout))),
                 ]))
 
     def forward(self, x): # x ~ [batch_size, num_categ]
