@@ -5,6 +5,13 @@ import torch.nn.functional as F
 class BPR(nn.Module):
     def __init__(self,):
         super().__init__()
+        self.n_users = n_users
+        self.n_items = n_items
+        self.embedding_size = embedding_size
+        self.user_embedding = nn.Embedding(self.n_users, self.embedding_size)
+        self.item_embedding = nn.Embedding(self.n_items, self.embedding_size)
+        self.loss = BPRLoss() # TODO --> implement loss module
+        self.apply(xavier_normal_initialization)
 
     def get_user_embedding(self, user):
         pass
