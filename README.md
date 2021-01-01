@@ -11,6 +11,8 @@
 | VGG16 | TBD | TBD |
 | DenseNet121 | TBD | TBD |
 | ResNet18 | TBD | In progress... |
+| ResNet34 | TBD | In progress... |
+| ResNet50 | TBD | In progress... |
 | ViT | TBD | TBD |
 | BERT | TBD | TBD |
 | OpenAI GPT | TBD | TBD |
@@ -18,6 +20,7 @@
 | Transformer XLM | TBD | TBD |
 | Structured Self-Attentive Sentence Embedding | TBD | In progress... |
 | TabTransformer | TBD | In progress... |
+| BPR: Bayesian Personalized Ranking from Implicit Feedback | TBD | In progress... |
 
 ------------------------------------------------------------------------------------
 
