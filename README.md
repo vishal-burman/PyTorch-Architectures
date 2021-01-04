@@ -19,7 +19,7 @@
 | OpenAI GPT2 | [Paper](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_GPT2/test_sample_GPT2.ipynb) |
 | Transformer XLM | [Paper](https://arxiv.org/pdf/1901.07291.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_XLM/test_sample_XLM.ipynb) |
 | Structured Self-Attentive Sentence Embedding | [Paper](https://arxiv.org/pdf/1703.03130) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_SSE/test_sample_SSE.ipynb) |
-| TabTransformer | TBD | In progress... |
+| TabTransformer | [Paper](https://arxiv.org/pdf/2012.06678) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TabTransformer/test_sample_TabTransformer.ipynb) |
 | BPR: Bayesian Personalized Ranking from Implicit Feedback | TBD | In progress... |
 
 ------------------------------------------------------------------------------------
