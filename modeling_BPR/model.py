@@ -27,7 +27,14 @@ class BPR(nn.Module):
         return user_emb, item_emb
 
     def calculate_loss(self, interaction):
-        pass
+        user = interaction['user_id']
+        pos_item = interaction['pos_item_id']
+        neg_item = interaction['neg_item_id']
+        user_emb, pos_emb = self.forward(user, pos_item)
+        neg_emb = self.get_item_embedding(neg_item)
+        pos_item_score, neg_item_score = torch.mul(user_emb, pos_emb).sum(dim=1), torch.mul(user_emb, item_emb).sum(dim=1)
+        loss = self.loss(pos_item_score, neg_item_score)
+        return loss
 
     def predict(self, interaction):
         pass
