@@ -2,6 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class BPRLoss(nn.Module):
+    def __init__(self, gamma):
+        pass
+
+    def forward(self, pos_score, neg_score):
+        pass
+
 class BPR(nn.Module):
     def __init__(self,):
         super().__init__()
