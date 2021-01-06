@@ -3,11 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class BPRLoss(nn.Module):
-    def __init__(self, gamma):
-        pass
+    def __init__(self, gamma=1e-10):
+        super().__init__()
+        self.gamma = gamma
 
     def forward(self, pos_score, neg_score):
-        pass
+        loss = - torch.log(self.gamma + torch.sigmoid(pos_score - neg_score)).mean()
+        return loss
 
 class BPR(nn.Module):
     def __init__(self,):
