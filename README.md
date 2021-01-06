@@ -26,8 +26,8 @@
 
 ## Miscellaneous:
 
-Knowledge Distillation: [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/Knowledge_Distillation.ipynb)
-
-T5 Add-Sub: [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5_Math_Add_Sub.ipynb)
-
-# TODO Links need to be updated...
+| Name | Notebook Link |
+| ---- | ------------- |
+| Knowledge Distillation | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/Knowledge_Distillation.ipynb) |
+| T5 Add-Sub | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5_Math_Add_Sub.ipynb) |
+| T5Unjumble | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5Unjumble.ipynb) |
