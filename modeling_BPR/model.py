@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn.init import xavier_normal_, constant_
 import torch.nn.functional as F
 
 class BPRLoss(nn.Module):
@@ -12,15 +13,22 @@ class BPRLoss(nn.Module):
         return loss
 
 class BPR(nn.Module):
-    def __init__(self,):
+    def __init__(self, n_users, n_items, embedding_size):
         super().__init__()
         self.n_users = n_users
         self.n_items = n_items
         self.embedding_size = embedding_size
         self.user_embedding = nn.Embedding(self.n_users, self.embedding_size)
         self.item_embedding = nn.Embedding(self.n_items, self.embedding_size)
-        self.loss = BPRLoss() # TODO --> implement loss module
-        self.apply(xavier_normal_initialization) # TODO --> import xavier initialization from torch
+        self.loss = BPRLoss()
+        
+        for m in self.modules():
+            if isinstance(m, nn.Embedding):
+                xavier_normal_(m.weight.data)
+            elif isinstance(m, nn.Linear):
+                xavier_normal_(m.weight.data)
+                if m.bias is not None:
+                    constant_(m.bias.data, 0)
 
     def get_user_embedding(self, user):
         """ Returns batch of user embedding based on input user's id """
