@@ -1,3 +1,4 @@
+import pdb
 import torch
 import torch.nn as nn
 from torch.nn.init import xavier_normal_, constant_
@@ -36,7 +37,7 @@ class BPR(nn.Module):
 
     def get_item_embedding(self, item):
         """ Returns batch of item embedding based on input item's id """
-        return self.item_embedding(user)
+        return self.item_embedding(item)
 
     def forward(self, user, item):
         user_emb = self.get_user_embedding(user)
@@ -44,12 +45,13 @@ class BPR(nn.Module):
         return user_emb, item_emb
 
     def calculate_loss(self, interaction):
+        pdb.set_trace()
         user = interaction['user_id']
         pos_item = interaction['pos_item_id']
         neg_item = interaction['neg_item_id']
         user_emb, pos_emb = self.forward(user, pos_item)
         neg_emb = self.get_item_embedding(neg_item)
-        pos_item_score, neg_item_score = torch.mul(user_emb, pos_emb).sum(dim=1), torch.mul(user_emb, item_emb).sum(dim=1)
+        pos_item_score, neg_item_score = torch.mul(user_emb, pos_emb).sum(dim=1), torch.mul(user_emb, neg_emb).sum(dim=1)
         loss = self.loss(pos_item_score, neg_item_score)
         return loss
 
