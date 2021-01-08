@@ -1,4 +1,3 @@
-import pdb
 import torch
 import torch.nn as nn
 from torch.nn.init import xavier_normal_, constant_
@@ -45,7 +44,6 @@ class BPR(nn.Module):
         return user_emb, item_emb
 
     def calculate_loss(self, interaction):
-        pdb.set_trace()
         user = interaction['user_id']
         pos_item = interaction['pos_item_id']
         neg_item = interaction['neg_item_id']
