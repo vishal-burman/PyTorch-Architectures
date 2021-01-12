@@ -20,7 +20,7 @@
 | Transformer XLM | [Paper](https://arxiv.org/pdf/1901.07291.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_XLM/test_sample_XLM.ipynb) |
 | Structured Self-Attentive Sentence Embedding | [Paper](https://arxiv.org/pdf/1703.03130) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_SSE/test_sample_SSE.ipynb) |
 | TabTransformer | [Paper](https://arxiv.org/pdf/2012.06678) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TabTransformer/test_sample_TabTransformer.ipynb) |
-| BPR: Bayesian Personalized Ranking from Implicit Feedback | TBD | In progress... |
+| BPR: Bayesian Personalized Ranking from Implicit Feedback | [Paper](https://arxiv.org/ftp/arxiv/papers/1205/1205.2618.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_BPR/test_sample_BPR.ipynb) |
 
 ------------------------------------------------------------------------------------
 
