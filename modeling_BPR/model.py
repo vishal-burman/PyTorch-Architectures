@@ -55,8 +55,6 @@ class BPR(nn.Module):
 
     def predict(self, interaction):
         user = interaction['user_id']
-        user_emb = self.get_user_embedding(user)
-        all_item_emb = self.item_embedding.weight
-        score = torch.matmul(user_emb, all_item_emb.transpose(0, 1))
-        return score.view(-1)
-
+        item = interaction['pos_item_id']
+        user_emb, item_emb = self.forward(user, item)
+        return torch.mul(user_emb, item_emb).sum(dim=1)
