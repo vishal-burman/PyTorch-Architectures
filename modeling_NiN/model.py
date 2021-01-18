@@ -35,4 +35,7 @@ class NiN(nn.Module):
                 )
 
     def forward(self, x):
-        pass
+        x = self.classifier(x)
+        x = x.view(x.size(0), self.num_classes)
+        probas = F.softmax(x, dim=1)
+        return logits, probas
