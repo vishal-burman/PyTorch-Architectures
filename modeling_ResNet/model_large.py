@@ -39,7 +39,7 @@ class Bottleneck(nn.Module):
         return out
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes, grayscale=False, is_memory_efficient=False):
+    def __init__(self, block, layers, num_classes, grayscale=False):
         self.inplanes = 64
         if grayscale:
             in_dim = 1
@@ -93,10 +93,7 @@ class ResNet(nn.Module):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        if self.is_memory_efficient:
-            x = cp.checkpoint(self._forward_layers, x)
-        else:
-            x = self._forward_layers(x)
+        x = self._forward_layers(x)
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
