@@ -31,7 +31,7 @@ class NiN(nn.Module):
                 # (16 + 2 * 0 -(1 - 1) - 1)/1 + 1 --> 16x16
                 nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0),
                 nn.ReLU(inplace=True),
-                # (16 + 2 * 1 -(3 - 1) - 1)/2 + 1 --> 8x8
+                # (16 + 2 * 1 -3)/2 + 1 --> 8x8
                 nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
                 nn.Dropout(0.5),
 
@@ -41,15 +41,15 @@ class NiN(nn.Module):
                 # (8 + 2 * 0 -(1 - 1) - 1)/1 + 1 --> 8x8
                 nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0),
                 nn.ReLU(inplace=True),
-                # (8 + 2 * 1 -(1 - 1) - 1)/1 + 1 --> 10x10
-                nn.Conv2d(192, 10, kernel_size=1, stride=1, padding=1),
+                # (8 + 2 * 0 -(1 - 1) - 1)/1 + 1 --> 8x8
+                nn.Conv2d(192, 10, kernel_size=1, stride=1, padding=0),
                 nn.ReLU(inplace=True),
-                # (10 + 2 * 0 -8)/1 + 1 --> 3x3 
+                # (8 + 2 * 0 -8)/1 + 1 --> 1x1 
                 nn.AvgPool2d(kernel_size=8, stride=1, padding=0),
                 )
 
     def forward(self, x):
         x = self.classifier(x)
-        x = x.view(x.size(0), self.num_classes)
+        logits = x.view(x.size(0), self.num_classes)
         probas = F.softmax(x, dim=1)
         return logits, probas
