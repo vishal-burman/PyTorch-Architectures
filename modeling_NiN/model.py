@@ -22,12 +22,16 @@ class NiN(nn.Module):
                 nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
                 nn.Dropout(0.5),
 
+                # (16 + 2 * 2 -(5 - 1) - 1)/1 + 1 --> 16x16
                 nn.Conv2d(96, 192, kernel_size=5, stride=1, padding=2),
                 nn.ReLU(inplace=True),
+                # (16 + 2 * 0 -(1 - 1) - 1)/1 + 1 --> 16x16
                 nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0),
                 nn.ReLU(inplace=True),
+                # (16 + 2 * 0 -(1 - 1) - 1)/1 + 1 --> 16x16
                 nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0),
                 nn.ReLU(inplace=True),
+                # (16 + 2 * 1 -(3 - 1) - 1)/2 + 1 --> 8x8
                 nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
                 nn.Dropout(0.5),
 
