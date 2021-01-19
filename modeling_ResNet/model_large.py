@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.utils.checkpoint as cp
 
 def conv3x3(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -38,12 +39,13 @@ class Bottleneck(nn.Module):
         return out
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes, grayscale=False):
+    def __init__(self, block, layers, num_classes, grayscale=False, is_memory_efficient=False):
         self.inplanes = 64
         if grayscale:
             in_dim = 1
         else:
             in_dim = 3
+        self.is_memory_efficient = is_memory_efficient
         super().__init__()
         self.conv1 = nn.Conv2d(in_dim, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
@@ -78,16 +80,23 @@ class ResNet(nn.Module):
             layers.append(block(self.inplanes, planes))
         return nn.Sequential(*layers)
 
+    def _forward_layers(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        return x
+
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        if self.is_memory_efficient:
+            x = cp.checkpoint(self._forward_layers, x)
+        else:
+            x = self._forward_layers(x)
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
