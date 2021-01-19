@@ -35,12 +35,16 @@ class NiN(nn.Module):
                 nn.AvgPool2d(kernel_size=3, stride=2, padding=1),
                 nn.Dropout(0.5),
 
+                # (8 + 2 * 1 -(3 - 1) - 1)/1 + 1 --> 8x8
                 nn.Conv2d(192, 192, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
+                # (8 + 2 * 0 -(1 - 1) - 1)/1 + 1 --> 8x8
                 nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0),
                 nn.ReLU(inplace=True),
+                # (8 + 2 * 1 -(1 - 1) - 1)/1 + 1 --> 10x10
                 nn.Conv2d(192, 10, kernel_size=1, stride=1, padding=1),
                 nn.ReLU(inplace=True),
+                # (10 + 2 * 0 -8)/1 + 1 --> 3x3 
                 nn.AvgPool2d(kernel_size=8, stride=1, padding=0),
                 )
 
