@@ -33,4 +33,5 @@
 | ---- | ------------- |
 | Knowledge Distillation | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/Knowledge_Distillation.ipynb) |
 | T5 Add-Sub | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5_Math_Add_Sub.ipynb) |
-| T5Unjumble | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5Unjumble.ipynb) |
+| T5 Unjumble | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5Unjumble.ipynb) |
+| T5 AutoComplete | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/test_sample_T5AutoComplete.ipynb?flush_cache=true) |
