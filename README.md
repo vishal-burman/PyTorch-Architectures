@@ -15,7 +15,7 @@
 | ResNet50 | [Paper](https://arxiv.org/pdf/1512.03385) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_ResNet/test_sample_ResNet50.ipynb?flush_cache=true) |
 | ResNet101 | [Paper](https://arxiv.org/pdf/1512.03385) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_ResNet/test_sample_ResNet101.ipynb) |
 | ResNet152 | [Paper](https://arxiv.org/pdf/1512.03385) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_ResNet/test_sample_ResNet152.ipynb?flush_cache=true) |
-| NiN: Network in Network | TBD | TBD |
+| NiN: Network in Network | [Paper](https://arxiv.org/pdf/1312.4400) | [Notebook](https://github.com/vishal-burman/PyTorch-Architectures/blob/master/modeling_NiN/test_sample_NiN.ipynb) |
 | ViT: Transformer for Image Recognition | [Paper](https://arxiv.org/pdf/2010.11929) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_ViT/test_sample_ViT.ipynb) |
 | BERT | [Paper](https://arxiv.org/pdf/1810.04805.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_BERT/test_sample_BERT.ipynb) |
 | OpenAI GPT | [Paper](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_OpenAI/test_sample_OpenAI.ipynb) |
