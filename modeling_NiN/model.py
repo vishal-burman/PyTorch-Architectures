@@ -1,11 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.utils.checkpoint as cp
 
 class NiN(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, is_memory_efficient=False):
         super().__init__()
         self.num_classes = num_classes
+        self.is_memory_efficient = is_memory_efficient
         self.classifier = nn.Sequential(
                 # Ref --> floor(H_in + 2*padding - dilation(kernel-1) -1)/stride + 1
 
@@ -49,7 +51,10 @@ class NiN(nn.Module):
                 )
 
     def forward(self, x):
-        x = self.classifier(x)
+        if self.is_memory_efficient:
+            x = cp.checkpoint_sequential(self.classifier, segments=1, input=x)
+        else:
+            x = self.classifier(x)
         logits = x.view(x.size(0), self.num_classes)
         probas = F.softmax(x, dim=1)
         return logits, probas
