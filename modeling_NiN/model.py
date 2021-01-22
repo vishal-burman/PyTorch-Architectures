@@ -56,5 +56,5 @@ class NiN(nn.Module):
         else:
             x = self.classifier(x)
         logits = x.view(x.size(0), self.num_classes)
-        probas = F.softmax(x, dim=1)
+        probas = F.softmax(logits, dim=1)
         return logits, probas
