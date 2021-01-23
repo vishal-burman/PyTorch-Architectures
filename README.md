@@ -35,3 +35,4 @@
 | T5 Add-Sub | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5_Math_Add_Sub.ipynb) |
 | T5 Unjumble | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/T5Unjumble.ipynb) |
 | T5 AutoComplete | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/test_sample_T5AutoComplete.ipynb?flush_cache=true) |
+| DistilBERT PT | [Notebook Link](https://github.com/vishal-burman/PyTorch-Architectures/blob/master/misc/test_sample_DistilBERT_PT.ipynb) |
