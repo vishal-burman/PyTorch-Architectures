@@ -10,4 +10,8 @@ class FilterResponseNormalization(nn.Module):
         self.eps = torch.Tensor([eps])
 
     def forward(self, x):
-        pass
+        n, c, h, w = x.size()
+        self.eps = self.eps.to(self.tau.device)
+        nu2 = torch.mean(x.pow(2), (2, 3), keepdims=True)
+        x = x * torch.rsqrt(nu2 + torch.abs(self.eps))
+        return torch.max(self.gamma * x + self.beta, self.tau)
