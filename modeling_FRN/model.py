@@ -1,3 +1,4 @@
+import pdb
 import torch
 import torch.nn as nn
 from FRN import FilterResponseNormalization
@@ -27,7 +28,7 @@ class NiN(nn.Module):
 
                 nn.Conv2d(192, 192, kernel_size=3, stride=1, padding=1, bias=False),
                 FilterResponseNormalization(192),
-                nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=1, bias=False),
+                nn.Conv2d(192, 192, kernel_size=1, stride=1, padding=0, bias=False),
                 FilterResponseNormalization(192),
                 nn.Conv2d(192, 10, kernel_size=1, stride=1, padding=0),
                 nn.ReLU(inplace=True),
