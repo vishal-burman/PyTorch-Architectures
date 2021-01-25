@@ -35,4 +35,7 @@ class NiN(nn.Module):
                 )
 
     def forward(self, x):
-        pass
+        x = self.classifier(x)
+        logits = x.view(x.size(0), self.num_classes)
+        probas = torch.softmax(logits, dim=1)
+        return logits, probas
