@@ -15,5 +15,12 @@ class AutoEncoder(nn.Module):
         self.linear_2.weight.detach().normal_(0.0, 0.1)
         self.linear_2.bias.detach().zero_()
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        encoded = self.linear_1(x)
+        encoded = F.leaky_relu(encoded)
+
+        logits = self.linear_2(encoded)
+        decoded = torch.sigmoid(logits)
+        
+        return decoded
