@@ -10,6 +10,10 @@ class AutoEncoder(nn.Module):
         self.linear_1.weight.detach().normal_(0.0, 0.1)
         self.linear_1.bias.detach().zero_()
 
+        # Decoder
+        self.linear_2 = nn.Linear(num_hidden_1, num_features)
+        self.linear_2.weight.detach().normal_(0.0, 0.1)
+        self.linear_2.bias.detach().zero_()
 
     def forward(self):
         pass
