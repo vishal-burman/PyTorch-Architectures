@@ -10,7 +10,7 @@ class AutoEncoder(nn.Module):
         
         # Encoder
         # p = (1(28 - 1) - 28 + 3) / 2 = 1
-        self.conv_1 = nn.Conv2d(3, 4, kernel_size=3, stride=1, padding=1) # 28x28x1 => 28x28x4
+        self.conv_1 = nn.Conv2d(1, 4, kernel_size=3, stride=1, padding=1) # 28x28x1 => 28x28x4
         # p = (2(14 - 1) - 28 + 2) / 2 = 0
         self.pool_1 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0) # 28x28x4 => 14x14x4
         # p = (1(14 - 1) - 14 + 3) / 2 = 1
@@ -24,5 +24,18 @@ class AutoEncoder(nn.Module):
         self.deconv_2 = nn.ConvTranspose2d(4, 1, kernel_size=3, stride=2, padding=0) # 15x15x4 => 31x31x1
 
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = self.conv_1(x)
+        x = F.leaky_relu(x)
+        x = self.pool_1(x)
+        x = self.conv_2(x)
+        x = F.leaky_relu(x)
+        x = self.pool_2(x)
+
+        x = self.deconv_1(x)
+        x = F.leaky_relu(x)
+        x = self.deconv_2(x)
+        x = F.leaky_relu(x)
+        logits = x[:, :, 2:30, 2:30]
+        probas = torch.sigmoid(logits)
+        return logits, probas
