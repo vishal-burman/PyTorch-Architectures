@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class AutoEncoder(nn.Module):
+class ConvolutionalAutoEncoder(nn.Module):
     def __init__(self):
         super().__init__()
         # Ref (w - k + 2*p)/s + 1 = o
