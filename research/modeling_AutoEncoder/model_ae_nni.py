@@ -30,5 +30,7 @@ class ConvolutionalAutoEncoder(nn.Module):
         x = F.leaky_relu(x) # x ~ [bs, 4, 14, 14]
         x = F.interpolate(x, scale_factor=2, mode='nearest') # x ~ [bs, 4, 28, 28]
         x = self.conv_4(x) # x ~ [bs, 1, 28, 28]
-        return x
+        logits = F.leaky_relu(x) # logits ~ [bs, 1, 28, 28]
+        probas = torch.sigmoid(x) # probas ~ [bs, 1, 28, 28]
+        return logits, probas
 
