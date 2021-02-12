@@ -10,13 +10,13 @@ class ConvolutionalAutoEncoder(nn.Module):
         self.conv_2 = nn.Conv2d(in_channels=4, out_channels=8, kernel_size=3, stride=1, padding=1) # 14x14x4 => 14x14x8
         self.pool_2 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0) # 14x14x8 => 7x7x8
 
-    def forward(self, x):
+    def forward(self, x): # x ~ [bs, 1, 28, 28]
         # Encoder
-        x = self.conv_1(x)
-        x = F.leaky_relu(x)
-        x = self.pool_1(x)
-        x = self.conv_2(x)
-        x = F.leaky_relu(x)
-        x = self.pool_2(x)
+        x = self.conv_1(x) # x ~ [bs, 4, 28, 28]
+        x = F.leaky_relu(x) # x ~ [bs, 4, 28, 28]
+        x = self.pool_1(x) # x ~ [bs, 4, 14, 14]
+        x = self.conv_2(x) # x ~ [bs, 8, 14, 14]
+        x = F.leaky_relu(x) # x ~ [bs, 8, 14, 14]
+        x = self.pool_2(x) # x ~ [bs, 8, 7, 7]
         return x
 
