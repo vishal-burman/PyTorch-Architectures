@@ -42,7 +42,8 @@ LAYERS_TO_COPY = {
         16: list(range(16)),
     },
     24: { # 24 layers doesn't work properly -> needs more testing
-	6: [0, 4, 10, 16, 20, 23],
+        3: [0, 12, 23],
+        6: [0, 4, 10, 16, 20, 23],
 	12: list(range(12)),
     },
     6: {1: [0], 2: [0, 5], 3: [0, 2, 5], 4: [0, 1, 3, 5], 6: list(range(6))},
