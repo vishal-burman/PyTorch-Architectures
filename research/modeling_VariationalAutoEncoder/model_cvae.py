@@ -19,14 +19,44 @@ class ConvVariationalAutoEncoder(nn.Module):
         self.dec_deconv_2 = nn.ConvTranspose2d(32, 16, kernel_size=4, stride=3, padding=1)
         self.dec_deconv_3 = nn.ConvTranspose2d(16, 1, kernel_size=6, stride=3, padding=4)
 
-    def reparameterize(self):
-        pass
+    def reparameterize(self, z_mu, z_log_var):
+        device = z_mu.device
+        eps = torch.randn(z_mu.size(0), z_mu.size(1)).to(device)
+        z = z_mu + eps * torch.exp(z_log_var/2.)
+        return z
 
     def encoder(self, features):
-        pass
+        x = self.enc_conv_1(features)
+        x = F.leaky_relu(x)
+
+        x = self.enc_conv_2(x)
+        x = F.leaky_relu(x)
+
+        x = self.enc_conv_3(x)
+        x = F.leaky_relu(x)
+
+        z_mean = self.z_mean(x.view(-1, 64*2*2))
+        z_log_var = self.z_log_var(x.view(-1, 64*2*2))
+        encoded = self.reparameterize(z_mean, z_log_var)
+        return z_mean, z_log_var, encoded
 
     def decoder(self):
-        pass
+        x = self.dec_linear_1(encoded)
+        x = x.view(-1, 64, 2, 2)
+
+        x = self.dec_deconv_1(x)
+        x = F.leaky_relu(x)
+
+        x = self.dec_deconv_2(x)
+        x = F.leaky_relu(x)
+
+        x = self.dec_deconv_3(x)
+        x = F.leaky_relu(x)
+
+        decoded = torch.sigmoid(x)
+        return decoded
 
     def forward(self, features):
-        pass
+        z_mean, z_log_var, encoded = model(features)
+        decoded = self.decoder(encoded)
+        return z_mean, z_log_var, encoded, decoded
