@@ -16,12 +16,13 @@ class VariationalAutoEncoder(nn.Module):
         self.linear_4 = nn.Linear(num_hidden_1, num_features)
 
     def reparameterize(self, z_mu, z_log_var):
+        device = z_mu.device
         eps = torch.randn(z_mu.size(0), z_mu.size(1)).to(device)
         z = z_mu + eps * torch.exp(z_log_var/2.)
         return z
 
     def encoder(self, features):
-        x = self.linear_3(features)
+        x = self.hidden_1(features)
         x = F.leaky_relu(x, negative_slope=0.0001)
         z_mean = self.z_mean(x)
         z_log_var = self.z_log_var(x)
@@ -38,4 +39,5 @@ class VariationalAutoEncoder(nn.Module):
     def forward(self, features):
         z_mean, z_log_var, encoded = self.encoder(features)
         decoded = self.decoder(encoded)
+        return z_mean, z_log_var, encoded, decoded
 
