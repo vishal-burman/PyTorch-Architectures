@@ -15,8 +15,10 @@ class VariationalAutoEncoder(nn.Module):
         self.linear_3 = nn.Linear(num_latent, num_hidden_1)
         self.linear_4 = nn.Linear(num_hidden_1, num_features)
 
-    def reparameterize(self):
-        pass
+    def reparameterize(self, z_mu, z_log_var):
+        eps = torch.randn(z_mu.size(0), z_mu.size(1)).to(device)
+        z = z_mu + eps * torch.exp(z_log_var/2.)
+        return z
 
     def encoder(self, features):
         x = self.linear_3(features)
