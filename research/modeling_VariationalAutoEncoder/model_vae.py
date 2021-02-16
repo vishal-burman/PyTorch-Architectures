@@ -28,9 +28,14 @@ class VariationalAutoEncoder(nn.Module):
         encoded = self.reparameterize(z_mean, z_log_var)
         return z_mean, z_log_var, encoded
 
-    def decoder(self):
-        pass
+    def decoder(self, encoded):
+        x = self.linear_3(encoded)
+        x = F.leaky_relu(x, negative_slope=0.0001)
+        x = self.linear_4(x)
+        decoded = torch.sigmoid(x)
+        return decoded
 
     def forward(self, features):
         z_mean, z_log_var, encoded = self.encoder(features)
+        decoded = self.decoder(encoded)
 
