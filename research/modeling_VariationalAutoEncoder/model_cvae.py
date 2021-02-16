@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ConvVariationalAutoEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, num_features, num_latent):
         super().__init__()
 
         ## Encoder
@@ -40,7 +40,7 @@ class ConvVariationalAutoEncoder(nn.Module):
         encoded = self.reparameterize(z_mean, z_log_var)
         return z_mean, z_log_var, encoded
 
-    def decoder(self):
+    def decoder(self, encoded):
         x = self.dec_linear_1(encoded)
         x = x.view(-1, 64, 2, 2)
 
@@ -57,6 +57,6 @@ class ConvVariationalAutoEncoder(nn.Module):
         return decoded
 
     def forward(self, features):
-        z_mean, z_log_var, encoded = model(features)
+        z_mean, z_log_var, encoded = self.encoder(features)
         decoded = self.decoder(encoded)
         return z_mean, z_log_var, encoded, decoded
