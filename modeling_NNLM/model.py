@@ -3,7 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class NNLM(nn.Module):
-    def __init__(self, n_class, m, n_step, n_hidden, n_class):
+    def __init__(self, n_class, m, n_step=4, n_hidden):
+        """
+        Arguments:
+        n_class --> Vocabulary size
+        m --> hidden_dimension
+        n_step --> max_length of sentences
+        n_hidden --> hidden_dimension
+
+        Returns:
+        outputs --> TODO
+        """
         super().__init__()
         self.C = nn.Embedding(n_class, m)
         self.H = nn.Linear(n_step * m, n_hidden, bias=False)
