@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class NNLM(nn.Module):
-    def __init__(self, n_class, m, n_step=4, n_hidden):
+    def __init__(self, n_class, m, n_hidden, n_step=4):
         """
         Arguments:
         n_class --> Vocabulary size
@@ -22,5 +22,9 @@ class NNLM(nn.Module):
         self.W = nn.Linear(n_step * m, n_class, bias=False)
         self.b = nn.Parameter(torch.ones(n_class))
 
-    def forward(self):
-        pass
+    def forward(self, x): # x ~ [bs, max_length]
+        X = self.C(x) # X ~ [bs, max_length, m]
+        X = X.view(X.size(0), -1) # X ~ [bs, max_length * m]
+        tanh = torch.tanh(self.d + self.H(X)) # tanh ~ [bs, n_hidden]
+        output = self.b + self.W(X) + self.U(tanh) # output ~ [bs, n_class]
+        return output
