@@ -14,5 +14,7 @@ class Word2Vec(nn.Module):
         self.W = nn.Embedding(vocab_size, emb_size)
         self.WT = nn.Linear(emb_size, vocab_size)
 
-    def forward(self):
-        pass
+    def forward(self, X):
+        hidden_layer = self.W(X)
+        output_layer = self.WT(hidden_layer)
+        return output_layer
