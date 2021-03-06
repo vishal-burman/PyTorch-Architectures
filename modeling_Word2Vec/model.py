@@ -11,8 +11,8 @@ class Word2Vec(nn.Module):
         super().__init__()
         self.vocab_size = vocab_size
         self.emb_size = emb_size
-        self.W = nn.Linear(vocab_size, emb_size)
-        self.WT = nn.Linear(emb_size, vocab_size)
+        self.W = nn.Linear(vocab_size, emb_size, bias=False)
+        self.WT = nn.Linear(emb_size, vocab_size, bias=False)
 
     def forward(self, X):
         hidden_layer = self.W(X)
