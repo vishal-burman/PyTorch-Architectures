@@ -11,7 +11,7 @@ class Word2Vec(nn.Module):
         super().__init__()
         self.vocab_size = vocab_size
         self.emb_size = emb_size
-        self.W = nn.Embedding(vocab_size, emb_size)
+        self.W = nn.Linear(vocab_size, emb_size)
         self.WT = nn.Linear(emb_size, vocab_size)
 
     def forward(self, X):
