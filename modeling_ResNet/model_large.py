@@ -45,7 +45,6 @@ class ResNet(nn.Module):
             in_dim = 1
         else:
             in_dim = 3
-        self.is_memory_efficient = is_memory_efficient
         super().__init__()
         self.conv1 = nn.Conv2d(in_dim, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
