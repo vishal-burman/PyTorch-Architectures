@@ -13,7 +13,8 @@ x_sample = torch.arange(3).unsqueeze(0).to(torch.long)
 model = FastText(vocab_size=10,
 		 embedding_size=8,
 		 hidden_size=100,
-		 output_size=2)
+		 output_size=2,
+		 padding_idx=0)
 
 preds = model(x_sample)
 ```
