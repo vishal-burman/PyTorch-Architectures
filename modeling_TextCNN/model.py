@@ -32,4 +32,3 @@ class TextCNN(nn.Module):
         h_pool_flat = h_pool.reshape(h_pool.size(0), -1) # h_pool_flat ~ [batch_size, 1 * 1 * 3 * 3]
         logits = self.Weight(h_pool_flat) + self.Bias # logits ~ [batch_size, num_classes]
         return logits
-        """

@@ -9,7 +9,13 @@ import torch
 import torch.nn as nn
 from model import TextCNN
 
-model = TextCNN(num_filters=3, filter_sizes=[2, 2, 2], vocab_size=100, embedding_size=100, sequence_length=3)
+model = TextCNN(
+		num_filters=3, 
+		filter_sizes=[2, 2, 2], 
+		vocab_size=100, 
+		embedding_size=100, 
+		sequence_length=3,
+		)
 
 x_sample = torch.arange(6, dtype=torch.long).reshape(2, 3)
 
