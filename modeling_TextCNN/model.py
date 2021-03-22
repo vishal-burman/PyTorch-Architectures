@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class TextCNN(nn.Module):
-    def __init__(self, num_filters, filter_sizes, vocab_size, embedding_size, sequence_length, num_classes=2):
+    def __init__(self, num_filters, filter_sizes, vocab_size, embedding_size, sequence_length, num_classes=2, padding_idx=None):
         super().__init__()
         self.num_filters = num_filters
         self.filter_sizes = filter_sizes
@@ -11,8 +11,12 @@ class TextCNN(nn.Module):
         self.embedding_size = embedding_size
         self.sequence_length = sequence_length
         self.num_classes = num_classes
+        self.padding_idx = padding_idx
         self.num_filters_total = self.num_filters * len(self.filter_sizes)
-        self.W = nn.Embedding(self.vocab_size, self.embedding_size)
+        if self.padding_idx is not None:
+            self.W = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=self.padding_idx)
+        else:
+            self.W = nn.Embedding(self.vocab_size, self.embedding_size)
         self.Weight = nn.Linear(self.num_filters_total, self.num_classes, bias=False)
         self.Bias = nn.Parameter(torch.ones([self.num_classes]))
         self.filter_list = nn.ModuleList([nn.Conv2d(1, self.num_filters, (size, self.embedding_size)) for size in self.filter_sizes])
