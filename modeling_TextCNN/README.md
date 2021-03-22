@@ -15,6 +15,7 @@ model = TextCNN(
 		vocab_size=100, 
 		embedding_size=100, 
 		sequence_length=3,
+		padding_idx=0,
 		)
 
 x_sample = torch.arange(6, dtype=torch.long).reshape(2, 3)
