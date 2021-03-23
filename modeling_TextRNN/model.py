@@ -11,5 +11,10 @@ class TextRNN(nn.Module):
         self.W = nn.Linear(self.hidden_size, self.vocab_size, bias=False)
         self.B = nn.Parameter(torch.ones([self.vocab_size]))
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = x.transpose(0, 1)
+        outputs, hidden = self.rnn(x)
+        outputs = outputs[-1]
+        logits = self.W(outputs) + self.B
+        return logits
+
