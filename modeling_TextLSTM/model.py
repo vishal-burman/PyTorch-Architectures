@@ -18,5 +18,10 @@ class TextLSTM(nn.Module):
         self.b = nn.Parameter(torch.zeros([self.vocab_size]))
 
     def forward(self, x):
-        pass
+        x = self.embedding(x)
+        x = x.transpose(0, 1)
+        outputs, (_, _) = self.lstm(x)
+        outputs = outputs[-1]
+        logits = self.W(outputs) + self.b
+        return logits
 
