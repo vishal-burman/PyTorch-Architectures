@@ -19,10 +19,10 @@ class TextBiLSTM(nn.Module):
         self.W = nn.Linear(self.hidden_size * 2, self.vocab_size, bias=False)
         self.b = nn.Parameter(torch.ones([self.vocab_size]))
 
-    def forward(self, x):
-        x = self.embedding(x).transpose(0, 1)
-        outputs, (_, _) = self.lstm(x)
-        outputs = outputs[-1]
-        logits = self.W(outputs) + self.b
+    def forward(self, x): # x ~ [batch_size, seq_len]
+        x = self.embedding(x).transpose(0, 1) # x ~ [seq_len, batch_size, embedding_size]
+        outputs, (_, _) = self.lstm(x) # outputs ~ [seq_len, batch_size, hidden_size * 2]
+        outputs = outputs[-1] # outputs ~ [batch_size, hidden_size * 2]
+        logits = self.W(outputs) + self.b # logits ~ [batch_size, vocab_size]
         return logits
 
