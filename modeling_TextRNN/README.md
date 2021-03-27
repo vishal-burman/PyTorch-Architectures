@@ -8,10 +8,9 @@ Implementation of TextRNN architecture proposed in the paper _Finding Structure 
 import torch
 from model import TextRNN
 
-x_sample = torch.arange(4, dtype=torch.long).reshape(1, 4)
-x_sample = torch.eye(100)[x_sample]
+x_sample = torch.ones(4, dtype=torch.long).reshape(1, 4)
 
-model = TextRNN(vocab_size=100, hidden_size=100)
+model = TextRNN(vocab_size=100, embedding_size=32, hidden_size=100)
 
 logits = model(x_sample)
 ```
