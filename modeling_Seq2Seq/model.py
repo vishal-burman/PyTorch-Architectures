@@ -21,9 +21,17 @@ class Encoder(nn.Module):
         return hidden, cell
 
 class Decoder(nn.Module):
-    def __init__(self):
+    def __init__(self, output_dim, emb_dim, hidden_dim, num_layers, p_drop=0.1):
         super().__init__()
-        pass
+        self.output_dim = output_dim
+        self.emb_dim = emb_dim
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+        self.p_drop = p_drop
+        self.embedding = nn.Embedding(self.output_dim, self.emb_dim)
+        self.rnn = nn.LSTM(self.emb_dim, self.hidden_dim, self.num_layers, dropout=self.p_drop)
+        self.fc_out nn.Linear(self.hidden_dim, self.output_dim)
+        self.dropout = nn.Dropout(self.p_drop)
 
     def forward(self):
         pass
