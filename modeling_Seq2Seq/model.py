@@ -14,8 +14,11 @@ class Encoder(nn.Module):
         self.rnn = nn.LSTM(self.emb_dim, self.hidden_dim, self.num_layers, dropout=self.p_drop)
         self.dropout = nn.Dropout(self.p_drop)
 
-    def forward(self):
-        pass
+    def forward(self, src):
+        embedded = self.embedding(src)
+        embedded = self.dropout(embedded)
+        outputs, (hidden, cell) = self.rnn(embedded)
+        return hidden, cell
 
 class Decoder(nn.Module):
     def __init__(self):
