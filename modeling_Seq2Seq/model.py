@@ -33,8 +33,13 @@ class Decoder(nn.Module):
         self.fc_out nn.Linear(self.hidden_dim, self.output_dim)
         self.dropout = nn.Dropout(self.p_drop)
 
-    def forward(self):
-        pass
+    def forward(self, input, hidden, cell):
+        input = input.unsqueeze(0)
+        embedded = self.embedding(input)
+        embedded = self.dropout(embedded)
+        output, (hidden, cell) = self.rnn(embedded, (hidden, cell))
+        prediction = self.fc_out(output.squeeze(0))
+        return prediction, hidden, cell
 
 class Seq2Seq(nn.Module):
     def __init__(self):
