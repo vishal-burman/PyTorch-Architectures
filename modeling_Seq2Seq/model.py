@@ -55,7 +55,7 @@ class Seq2Seq(nn.Module):
         outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(src.device)
         hidden, cell = self.encoder(src)
         input = trg[0, :] # First input to the decoder is <sos> token
-        for i in range(1, trg_len):
+        for t in range(1, trg_len):
             output, hidden, cell = self.decoder(input, hidden, cell)
             outputs[t] = output
             teacher_force = random.random() < teacher_forcing_ratio
