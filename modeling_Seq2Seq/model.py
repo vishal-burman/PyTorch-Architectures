@@ -30,7 +30,7 @@ class Decoder(nn.Module):
         self.p_drop = p_drop
         self.embedding = nn.Embedding(self.output_dim, self.emb_dim)
         self.rnn = nn.LSTM(self.emb_dim, self.hidden_dim, self.num_layers, dropout=self.p_drop)
-        self.fc_out nn.Linear(self.hidden_dim, self.output_dim)
+        self.fc_out = nn.Linear(self.hidden_dim, self.output_dim)
         self.dropout = nn.Dropout(self.p_drop)
 
     def forward(self, input, hidden, cell):
@@ -47,5 +47,18 @@ class Seq2Seq(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self):
-        pass
+    def forward(self, src, trg, teacher_forcing_ratio=0.5):
+        batch_size = trg.size(1)
+        trg_len = trg.size(0)
+        trg_vocab_size = self.decoder.output_dim
+        
+        outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(src.device)
+        hidden, cell = self.encoder(src)
+        input = trg[0, :] # First input to the decoder is <sos> token
+        for i in range(1, trg_len):
+            output, hidden, cell = self.decoder(input, hidden, cell)
+            outputs[t] = output
+            teacher_force = random.random() < teacher_forcing_ratio
+            top1 = output.argmax(1)
+            input = trg[t] if teacher_force else top1
+        return outputs
