@@ -12,8 +12,10 @@ class Encoder(nn.Module):
         self.rnn = nn.GRU(self.emb_dim, self.hidden_dim)
         self.dropout = nn.Dropout(self.p_drop)
 
-    def forward(self):
-        pass
+    def forward(self, src):
+        embedded = self.dropout(self.embedding(src))
+        outputs, hidden = self.rnn(embedded)
+        return hidden
 
 class Decoder(nn.Module):
     def __init__(self):
