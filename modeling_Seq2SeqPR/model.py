@@ -18,9 +18,16 @@ class Encoder(nn.Module):
         return hidden
 
 class Decoder(nn.Module):
-    def __init__(self):
+    def __init__(self, output_dim, emb_dim, hidden_dim, p_drop=0.1):
         super().__init__()
-        pass
+        self.output_dim = output_dim
+        self.emb_dim = emb_dim
+        self.hidden_dim = hidden_dim
+        self.p_drop = p_drop
+        self.embedding = nn.Embedding(self.output_dim, self.emb_dim)
+        self.rnn = nn.GRU(emb_dim + hidden_dim, hid_dim)
+        self.fc_out = nn.Linear(emb_dim + hid_dim * 2, output_dim)
+        self.dropout = nn.Dropout(self.p_drop)
 
     def forward(self):
         pass
