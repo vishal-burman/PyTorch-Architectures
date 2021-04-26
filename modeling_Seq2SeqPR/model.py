@@ -25,12 +25,13 @@ class Decoder(nn.Module):
         self.hidden_dim = hidden_dim
         self.p_drop = p_drop
         self.embedding = nn.Embedding(self.output_dim, self.emb_dim)
-        self.rnn = nn.GRU(emb_dim + hidden_dim, hid_dim)
-        self.fc_out = nn.Linear(emb_dim + hid_dim * 2, output_dim)
+        self.rnn = nn.GRU(self.emb_dim + self.hidden_dim, self.hidden_dim)
+        self.fc_out = nn.Linear(self.emb_dim + self.hidden_dim * 2, self.output_dim)
         self.dropout = nn.Dropout(self.p_drop)
 
-    def forward(self):
+    def forward(self, input, hidden, context):
         pass
+
 
 class Seq2SeqPR(nn.Module):
     def __init__(self):
