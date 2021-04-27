@@ -1,4 +1,4 @@
-import pdb
+import random
 import torch
 import torch.nn as nn
 
@@ -53,7 +53,7 @@ class Seq2SeqPR(nn.Module):
         outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(src.device) # outputs ~ [trg_len, batch_size, trg_vocab_size]
         context = self.encoder(src) # context ~ [batch_size, max_len, hidden_dim]
         hidden = context # hidden ~ [batch_size, max_len, hidden_dim)
-        input = [0, :] # input ~ [batch_size] --> first input <sos> 
+        input = trg[0, :] # input ~ [batch_size] --> first input <sos> 
         for t in range(1, trg_len):
             output, hidden = self.decoder(input, hidden, context) # output ~ [batch_size, output_dim] | hiddden ~ [1, batch_size, hidden_dim]
             outputs[t] = output # outputs ~ [trg_len, batch_size, trg_vocab_size]
