@@ -50,13 +50,13 @@ class Seq2SeqPR(nn.Module):
         batch_size = trg.size(1)
         trg_len = trg.size(0)
         trg_vocab_size = self.decoder.output_dim
-        outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(src.device)
-        context = self.encoder(src)
-        hidden = context
-        input = [0, :]
+        outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(src.device) # outputs ~ [trg_len, batch_size, trg_vocab_size]
+        context = self.encoder(src) # context ~ [batch_size, max_len, hidden_dim]
+        hidden = context # hidden ~ [batch_size, max_len, hidden_dim)
+        input = [0, :] # input ~ [batch_size] --> first input <sos> 
         for t in range(1, trg_len):
-            output, hidden = self.decoder(input, hidden, context)
-            outputs[t] = output
+            output, hidden = self.decoder(input, hidden, context) # output ~ [batch_size, output_dim] | hiddden ~ [1, batch_size, hidden_dim]
+            outputs[t] = output # outputs ~ [trg_len, batch_size, trg_vocab_size]
             teacher_force = random.random() < teacher_forcing_ratio
             top1 = output.argmax(1)
             input = trg[t] if teacher_force else top1
