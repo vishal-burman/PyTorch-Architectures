@@ -6,7 +6,7 @@ Implementation of Seq2SeqPR architecture proposed in the paper _Learning Phrase 
 
 ```python
 import torch
-from model import Encoder, Decoder, Seq2Seq
+from model import Encoder, Decoder, Seq2SeqPR
 
 enc = Encoder(input_dim=100,
         emb_dim=32,
@@ -22,7 +22,7 @@ dec = Decoder(output_dim=100,
         p_drop=0.1,
         )
 
-model = Seq2Seq(encoder=enc, decoder=dec)
+model = Seq2SeqPR(encoder=enc, decoder=dec)
 
 x_sample = torch.arange(4, dtype=torch.long).reshape(4, 1)
 
