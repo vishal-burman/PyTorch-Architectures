@@ -30,7 +30,13 @@ class Decoder(nn.Module):
         self.dropout = nn.Dropout(self.p_drop)
 
     def forward(self, input, hidden, context):
-        pass
+        input = input.unsqueeze(0)
+        embedded = self.dropout(self.embedding(input))
+        emb_con = torch.cat((embedded, context), dim=2)
+        output, hidden = self.rnn(emb_con, hidden)
+        output = torch.cat((embedded.squeeze(0), hidden.squeeze(0), context.squeeze(0)), dim=1)
+        prediction = self.fc_out(output)
+        return prediction, hidden
 
 
 class Seq2SeqPR(nn.Module):
