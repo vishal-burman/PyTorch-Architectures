@@ -41,9 +41,10 @@ class Decoder(nn.Module):
 
 
 class Seq2SeqPR(nn.Module):
-    def __init__(self):
+    def __init__(self, encoder, decoder):
         super().__init__()
-        pass
+        self.encoder = encoder
+        self.decoder = decoder
 
     def forward(self):
         pass
