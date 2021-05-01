@@ -19,10 +19,24 @@ class XLNetModel(nn.Module):
         self.layer = nn.ModuleList([XLNetLayer(config) for _ in config.n_layers])
         self.dropout = nn.Dropout(config.dropout)
 
-    def forward(self, input_ids=None, attention_mask=None, perm_mask=None, target_mapping=None):
-        pass
+    def forward(self, input_ids=None, attention_mask=None): # input_ids, attention_mask ~ [batch_size, max_len]
+        input_ids = input_ids.transpose(0, 1).contiguous() # input_ids ~ [max_len, batch_size]
+        qlen, bs = input_ids.size(0), input_ids.size(1)
+        attention_mask = attention_mask.transpose(0, 1).contiguous() # attention_mask ~ [max_len, batch_size]
+        mlen = 0
+        klen = mlen + qlen
+        attn_mask = None
+        input_mask = 1.0 - attention_mask # input_mask ~ [max_len, batch_size]
+        data_mask = input_mask[None] # data_mask ~ [1, max_le, batch_size]
+        if attn_mask is None:
+            attn_mask = data_mask[:, :, :, None]  # attn_mask ~ [1, max_len, batch_size, 1]
+        attn_mask = (attn_mask > 0).to(torch.float) # attn_mask ~ [1, max_len, batch_size, 1]
+        non_tgt_mask = -torch.eye(qlen).to(attn_mask) # non_tgt_mask ~ [max_len, max_len]
+        non_tgt_mask = ((attn_mask + non_tgt_mask[:, :, None, None]) > 0).to(attn_mask) # non_tgt_mask ~ [max_len, max_len, batch_size, 1]
+        word_emb_k = self.word_embedding(input_ids) # word_emb_k ~ [max_len, batch_size, emb_size]
 
-class XLNetLM(nn.Module):
+
+class XLNetClassify(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.attn_type = config.attn_type
@@ -31,6 +45,10 @@ class XLNetLM(nn.Module):
         self.transformer = XLNetModel(config)
         self.lm_loss = nn.Linear(config.d_model, config.vocab_size, bias=True)
 
-    def forward(self, input_ids=None, attention_mask=None, perm_mask=None, target_mapping=None, labels=None):
-        transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask, perm_mask=perm_mask, target_mapping=target_mapping)
+    def forward(self, input_ids=None, attention_mask=None, labels=None):
+        """
+        input_ids ~ [batch_size, max_seq_len]
+        attention_mask ~ [batch_size, max_seq_len]
+        """
+        transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask)
         return transformer_outputs
