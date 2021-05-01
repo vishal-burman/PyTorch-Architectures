@@ -22,7 +22,7 @@
 | Word2Vec | [Paper](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_Word2Vec/test_sample_Word2Vec.ipynb) |
 | FastText | [Paper](https://arxiv.org/pdf/1607.01759) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_FastText/test_sample_FastText.ipynb) |
 | Seq2Seq | [Paper](https://arxiv.org/pdf/1409.3215) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_Seq2Seq/test_sample_Seq2Seq.ipynb) |
-| Learning Phrase Representations using Seq2Seq | [Paper](https://arxiv.org/pdf/1406.1078) | TBD |
+| Learning Phrase Representations using Seq2Seq | [Paper](https://arxiv.org/pdf/1406.1078) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_Seq2SeqPR/test_sample_Seq2SeqPR.ipynb) |
 | TextRNN | [Paper](https://onlinelibrary.wiley.com/doi/abs/10.1207/s15516709cog1402_1) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TextRNN/test_sample_TextRNN.ipynb) |
 | TextCNN | [Paper](https://arxiv.org/pdf/1408.5882) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TextCNN/test_sample_TextCNN.ipynb) |
 | TextBiLSTM | [Paper](https://www.bioinf.jku.at/publications/older/2604.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TextBiLSTM/test_sample_TextBiLSTM.ipynb) |
