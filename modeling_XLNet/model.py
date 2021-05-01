@@ -34,6 +34,10 @@ class XLNetModel(nn.Module):
         non_tgt_mask = -torch.eye(qlen).to(attn_mask) # non_tgt_mask ~ [max_len, max_len]
         non_tgt_mask = ((attn_mask + non_tgt_mask[:, :, None, None]) > 0).to(attn_mask) # non_tgt_mask ~ [max_len, max_len, batch_size, 1]
         word_emb_k = self.word_embedding(input_ids) # word_emb_k ~ [max_len, batch_size, emb_size]
+        output_h = self.dropout(word_emb_k)
+        output_g = None
+        seg_mat = None
+        pos_emb = self.relative_positional_encoding(qlen, klen, bs=bs)
 
 
 class XLNetClassify(nn.Module):
