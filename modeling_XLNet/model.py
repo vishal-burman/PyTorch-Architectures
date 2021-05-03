@@ -19,12 +19,21 @@ class XLNetModel(nn.Module):
         self.layer = nn.ModuleList([XLNetLayer(config) for _ in config.n_layers])
         self.dropout = nn.Dropout(config.dropout)
 
-    def relative_positional_encoding(self, qlen, klen, bsz=None): # qlen = klen
-        freq_seq = torch.arange(0, self.d_model, 2.0, dtype=torch.float) # freq_seq = [0, 2.0, 4.0 ... ]
-        inv_seq = 1 / torch.pow(10000, (freq_seq / self.d_model))
+    def positional_embedding(self, pos_seq, inv_freq, bs=None): # pos_seq, inv_freq ~ [2 * max_len]
+        sinusoid_inp = torch.einsum("i,d->id", pos_seq, inv_freq) # sinusoid_inp ~ [2 * max_len, d_model / 2]
+        pos_emb = torch.cat([torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)], dim=-1) # pos_emb ~ [2 * max_len, d_model]
+        pos_emb = pos_emb[:, None, :] # pos_emb ~ [2 * max_len, 1, d_model]
+        pos_emb = pos_emb.expand(1, bs, 1) # pos_emb ~ [2 * max_len, bs, d_model]
+        return pos_emb
+
+    def relative_positional_encoding(self, qlen, klen, bs=None): # qlen = klen
+        freq_seq = torch.arange(0, self.d_model, 2.0, dtype=torch.float) # freq_seq ~ [d_model / 2]
+        inv_seq = 1 / torch.pow(10000, (freq_seq / self.d_model)) # inv_seq ~ [d_model / 2]
         beg, end = klen, -qlen
-        fwd_pos_seq = torch.arange(beg, end, -1.0, dtype=torch.float)
-        bwd_pos_seq = torch.arange(-beg, -end, 1.0, dtype=torch.float)
+        fwd_pos_seq = torch.arange(beg, end, -1.0, dtype=torch.float) # fwd_pos_emb ~ [2 * max_len]
+        bwd_pos_seq = torch.arange(-beg, -end, 1.0, dtype=torch.float) # bwd_pos_emb ~ [2 * max_len] 
+        fwd_pos_emb = self.positional_embedding(fwd_pos_seq, inv_freq, bs // 2)
+        bwd_pos_emb = self.positional_embedding(bwd_pos_seq, inv_freq, bs // 2)
 
 
     def forward(self, input_ids=None, attention_mask=None): # input_ids, attention_mask ~ [batch_size, max_len]
