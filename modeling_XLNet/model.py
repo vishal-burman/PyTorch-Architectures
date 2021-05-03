@@ -23,7 +23,7 @@ class XLNetModel(nn.Module):
         sinusoid_inp = torch.einsum("i,d->id", pos_seq, inv_freq) # sinusoid_inp ~ [2 * max_len, d_model / 2]
         pos_emb = torch.cat([torch.sin(sinusoid_inp), torch.cos(sinusoid_inp)], dim=-1) # pos_emb ~ [2 * max_len, d_model]
         pos_emb = pos_emb[:, None, :] # pos_emb ~ [2 * max_len, 1, d_model]
-        pos_emb = pos_emb.expand(-1, bs, -1) # pos_emb ~ [2 * max_len, bs, d_model]
+        pos_emb = pos_emb.expand(-1, bs, -1) # pos_emb ~ [2 * max_len, bs // 2, d_model]
         return pos_emb
 
     def relative_positional_encoding(self, qlen, klen, bs=None): # qlen = klen
@@ -32,8 +32,10 @@ class XLNetModel(nn.Module):
         beg, end = klen, -qlen
         fwd_pos_seq = torch.arange(beg, end, -1.0, dtype=torch.float) # fwd_pos_emb ~ [2 * max_len]
         bwd_pos_seq = torch.arange(-beg, -end, 1.0, dtype=torch.float) # bwd_pos_emb ~ [2 * max_len] 
-        fwd_pos_emb = self.positional_embedding(fwd_pos_seq, inv_freq, bs // 2) # fwd_pos_emb ~ [2 * max_len, bs, d_model]
-        bwd_pos_emb = self.positional_embedding(bwd_pos_seq, inv_freq, bs // 2) # bwd_pos_emb ~ [2 * max_len, bs, d_model]
+        fwd_pos_emb = self.positional_embedding(fwd_pos_seq, inv_freq, bs // 2) # fwd_pos_emb ~ [2 * max_len, bs//2, d_model]
+        bwd_pos_emb = self.positional_embedding(bwd_pos_seq, inv_freq, bs // 2) # bwd_pos_emb ~ [2 * max_len, bs//2, d_model]
+        pos_emb = torch.cat([fwd_pos_emb bwd_pos_emb], dim=1) # pos_emb ~ [2 * max_len, bs, d_model]
+        return pos_emb
 
 
     def forward(self, input_ids=None, attention_mask=None): # input_ids, attention_mask ~ [batch_size, max_len]
