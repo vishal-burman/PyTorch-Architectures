@@ -24,6 +24,19 @@ class XLNetRelativeAttention(nn.Module):
         self.layer_norm = nn.LayerNorm(config.d_model, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.dropout)
 
+    def rel_shift_bnij(x, klen=-1):
+        pass
+
+    def rel_attn_core(self, q_head, k_head_h, v_head_h, k_head_r, attn_mask=None):
+        """
+        q_head, k_head_h, v_head_h ~ [max_len, bs, n_head, d_head]
+        k_head_r ~ [2 * max_len, bs, n_head, d_head]
+        attn_mask ~ [max_len, max_len, bs, 1]
+        """
+        ac = torch.einsum('ibnd,jbnd->bnij', q_head + self.r_w_bias, k_head_h) # ac ~ [bs, n_head, max_len, max_len] --> content based att score
+        bd = torch.einsum('ibnd,jbnd->bnij', q_head + self.r_r_bias, k_head_r) # bd ~ [bs, n_head, max_len, 2 * max_len] --> position based attn score
+
+
     def forward(self, h, g, attn_mask_h, attn_mask_g, r):
         """
         h ~ [max_len, bs, d_model]
@@ -38,7 +51,15 @@ class XLNetRelativeAttention(nn.Module):
         v_head_h = torch.einsum('ibh,hnd->ibnd', h, self.v) # v_head_h ~ [max_len, bs, n_head, d_head]
 
         # Positional heads
-        k_head_r = torch.einsum('ibh,hnd->ibnd', r.type(self.r.dtype), self.r)
+        k_head_r = torch.einsum('ibh,hnd->ibnd', r, self.r) # k_head_r ~ [2 * max_len, bs, n_head, d_head]
+
+        attn_vec = self.rel_attn_core(
+                q_head_h,
+                k_head_h,
+                v_head_h,
+                k_head_r,
+                attn_mask=attn_mask_h,
+                )
 
 class XLNetLayer(nn.Module):
     def __init__(self, config):
