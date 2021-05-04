@@ -2,6 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class XLNetRelativeAttention(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self):
+        pass
+
 class XLNetLayer(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -10,8 +18,8 @@ class XLNetLayer(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
         self.seq_len_dim = 1
 
-    def forward(self):
-        pass
+    def forward(self, output_h, output_g, attn_mask_h, attn_mask_g, r):
+        outputs = self.rel_attn(output_h, output_g, attn_mask_h, attn_mask_g, r)
 
 class XLNetModel(nn.Module):
     def __init__(self, config):
