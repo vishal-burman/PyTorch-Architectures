@@ -3,9 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class XLNetLayer(nn.Module):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
-        pass
+        self.rel_attn = XLNetRelativeAttention(config)
+        self.ff = XLNetFeedForward(config)
+        self.dropout = nn.Dropout(config.dropout)
+        self.seq_len_dim = 1
 
     def forward(self):
         pass
@@ -67,7 +70,12 @@ class XLNetModel(nn.Module):
         pos_emb = self.relative_positional_encoding(qlen, klen, bs=bs) # pos_emb ~ [2 * max_len, bs, d_model]
         pos_emb = self.dropout(pos_emb) # pos_emb ~ [2 * max_len, bs, d_model]
         for i, layer_module in enumerate(self.layer):
-            pass
+            outputs = layer_module(output_h,
+                    output_g,
+                    attn_mask_h=non_tgt_mask,
+                    attn_mask_g=attn_mask,
+                    r=pos_emb,
+                    )
 
 
 class XLNetClassify(nn.Module):
