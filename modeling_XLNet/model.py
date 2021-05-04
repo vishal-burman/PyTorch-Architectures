@@ -2,6 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class XLNetLayer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self):
+        pass
+
 class XLNetModel(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -43,7 +51,7 @@ class XLNetModel(nn.Module):
         qlen, bs = input_ids.size(0), input_ids.size(1)
         attention_mask = attention_mask.transpose(0, 1).contiguous() # attention_mask ~ [max_len, batch_size]
         mlen = 0
-        klen = mlen + qlen
+        klen = mlen + qlen # klen = max_len
         attn_mask = None
         input_mask = 1.0 - attention_mask # input_mask ~ [max_len, batch_size]
         data_mask = input_mask[None] # data_mask ~ [1, max_le, batch_size]
@@ -56,7 +64,10 @@ class XLNetModel(nn.Module):
         output_h = self.dropout(word_emb_k) # output_h ~ [max_len, batch_size, emb_size]
         output_g = None
         seg_mat = None
-        pos_emb = self.relative_positional_encoding(qlen, klen, bs=bs)
+        pos_emb = self.relative_positional_encoding(qlen, klen, bs=bs) # pos_emb ~ [2 * max_len, bs, d_model]
+        pos_emb = self.dropout(pos_emb) # pos_emb ~ [2 * max_len, bs, d_model]
+        for i, layer_module in enumerate(self.layer):
+            pass
 
 
 class XLNetClassify(nn.Module):
