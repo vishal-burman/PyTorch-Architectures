@@ -24,8 +24,21 @@ class XLNetRelativeAttention(nn.Module):
         self.layer_norm = nn.LayerNorm(config.d_model, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.dropout)
 
-    def forward(self):
-        pass
+    def forward(self, h, g, attn_mask_h, attn_mask_g, r):
+        """
+        h ~ [max_len, bs, d_model]
+        g ~ None
+        attn_mask_h ~ [max_len, max_len, bs, 1]
+        attn_mask_g ~ [1, max_len, bs, 1]
+        r ~ [2 * max_len, bs, d_model]
+        """
+        # Content heads
+        q_head_h = torch.einsum('ibh,hnd->ibnd', h, self.q) # q_head_h ~ [max_len, bs, n_head, d_head]
+        k_head_h = torch.einsum('ibh,hnd->ibnd', h, self.k) # k_head_h ~ [max_len, bs, n_head, d_head]
+        v_head_h = torch.einsum('ibh,hnd->ibnd', h, self.v) # v_head_h ~ [max_len, bs, n_head, d_head]
+
+        # Positional heads
+        k_head_r = torch.einsum('ibh,hnd->ibnd', r.type(self.r.dtype), self.r)
 
 class XLNetLayer(nn.Module):
     def __init__(self, config):
@@ -88,18 +101,18 @@ class XLNetModel(nn.Module):
         attn_mask = (attn_mask > 0).to(torch.float) # attn_mask ~ [1, max_len, batch_size, 1]
         non_tgt_mask = -torch.eye(qlen).to(attn_mask) # non_tgt_mask ~ [max_len, max_len]
         non_tgt_mask = ((attn_mask + non_tgt_mask[:, :, None, None]) > 0).to(attn_mask) # non_tgt_mask ~ [max_len, max_len, batch_size, 1]
-        word_emb_k = self.word_embedding(input_ids) # word_emb_k ~ [max_len, batch_size, emb_size]
-        output_h = self.dropout(word_emb_k) # output_h ~ [max_len, batch_size, emb_size]
+        word_emb_k = self.word_embedding(input_ids) # word_emb_k ~ [max_len, batch_size, d_model]
+        output_h = self.dropout(word_emb_k) # output_h ~ [max_len, batch_size, d_model]
         output_g = None
         seg_mat = None
         pos_emb = self.relative_positional_encoding(qlen, klen, bs=bs) # pos_emb ~ [2 * max_len, bs, d_model]
         pos_emb = self.dropout(pos_emb) # pos_emb ~ [2 * max_len, bs, d_model]
         for i, layer_module in enumerate(self.layer):
-            outputs = layer_module(output_h,
-                    output_g,
-                    attn_mask_h=non_tgt_mask,
-                    attn_mask_g=attn_mask,
-                    r=pos_emb,
+            outputs = layer_module(output_h, # output_h ~ [max_len, batch_size, d_model]
+                    output_g, # output_g ~ None
+                    attn_mask_h=non_tgt_mask, # attn_mask_h ~ [max_len, max_len, batch_size, 1]
+                    attn_mask_g=attn_mask, # attn_mask_g ~ [1, max_len, batch_size, 1]
+                    r=pos_emb, # r ~ [2 * max_len, bs, d_model]
                     )
 
 
