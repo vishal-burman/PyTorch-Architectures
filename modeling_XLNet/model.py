@@ -77,9 +77,13 @@ class XLNetRelativeAttention(nn.Module):
         return output_h
 
 class XLNetFeedForward(nn.Module):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
-        pass
+        self.layer_norm = nn.LayerNorm(config.d_model, eps=config.layer_norm_eps)
+        self.layer_1 = nn.Linear(config.d_model, config.d_inner)
+        self.layer_2 = nn.Linear(config.d_inner, config.d_model)
+        self.dropout = nn.Dropout(config.dropout)
+        self.activation_function = nn.GELU()
 
     def forward(self):
         pass
