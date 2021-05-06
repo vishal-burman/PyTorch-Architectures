@@ -24,8 +24,13 @@ class XLNetRelativeAttention(nn.Module):
         self.layer_norm = nn.LayerNorm(config.d_model, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.dropout)
 
-    def rel_shift_bnij(x, klen=-1):
-        pass
+    def rel_shift_bnij(x, klen=-1): # x ~ [bs, n_head, max_len, 2 * max_len]
+        x_size = x.shape
+        x = x.reshape(x_size[0], x_size[1], x_size[3], x_size[2]) # x ~ [bs, n_head, 2 * max_len, max_len]
+        x = x[:, :, 1:, :] # x ~ [bs, n_head, (2 * max_len) - 1, max_len]
+        x = x.reshape(x_size[0], x_size[1], x_size[2], x_size[3] - 1) # x ~ [bs, n_head, max_len, (2 * max_len) - 1]
+        x = torch.index_select(x, 3, torch.arange(klen, device=x.device, dtype=torch.long)) # x ~ [bs, n_head, max_len, max_len]
+        return x
 
     def rel_attn_core(self, q_head, k_head_h, v_head_h, k_head_r, attn_mask=None):
         """
@@ -35,7 +40,7 @@ class XLNetRelativeAttention(nn.Module):
         """
         ac = torch.einsum('ibnd,jbnd->bnij', q_head + self.r_w_bias, k_head_h) # ac ~ [bs, n_head, max_len, max_len] --> content based att score
         bd = torch.einsum('ibnd,jbnd->bnij', q_head + self.r_r_bias, k_head_r) # bd ~ [bs, n_head, max_len, 2 * max_len] --> position based attn score
-
+        bd = self.rel_shift_bnij(bd, klen=ac.shape[3]) # bd ~ [bs, n_head, max_len, max_len]
 
     def forward(self, h, g, attn_mask_h, attn_mask_g, r):
         """
