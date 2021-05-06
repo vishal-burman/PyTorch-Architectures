@@ -180,7 +180,7 @@ class XLNetClassify(nn.Module):
         super().__init__()
         self.transformer = XLNetModel(config)
         self.num_labels = config.num_labels
-        self.summary = self.Linear(config.d_model, self.num_labels)
+        self.logits_proj = self.Linear(config.d_model, self.num_labels)
         self.summary_activation = nn.Tanh()
         self.last_dropout = nn.Dropout(config.summary_last_dropout)
 
@@ -189,4 +189,13 @@ class XLNetClassify(nn.Module):
         input_ids ~ [batch_size, max_seq_len]
         attention_mask ~ [batch_size, max_seq_len]
         """
-        output = self.transformer(input_ids, attention_mask=attention_mask)
+        output = self.transformer(input_ids, attention_mask=attention_mask) # output ~ [bs, max_len, d_model]
+        output = output[:, -1] # output ~ [bs, d_model]
+        output = self.summary_activation(output) # output ~ [bs, d_model]
+        output = self.last_dropout(output) # output ~ [bs, d_model]
+        output = self.logits_proj(output) # output ~ [bs, num_labels]
+        loss = None
+        if labels is not None:
+            loss_fct = CrossEntropyLoss()
+            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+        return (output, loss)
