@@ -24,7 +24,7 @@ class XLNetRelativeAttention(nn.Module):
         self.layer_norm = nn.LayerNorm(config.d_model, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.dropout)
 
-    def rel_shift_bnij(x, klen=-1): # x ~ [bs, n_head, max_len, 2 * max_len]
+    def rel_shift_bnij(self, x, klen=-1): # x ~ [bs, n_head, max_len, 2 * max_len]
         x_size = x.shape
         x = x.reshape(x_size[0], x_size[1], x_size[3], x_size[2]) # x ~ [bs, n_head, 2 * max_len, max_len]
         x = x[:, :, 1:, :] # x ~ [bs, n_head, (2 * max_len) - 1, max_len]
@@ -40,7 +40,7 @@ class XLNetRelativeAttention(nn.Module):
         """
         ac = torch.einsum('ibnd,jbnd->bnij', q_head + self.r_w_bias, k_head_h) # ac ~ [bs, n_head, max_len, max_len] --> content based att score
         bd = torch.einsum('ibnd,jbnd->bnij', q_head + self.r_r_bias, k_head_r) # bd ~ [bs, n_head, max_len, 2 * max_len] --> position based attn score
-        bd = self.rel_shift_bnij(bd, klen=ac.shape[3]) # bd ~ [bs, n_head, max_len, max_len]
+        bd = self.rel_shift_bnij(bd, klen=ac.size(3)) # bd ~ [bs, n_head, max_len, max_len]
         attn_score = (ac + bd) * self.scale # attn_score ~ [bs, n_head, max_len, max_len]
         attn_score = attn_score - 1e30 * torch.einsum('ijbn->bnij', attn_mask) # attn_score ~ [bs, n_head, max_len, max_len]
         attn_prob = F.softmax(attn_score, dim=3) # attn_prob ~ [bs, n_head, max_len, max_len]
@@ -70,7 +70,7 @@ class XLNetRelativeAttention(nn.Module):
         v_head_h = torch.einsum('ibh,hnd->ibnd', h, self.v) # v_head_h ~ [max_len, bs, n_head, d_head]
 
         # Positional heads
-        k_head_r = torch.einsum('ibh,hnd->ibnd', r, self.r) # k_head_r ~ [2 * max_len, bs, n_head, d_head]
+        k_head_r = torch.einsum('ibh,hnd->ibnd', r.type(self.r.dtype), self.r) # k_head_r ~ [2 * max_len, bs, n_head, d_head]
 
         attn_vec = self.rel_attn_core(q_head_h, k_head_h, v_head_h, k_head_r, attn_mask=attn_mask_h) # attn_vec ~  [max_len, bs, n_head, d_head]
         output_h = self.post_attention(h, attn_vec) # output_h ~ [max_len, bs, d_model]
@@ -111,18 +111,12 @@ class XLNetLayer(nn.Module):
 class XLNetModel(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.mem_len = config.mem_len
-        self.reuse_len = config.reuse_len
         self.d_model = config.d_model
-        self.same_length = config.same_length
-        self.attn_type = config.attn_type
-        self.bi_data = config.bi_data
-        self.clamp_len = clamp_len
         self.n_layer = config.n_layer
         
         self.word_embedding = nn.Embedding(config.vocab_size, config.d_model)
         self.mask_emb = nn.Parameter(torch.FloatTensor(1, 1, config.d_model))
-        self.layer = nn.ModuleList([XLNetLayer(config) for _ in config.n_layers])
+        self.layer = nn.ModuleList([XLNetLayer(config) for _ in range(config.n_layer)])
         self.dropout = nn.Dropout(config.dropout)
 
     def positional_embedding(self, pos_seq, inv_freq, bs=None): # pos_seq, inv_freq ~ [2 * max_len]
@@ -134,15 +128,11 @@ class XLNetModel(nn.Module):
 
     def relative_positional_encoding(self, qlen, klen, bs=None): # qlen = klen
         freq_seq = torch.arange(0, self.d_model, 2.0, dtype=torch.float) # freq_seq ~ [d_model / 2]
-        inv_seq = 1 / torch.pow(10000, (freq_seq / self.d_model)) # inv_seq ~ [d_model / 2]
+        inv_freq = 1 / torch.pow(10000, (freq_seq / self.d_model)) # inv_seq ~ [d_model / 2]
         beg, end = klen, -qlen
         fwd_pos_seq = torch.arange(beg, end, -1.0, dtype=torch.float) # fwd_pos_emb ~ [2 * max_len]
-        bwd_pos_seq = torch.arange(-beg, -end, 1.0, dtype=torch.float) # bwd_pos_emb ~ [2 * max_len] 
-        fwd_pos_emb = self.positional_embedding(fwd_pos_seq, inv_freq, bs // 2) # fwd_pos_emb ~ [2 * max_len, bs//2, d_model]
-        bwd_pos_emb = self.positional_embedding(bwd_pos_seq, inv_freq, bs // 2) # bwd_pos_emb ~ [2 * max_len, bs//2, d_model]
-        pos_emb = torch.cat([fwd_pos_emb bwd_pos_emb], dim=1) # pos_emb ~ [2 * max_len, bs, d_model]
+        pos_emb = self.positional_embedding(fwd_pos_seq, inv_freq, bs) # pos_emb ~ [2 * max_len, bs, d_model]
         return pos_emb
-
 
     def forward(self, input_ids=None, attention_mask=None): # input_ids, attention_mask ~ [batch_size, max_len]
         input_ids = input_ids.transpose(0, 1).contiguous() # input_ids ~ [max_len, batch_size]
@@ -180,9 +170,9 @@ class XLNetClassify(nn.Module):
         super().__init__()
         self.transformer = XLNetModel(config)
         self.num_labels = config.num_labels
-        self.logits_proj = self.Linear(config.d_model, self.num_labels)
+        self.logits_proj = nn.Linear(config.d_model, self.num_labels)
         self.summary_activation = nn.Tanh()
-        self.last_dropout = nn.Dropout(config.summary_last_dropout)
+        self.last_dropout = nn.Dropout(config.dropout)
 
     def forward(self, input_ids=None, attention_mask=None, labels=None):
         """
@@ -193,9 +183,9 @@ class XLNetClassify(nn.Module):
         output = output[:, -1] # output ~ [bs, d_model]
         output = self.summary_activation(output) # output ~ [bs, d_model]
         output = self.last_dropout(output) # output ~ [bs, d_model]
-        output = self.logits_proj(output) # output ~ [bs, num_labels]
+        logits = self.logits_proj(output) # output ~ [bs, num_labels]
         loss = None
         if labels is not None:
-            loss_fct = CrossEntropyLoss()
+            loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
         return (output, loss)
