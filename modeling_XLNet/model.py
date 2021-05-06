@@ -85,8 +85,15 @@ class XLNetFeedForward(nn.Module):
         self.dropout = nn.Dropout(config.dropout)
         self.activation_function = nn.GELU()
 
-    def forward(self):
-        pass
+    def forward(self, inp): # inp ~ [max_len, bs, d_model]
+        output = inp
+        output = self.layer_1(inp) # output ~ [max_len, bs, d_inner]
+        output = self.activation_function(output) # output ~ [max_len, bs, d_inner]
+        output = self.dropout(output) # output ~ [max_len, bs, d_inner]
+        output = self.layer_2(output) # output ~ [max_len, bs, d_model]
+        output = self.dropout(output) # output ~ [max_len, bs, d_model]
+        output = self.layer_norm(output + inp) # output ~ [max_len, bs, d_model]
+        return output
 
 class XLNetLayer(nn.Module):
     def __init__(self, config):
