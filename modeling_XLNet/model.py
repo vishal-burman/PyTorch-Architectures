@@ -48,6 +48,14 @@ class XLNetRelativeAttention(nn.Module):
         attn_vec = torch.einsum('bnij,jbnd->ibnd', attn_prob, v_head_h) # attn_vec ~ [max_len, bs, n_head, d_head]
         return attn_vec
 
+    def post_attention(self, h, attn_vec, residual=True): # h ~ [max_len, bs, d_model] | attn_vec ~ [max_len, bs, n_head, d_head]
+        attn_out = torch.einsum('ibnd,hnd->ibh', attn_vec, self.o) # attn_out ~ [max_len, bs, d_model]
+        attn_out = self.dropout(attn_out) # attn_out ~ [max_len, bs, d_model]
+        if residual:
+            attn_out = attn_out + h # attn_out ~ [max_len, bs, d_model]
+        output = self.layer_norm(attn_out) # output ~ [max_len, bs, d_model]
+        return output
+
     def forward(self, h, g, attn_mask_h, attn_mask_g, r):
         """
         h ~ [max_len, bs, d_model]
@@ -65,7 +73,7 @@ class XLNetRelativeAttention(nn.Module):
         k_head_r = torch.einsum('ibh,hnd->ibnd', r, self.r) # k_head_r ~ [2 * max_len, bs, n_head, d_head]
 
         attn_vec = self.rel_attn_core(q_head_h, k_head_h, v_head_h, k_head_r, attn_mask=attn_mask_h) # attn_vec ~  [max_len, bs, n_head, d_head]
-
+        output_h = self.post_attention(h, attn_vec) # output_h ~ [max_len, bs, d_model]
 
 class XLNetLayer(nn.Module):
     def __init__(self, config):
