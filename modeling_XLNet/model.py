@@ -105,7 +105,8 @@ class XLNetLayer(nn.Module):
 
     def forward(self, output_h, output_g, attn_mask_h, attn_mask_g, r):
         output_h = self.rel_attn(output_h, output_g, attn_mask_h, attn_mask_g, r) # outputs ~ [max_len, bs, d_model]
-        output_h = self.ff(output_h)
+        output_h = self.ff(output_h) # output_h ~ [max_len, bs, d_model]
+        return output_h
 
 class XLNetModel(nn.Module):
     def __init__(self, config):
@@ -164,27 +165,28 @@ class XLNetModel(nn.Module):
         pos_emb = self.relative_positional_encoding(qlen, klen, bs=bs) # pos_emb ~ [2 * max_len, bs, d_model]
         pos_emb = self.dropout(pos_emb) # pos_emb ~ [2 * max_len, bs, d_model]
         for i, layer_module in enumerate(self.layer):
-            outputs = layer_module(output_h, # output_h ~ [max_len, batch_size, d_model]
+            output_h = layer_module(output_h, 
                     output_g, # output_g ~ None
                     attn_mask_h=non_tgt_mask, # attn_mask_h ~ [max_len, max_len, batch_size, 1]
                     attn_mask_g=attn_mask, # attn_mask_g ~ [1, max_len, batch_size, 1]
                     r=pos_emb, # r ~ [2 * max_len, bs, d_model]
-                    )
-
+                    ) # output_h ~ [max_len, bs, d_model]
+        output_h = self.dropout(output_h) # output_h ~ [max_len, bs, d_model]
+        output_h = output_h.permute(1, 0, 2).contiguous() # output_h ~ [bs, max_len, d_model]
+        return output_h
 
 class XLNetClassify(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.attn_type = config.attn_type
-        self.same_length =config.same_length
-        
         self.transformer = XLNetModel(config)
-        self.lm_loss = nn.Linear(config.d_model, config.vocab_size, bias=True)
+        self.num_labels = config.num_labels
+        self.summary = self.Linear(config.d_model, self.num_labels)
+        self.summary_activation = nn.Tanh()
+        self.last_dropout = nn.Dropout(config.summary_last_dropout)
 
     def forward(self, input_ids=None, attention_mask=None, labels=None):
         """
         input_ids ~ [batch_size, max_seq_len]
         attention_mask ~ [batch_size, max_seq_len]
         """
-        transformer_outputs = self.transformer(input_ids, attention_mask=attention_mask)
-        return transformer_outputs
+        output = self.transformer(input_ids, attention_mask=attention_mask)
