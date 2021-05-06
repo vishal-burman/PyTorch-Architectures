@@ -74,6 +74,15 @@ class XLNetRelativeAttention(nn.Module):
 
         attn_vec = self.rel_attn_core(q_head_h, k_head_h, v_head_h, k_head_r, attn_mask=attn_mask_h) # attn_vec ~  [max_len, bs, n_head, d_head]
         output_h = self.post_attention(h, attn_vec) # output_h ~ [max_len, bs, d_model]
+        return output_h
+
+class XLNetFeedForward(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self):
+        pass
 
 class XLNetLayer(nn.Module):
     def __init__(self, config):
@@ -84,7 +93,8 @@ class XLNetLayer(nn.Module):
         self.seq_len_dim = 1
 
     def forward(self, output_h, output_g, attn_mask_h, attn_mask_g, r):
-        outputs = self.rel_attn(output_h, output_g, attn_mask_h, attn_mask_g, r)
+        output_h = self.rel_attn(output_h, output_g, attn_mask_h, attn_mask_g, r) # outputs ~ [max_len, bs, d_model]
+        output_h = self.ff(output_h)
 
 class XLNetModel(nn.Module):
     def __init__(self, config):
