@@ -101,7 +101,6 @@ class XLNetLayer(nn.Module):
         self.rel_attn = XLNetRelativeAttention(config)
         self.ff = XLNetFeedForward(config)
         self.dropout = nn.Dropout(config.dropout)
-        self.seq_len_dim = 1
 
     def forward(self, output_h, output_g, attn_mask_h, attn_mask_g, r):
         output_h = self.rel_attn(output_h, output_g, attn_mask_h, attn_mask_g, r) # outputs ~ [max_len, bs, d_model]
@@ -153,7 +152,7 @@ class XLNetModel(nn.Module):
         output_g = None
         seg_mat = None
         pos_emb = self.relative_positional_encoding(qlen, klen, bs=bs) # pos_emb ~ [2 * max_len, bs, d_model]
-        pos_emb = self.dropout(pos_emb) # pos_emb ~ [2 * max_len, bs, d_model]
+        pos_emb = self.dropout(pos_emb).to(output_h.device) # pos_emb ~ [2 * max_len, bs, d_model]
         for i, layer_module in enumerate(self.layer):
             output_h = layer_module(output_h, 
                     output_g, # output_g ~ None
