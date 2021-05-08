@@ -187,4 +187,4 @@ class XLNetClassify(nn.Module):
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-        return (output, loss)
+        return (logits, loss)
