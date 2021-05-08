@@ -7,6 +7,7 @@ class XLNetConfig:
             n_head=16,
             d_inner=1024,
             layer_norm_eps=1e-12,
+            initializer_range=0.02,
             dropout=0.1,
             num_labels=2,
             ):
@@ -17,5 +18,6 @@ class XLNetConfig:
         self.n_head = n_head
         self.d_inner = d_inner
         self.layer_norm_eps = layer_norm_eps
+        self.initializer_range = initializer_range
         self.dropout = dropout
         self.num_labels = num_labels
