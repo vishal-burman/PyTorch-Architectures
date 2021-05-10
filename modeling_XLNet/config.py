@@ -3,7 +3,7 @@ class XLNetConfig:
             self,
             vocab_size=32000,
             d_model=1024,
-            n_layer=8,
+            n_layer=4,
             n_head=16,
             d_inner=1024,
             layer_norm_eps=1e-12,
