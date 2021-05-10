@@ -2,6 +2,23 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class InitModule(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            module.weight.data.normal_(mean=0.0, std=0.02)
+            if module.bias is not None:
+                module.bias.data.zero_()
+        elif isinstance(module, nn.Embedding):
+            module.weight.data.normal_(mean=0.0, std=0.02)
+            if module.padding_idx is not None:
+                module.weight.data[module.padding_idx].zero_()
+
+    def init_weights(self):
+        self.apply(self._init_weights)
+
 class XLNetRelativeAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -107,7 +124,7 @@ class XLNetLayer(nn.Module):
         output_h = self.ff(output_h) # output_h ~ [max_len, bs, d_model]
         return output_h
 
-class XLNetModel(nn.Module):
+class XLNetModel(InitModule):
     def __init__(self, config):
         super().__init__()
         self.d_model = config.d_model
@@ -164,7 +181,7 @@ class XLNetModel(nn.Module):
         output_h = output_h.permute(1, 0, 2).contiguous() # output_h ~ [bs, max_len, d_model]
         return output_h
 
-class XLNetClassify(nn.Module):
+class XLNetClassify(InitModule):
     def __init__(self, config):
         super().__init__()
         self.transformer = XLNetModel(config)
