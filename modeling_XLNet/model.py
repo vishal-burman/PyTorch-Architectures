@@ -31,6 +31,8 @@ class InitModule(nn.Module):
                     module.seg_embed,
                     ]:
                 param.data.normal_(mean=0.0, std=0.02)
+        elif isinstance(module, XLNetModel):
+            module.mask_emb.data.normal_(mean=0.0, std=0.02)
 
     def init_weights(self):
         self.apply(self._init_weights)
@@ -205,6 +207,7 @@ class XLNetClassify(InitModule):
         self.logits_proj = nn.Linear(config.d_model, self.num_labels)
         self.summary_activation = nn.Tanh()
         self.last_dropout = nn.Dropout(config.dropout)
+        self.init_weights()
 
     def forward(self, input_ids=None, attention_mask=None, labels=None):
         """
