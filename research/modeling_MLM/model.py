@@ -28,6 +28,7 @@ def get_mask_subset_with_prob(mask, prob): # mask ~ [batch_size, max_len]
 class MLM(nn.Module):
     def __init__(self, transformer, mask_prob=0.15, pad_token_id=0, mask_token_id=2, num_tokens=None, replace_prob=0.9, mask_ignore_token_ids=[]):
         super().__init__()
+        self.transformer = transformer
         self.mask_prob = mask_prob
         self.pad_token_id = pad_token_id
         self.mask_token_id = mask_token_id
