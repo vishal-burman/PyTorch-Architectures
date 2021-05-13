@@ -26,13 +26,13 @@ def get_mask_subset_with_prob(mask, prob): # mask ~ [batch_size, max_len]
     return new_mask[:, 1:].bool() # new_mask ~ [batch_size, max_len]
 
 class MLM(nn.Module):
-    def __init__(self, mask_prob=0.15, pad_token_id=0, mask_token_id=2, num_tokens=None, random_token_prob=0., mask_ignore_token_ids=[]):
+    def __init__(self, mask_prob=0.15, pad_token_id=0, mask_token_id=2, num_tokens=None, replace_prob=0.9, mask_ignore_token_ids=[]):
         super().__init__()
         self.mask_prob = mask_prob
         self.pad_token_id = pad_token_id
         self.mask_token_id = mask_token_id
         self.num_tokens = num_tokens
-        self.random_token_prob = random_token_prob
+        self.replace_prob = replace_prob
         self.mask_ignore_token_ids = set([*mask_ignore_token_ids, pad_token_id])
 
     def forward(self, input_ids): # input_ids ~ [batch_size, max_len]
@@ -40,7 +40,6 @@ class MLM(nn.Module):
         mask = get_mask_subset_with_prob(~no_mask, self.mask_prob) # mask ~ [batch_size, max_len]
         mask_indices = torch.nonzero(mask, as_tuple=True) # mask_indices ~ [mask_prob * max_len]
         masked_input = input_ids.clone().detach() # masked_input ~ [batch_size, max_len]
-        if self.random_token_prob > 0:
-            assert self.num_tokens is not None
-            random_token_prob = prob_mask_like(input_ids, self.random_token_prob) # random_token_prob ~ [batch_size, seq_len]
-        return random_token_prob
+        replace_prob = prob_mask_like(input_ids, self.replace_prob) # replace_prob ~ [batch_size, max_len]
+        masked_input = masked_input.masked_fill_(mask * replace_prob, self.mask_token_id) # masked_input ~ [batch_size, max_len]
+        labels = input_ids.masked_fill(~mask, self.pad_token_id) # labels ~ [batch_size, max_len]
