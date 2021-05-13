@@ -46,4 +46,4 @@ class MLM(nn.Module):
         labels = input_ids.masked_fill(~mask, self.pad_token_id) # labels ~ [batch_size, max_len]
         logits = self.transformer(masked_input, **kwargs).last_hidden_state
         mlm_loss = F.cross_entropy(logits.transpose(1, 2), labels, ignore_index=self.pad_token_id)
-        return mlm_loss
+        return (mlm_loss, logits, labels)
