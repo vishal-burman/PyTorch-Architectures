@@ -42,7 +42,7 @@ class MLM(nn.Module):
         mask_indices = torch.nonzero(mask, as_tuple=True) # mask_indices ~ [mask_prob * max_len]
         masked_input = input_ids.clone().detach() # masked_input ~ [batch_size, max_len]
         replace_prob = prob_mask_like(input_ids, self.replace_prob) # replace_prob ~ [batch_size, max_len]
-        masked_input = masked_input.masked_fill_(mask * replace_prob, self.mask_token_id) # masked_input ~ [batch_size, max_len]
+        masked_input = masked_input.masked_fill(mask * replace_prob, self.mask_token_id) # masked_input ~ [batch_size, max_len]
         labels = input_ids.masked_fill(~mask, self.pad_token_id) # labels ~ [batch_size, max_len]
         logits = self.transformer(masked_input, **kwargs).last_hidden_state
         return logits, labels
