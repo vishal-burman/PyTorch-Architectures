@@ -35,7 +35,7 @@ class MLM(nn.Module):
         self.replace_prob = replace_prob
         self.mask_ignore_token_ids = set([*mask_ignore_token_ids, pad_token_id])
 
-    def forward(self, input_ids): # input_ids ~ [batch_size, max_len]
+    def forward(self, input_ids, **kwargs): # input_ids ~ [batch_size, max_len]
         no_mask = mask_with_tokens(input_ids, self.mask_ignore_token_ids) # no_mask ~ [batch_size, max_len]
         mask = get_mask_subset_with_prob(~no_mask, self.mask_prob) # mask ~ [batch_size, max_len]
         mask_indices = torch.nonzero(mask, as_tuple=True) # mask_indices ~ [mask_prob * max_len]
