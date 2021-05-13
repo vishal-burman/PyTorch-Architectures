@@ -26,7 +26,7 @@ def get_mask_subset_with_prob(mask, prob): # mask ~ [batch_size, max_len]
     return new_mask[:, 1:].bool() # new_mask ~ [batch_size, max_len]
 
 class MLM(nn.Module):
-    def __init__(self, mask_prob=0.15, pad_token_id=0, mask_token_id=2, num_tokens=None, replace_prob=0.9, mask_ignore_token_ids=[]):
+    def __init__(self, transformer, mask_prob=0.15, pad_token_id=0, mask_token_id=2, num_tokens=None, replace_prob=0.9, mask_ignore_token_ids=[]):
         super().__init__()
         self.mask_prob = mask_prob
         self.pad_token_id = pad_token_id
@@ -43,3 +43,6 @@ class MLM(nn.Module):
         replace_prob = prob_mask_like(input_ids, self.replace_prob) # replace_prob ~ [batch_size, max_len]
         masked_input = masked_input.masked_fill_(mask * replace_prob, self.mask_token_id) # masked_input ~ [batch_size, max_len]
         labels = input_ids.masked_fill(~mask, self.pad_token_id) # labels ~ [batch_size, max_len]
+        logits = self.transformer(masked_input, **kwargs)
+        mlm_loss = F.cross_entropy(logits.transpose(1, 2), labels, ignore_index=self.pad_token_id)
+        return mlm_loss
