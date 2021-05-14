@@ -26,14 +26,19 @@ def get_mask_subset_with_prob(mask, prob): # mask ~ [batch_size, max_len]
     return new_mask[:, 1:].bool() # new_mask ~ [batch_size, max_len]
 
 class MLM(nn.Module):
-    def __init__(self, transformer, mask_prob=0.15, pad_token_id=0, mask_token_id=2, num_tokens=None, replace_prob=0.9, mask_ignore_token_ids=[]):
+    def __init__(self, transformer, dim=768, mask_prob=0.15, pad_token_id=0, mask_token_id=2, num_tokens=None, replace_prob=0.9, mask_ignore_token_ids=[]):
         super().__init__()
         self.transformer = transformer
+        self.dim = dim
         self.mask_prob = mask_prob
         self.pad_token_id = pad_token_id
         self.mask_token_id = mask_token_id
         self.num_tokens = num_tokens
         self.replace_prob = replace_prob
+        self.gelu = nn.GELU()
+        self.vocab_transform = nn.Linear(self.dim, self.dim)
+        self.vocab_layer_norm = nn.LayerNorm(self.dim, eps=1e-12)
+        self.vocab_projector = nn.Linear(self.dim, self.num_tokens)
         self.mask_ignore_token_ids = set([*mask_ignore_token_ids, pad_token_id])
 
     def forward(self, input_ids, **kwargs): # input_ids ~ [batch_size, max_len]
@@ -44,5 +49,9 @@ class MLM(nn.Module):
         replace_prob = prob_mask_like(input_ids, self.replace_prob) # replace_prob ~ [batch_size, max_len]
         masked_input = masked_input.masked_fill(mask * replace_prob, self.mask_token_id) # masked_input ~ [batch_size, max_len]
         labels = input_ids.masked_fill(~mask, self.pad_token_id) # labels ~ [batch_size, max_len]
-        logits = self.transformer(masked_input, **kwargs).last_hidden_state
+        last_hidden_state = self.transformer(masked_input, **kwargs).last_hidden_state # logits ~ [batch_size, max_len, dim]
+        logits = self.vocab_transform(last_hidden_state) # logits ~ [batch_size, max_len, dim]
+        logits = self.gelu(logits) # logits ~ [batch_size, seq_len, dim]
+        logits = self.vocab_layer_norm(logits) # logits ~ [batch_size, max_len, dim]
+        logits = self.vocab_projector(logits) # logits ~ [batch_size, max_len, vocab_size]
         return logits, labels
