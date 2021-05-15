@@ -1,4 +1,3 @@
-import pdb
 import torch.nn as nn
 from functools import partial
 
@@ -21,10 +20,17 @@ class FeedForwardLayer(nn.Module):
         self.dense = dense
 
     def forward(self, x):
-        pdb.set_trace()
         x = self.dense(self.dim, self.dim * self.expansion_factor)(x)
         x = self.gelu(x)
         x = self.dropout(x)
         x = self.dense(self.dim * self.expansion_factor, self.dim)(x)
         x = self.dropout(x)
         return x
+
+class MLPMixer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self):
+        pass
