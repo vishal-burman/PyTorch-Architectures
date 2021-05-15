@@ -27,6 +27,7 @@
 | TextCNN | [Paper](https://arxiv.org/pdf/1408.5882) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TextCNN/test_sample_TextCNN.ipynb) |
 | TextBiLSTM | [Paper](https://www.bioinf.jku.at/publications/older/2604.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TextBiLSTM/test_sample_TextBiLSTM.ipynb) |
 | BERT | [Paper](https://arxiv.org/pdf/1810.04805.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_BERT/test_sample_BERT.ipynb) |
+| MLM: Masked Language Modeling(DistilBERT) | [Paper](https://arxiv.org/pdf/1810.04805.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/research/modeling_MLM/test_sample_MLM.ipynb) |
 | OpenAI GPT | [Paper](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_OpenAI/test_sample_OpenAI.ipynb) |
 | OpenAI GPT2 | [Paper](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_GPT2/test_sample_GPT2.ipynb) |
 | Transformer XLM | [Paper](https://arxiv.org/pdf/1901.07291.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_XLM/test_sample_XLM.ipynb) |
