@@ -28,9 +28,23 @@ class FeedForwardLayer(nn.Module):
         return x
 
 class MLPMixer(nn.Module):
-    def __init__(self):
+    def __init__(self, image_size, patch_size, channel, dim, depth, num_classes):
         super().__init__()
-        pass
+        self.image_size = image_size
+        self.patch_size = patch_size
+        assert self.image_size % patch_size == 0, 'Image size must be divisible by Patch size'
+        self.num_patches = (self.image_size // self.patch_size) ** 2
+        self.dim = dim
+        self.conv_dim = (self.patch_size ** 2) * 3
+        self.depth = depth
+        self.num_classes = num_classes
+        self.proj = nn.Conv2d(in_channels=3, out_channels=self.conv_dim, kernel_size=self.patch_size, stride=self.patch_size)
+        self.proj_to_embedding = nn.Linear(self.conv_dim, self.dim)
 
+    def embed_layer(self, img):
+        proj = self.proj(img).flatten(2).transpose(1, 2)
+        embed = self.proj_to_embedding(proj)
+        return embed
+    
     def forward(self):
         pass
