@@ -19,12 +19,12 @@ class FeedForwardLayer(nn.Module):
         self.gelu = nn.GELU()
         self.dense = dense
 
-    def forward(self, x):
-        x = self.dense(self.dim, self.dim * self.expansion_factor)(x)
-        x = self.gelu(x)
-        x = self.dropout(x)
-        x = self.dense(self.dim * self.expansion_factor, self.dim)(x)
-        x = self.dropout(x)
+    def forward(self, x): # x ~ [batch_size, height * width, dim]
+        x = self.dense(self.dim, self.dim * self.expansion_factor)(x) # x ~ [batch_size, heigth * width, dim * expansion_factor]
+        x = self.gelu(x) # x ~ [batch_size, height * width, dim * expansion_factor]
+        x = self.dropout(x) # x ~ [batch_size, height * width, dim * expansion_factor]
+        x = self.dense(self.dim * self.expansion_factor, self.dim)(x) # x ~ [batch_size, height * width, dim]
+        x = self.dropout(x) # x ~ [batch_size, height * width, dim]
         return x
 
 class MLPMixer(nn.Module):
@@ -48,17 +48,17 @@ class MLPMixer(nn.Module):
         self.layer_norm = nn.LayerNorm(self.dim)
         self.last_layer = nn.Linear(self.dim, self.num_classes)
 
-    def embed_layer(self, img):
-        proj = self.proj(img).flatten(2).transpose(1, 2)
-        embed = self.proj_to_embedding(proj)
+    def embed_layer(self, img): # img ~ [batch_size, channels, height, width]
+        proj = self.proj(img).flatten(2).transpose(1, 2) # proj ~ [batch_size, height * width, (patch_size**2) * 3]
+        embed = self.proj_to_embedding(proj) # embed ~ [batch_size, height * width, dim]
         return embed
     
-    def forward(self, img):
-        embed = self.embed_layer(img)
+    def forward(self, img): # img ~ [batch_size, channels, height, width]
+        embed = self.embed_layer(img) # embed ~ [batch_size, height * width, dim]
         for _ in range(self.depth):
-            embed = self.mixer_layer_first(embed)
-            embed = self.mixer_layer_last(embed)
-        embed = self.layer_norm(embed)
-        embed = embed.mean(dim=1)
-        logits = self.last_layer(embed)
+            embed = self.mixer_layer_first(embed) # embed ~ [batch_size, height * width, dim]
+            embed = self.mixer_layer_last(embed) # embed ~ [batch_size, height * width, dim]
+        embed = self.layer_norm(embed) # embed ~ [batch_size, height * width, dim]
+        embed = embed.mean(dim=1) # embed ~ [batch_size, dim]
+        logits = self.last_layer(embed) # logits ~ [batch_size, num_classes]
         return logits
