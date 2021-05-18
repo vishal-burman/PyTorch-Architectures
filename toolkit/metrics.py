@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 
 def compute_accuracy(model, data_loader, device):
     correct, total = 0, 0
