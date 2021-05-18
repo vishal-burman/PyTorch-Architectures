@@ -17,13 +17,14 @@ class FeedForwardLayer(nn.Module):
         self.expansion_factor = expansion_factor
         self.dropout = nn.Dropout(p_drop)
         self.gelu = nn.GELU()
-        self.dense = dense
+        self.dense_1 = dense(self.dim, self.dim * self.expansion_factor)
+        self.dense_2 = dense(self.dim * self.expansion_factor, self.dim)
 
     def forward(self, x): # x ~ [batch_size, height * width, dim]
-        x = self.dense(self.dim, self.dim * self.expansion_factor)(x) # x ~ [batch_size, heigth * width, dim * expansion_factor]
+        x = self.dense_1(x) # x ~ [batch_size, heigth * width, dim * expansion_factor]
         x = self.gelu(x) # x ~ [batch_size, height * width, dim * expansion_factor]
         x = self.dropout(x) # x ~ [batch_size, height * width, dim * expansion_factor]
-        x = self.dense(self.dim * self.expansion_factor, self.dim)(x) # x ~ [batch_size, height * width, dim]
+        x = self.dense_2(x) # x ~ [batch_size, height * width, dim]
         x = self.dropout(x) # x ~ [batch_size, height * width, dim]
         return x
 
