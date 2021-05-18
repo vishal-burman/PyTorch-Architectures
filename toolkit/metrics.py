@@ -1,7 +1,11 @@
+import warnings
 import torch
 import torch.nn.functional as F
 
 def compute_accuracy(model, data_loader, device):
+    if model.training:
+        warnings.warn('Model is in training mode...switching to eval mode')
+        model.eval()
     correct, total = 0, 0
     with torch.set_grad_enabled(False):
         for sample in data_loader:
