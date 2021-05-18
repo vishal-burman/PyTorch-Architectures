@@ -1,12 +1,13 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from datasets import load_dataset
 class DatasetTextClassification(Dataset):
-    def __init__(self, tokenizer, max_input_length=16, split=0.9, train=True):
+    def __init__(self, tokenizer, max_input_length=16, train=True):
         self.tokenizer = tokenizer
         self.max_input_length = max_input_length
+        self.train = train
         self.dataset = load_dataset('glue', 'sst2')
-        if train:
+        if self.train:
             self.sents = self.dataset['train']['sentence']
             self.labels = self.dataset['train']['label']
         else:
@@ -25,3 +26,14 @@ class DatasetTextClassification(Dataset):
                 'attention_mask': tokens['attention_mask'],
                 'labels': torch.tensor(targets),
                 }
+
+
+class DataLoaderTextClassification:
+    def __init__(self, tokenizer, max_input_length=16, batch_size=4, train=True):
+        self.tokenizer = tokenizer
+        self.max_input_length = max_input_length
+        self.train = train
+        self.dataset = DatasetTextClassification(self.tokenizer, self.max_input_length, self.train)
+
+    def return_dataloader(self, batch_size=4, shuffle=False):
+        return DataLoader(self.dataset, batch_size, shuffle=shuffle)
