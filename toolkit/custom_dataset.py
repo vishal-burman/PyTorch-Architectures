@@ -29,7 +29,7 @@ class DatasetTextClassification(Dataset):
 
 
 class DataLoaderTextClassification:
-    def __init__(self, tokenizer, max_input_length=16, batch_size=4, train=True):
+    def __init__(self, tokenizer, max_input_length=16, train=True):
         self.tokenizer = tokenizer
         self.max_input_length = max_input_length
         self.train = train
