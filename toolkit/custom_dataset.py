@@ -17,4 +17,10 @@ class DatasetTextClassification(Dataset):
         return len(self.sents)
 
     def __getitem__(self, idx):
-        pass
+        sentences, targets = self.sents[idx], self.labels[idx]
+        tokens = self.tokenizer(sentences, max_length=self.max_input_length, padding='max_length', truncation=True, return_tensors='pt')
+        return {
+                'input_ids': tokens['input_ids'],
+                'attention_mask': tokens['attention_mask'],
+                'labels': torch.tensor(targets),
+                }
