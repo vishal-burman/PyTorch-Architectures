@@ -31,3 +31,19 @@ def compute_accuracy(model, data_loader, device):
             correct += (preds == labels).sum()
             total += labels.size(0)
     return correct.float() / total * 100
+
+def compute_mean_loss(model, data_loader, device):
+    if model.training:
+        warnings.warn('Model is in training mode...switching to eval mode')
+    loss_list = []
+    with torch.set_grad_enabled(False):
+        for sample in data_loader:
+            if sample['input_ids'].dim() == 3:
+                input_ids = sample['input_ids'].squeeze(1).to(device)
+                attention_mask = sample['attention_mask'].squeeze(1).to(device)
+                labels = sample['labels'].squeeze(1).to(device)
+            else:
+                pass
+            pass
+        pass
+    return torch.mean(loss_list).item()
