@@ -39,11 +39,15 @@ def compute_mean_loss(model, data_loader, device):
     with torch.set_grad_enabled(False):
         for sample in data_loader:
             if sample['input_ids'].dim() == 3:
+                assert sample['labels'].dim() == 3, 'Shape of input_ids and labels do not match'
                 input_ids = sample['input_ids'].squeeze(1).to(device)
                 attention_mask = sample['attention_mask'].squeeze(1).to(device)
                 labels = sample['labels'].squeeze(1).to(device)
             else:
-                pass
+                assert sample['labels'].dim() == 2
+                input_ids = sample['input_ids']
+                attention_mask = sample['attention_mask']
+                labels = sample['labels']
             pass
         pass
     return torch.mean(loss_list).item()
