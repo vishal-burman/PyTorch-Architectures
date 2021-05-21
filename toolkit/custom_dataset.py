@@ -23,7 +23,7 @@ class DatasetTextClassification(Dataset):
         return (sentences, targets)
 
     def collate_fn(self, batch):
-        sentences, labels = batch[0], batch[1]
+        sentences, labels = list(batch[0]), batch[1]
         tokens = self.tokenizer(sentences,
                 max_length=self.max_input_length,
                 padding=True,
