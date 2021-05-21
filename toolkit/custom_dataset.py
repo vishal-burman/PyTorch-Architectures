@@ -20,10 +20,17 @@ class DatasetTextClassification(Dataset):
 
     def __getitem__(self, idx):
         sentences, targets = self.sents[idx], self.labels[idx]
-        return (sentences, targets)
+        return {
+                'sents': sentences,
+                'labels': targets,
+                }
 
     def collate_fn(self, batch):
-        sentences, labels = list(batch[0]), batch[1]
+        sentences = []
+        labels = []
+        for sample in batch:
+            sentences.append(sample['sents'])
+            labels.append(sample['labels'])
         tokens = self.tokenizer(sentences,
                 max_length=self.max_input_length,
                 padding=True,
