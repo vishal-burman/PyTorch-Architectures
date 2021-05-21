@@ -35,6 +35,7 @@ def compute_accuracy(model, data_loader, device):
 def compute_mean_loss(model, data_loader, device):
     if model.training:
         warnings.warn('Model is in training mode...switching to eval mode')
+        model.eval()
     loss_list = []
     with torch.set_grad_enabled(False):
         for sample in data_loader:
