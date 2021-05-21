@@ -48,6 +48,10 @@ def compute_mean_loss(model, data_loader, device):
                 input_ids = sample['input_ids']
                 attention_mask = sample['attention_mask']
                 labels = sample['labels']
-            pass
-        pass
-    return torch.mean(loss_list).item()
+            outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+            if type(ouputs) is tuple:
+                loss = outputs[1].item()
+            else:
+                loss = outputs.item()
+            loss_list.append(loss)
+    return torch.tensor(loss_list).mean().item()
