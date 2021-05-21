@@ -51,4 +51,4 @@ class DataLoaderTextClassification:
         self.dataset = DatasetTextClassification(self.tokenizer, self.max_input_length, self.train)
 
     def return_dataloader(self, batch_size=4, shuffle=False):
-        return DataLoader(self.dataset, batch_size, shuffle=shuffle)
+        return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
