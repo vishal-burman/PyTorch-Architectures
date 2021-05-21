@@ -20,11 +20,19 @@ class DatasetTextClassification(Dataset):
 
     def __getitem__(self, idx):
         sentences, targets = self.sents[idx], self.labels[idx]
-        tokens = self.tokenizer(sentences, max_length=self.max_input_length, padding='max_length', truncation=True, return_tensors='pt')
-        return {
+        return (sentences, targets)
+
+    def collate_fn(self, batch):
+        sentences, labels = batch[0], batch[1]
+        tokens = self.tokenizer(sentences,
+                max_length=self.max_input_length,
+                padding=True,
+                truncation=True,
+                return_tensors='pt')
+        return{
                 'input_ids': tokens['input_ids'],
                 'attention_mask': tokens['attention_mask'],
-                'labels': torch.tensor(targets),
+                'labels': torch.tensor(labels),
                 }
 
 
