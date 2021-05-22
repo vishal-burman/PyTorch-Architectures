@@ -79,7 +79,7 @@ class FNetClassify(nn.Module):
         self.fnet = FNetModel(config)
         self.num_labels = config.num_labels
         self.pre_classifier = nn.Linear(config.dim, config.dim)
-        self.classifier = nn.Linear(config.dim, confid.num_labels)
+        self.classifier = nn.Linear(config.dim, config.num_labels)
         self.dropout = nn.Dropout(config.p_drop)
         self.relu = nn.ReLU()
 

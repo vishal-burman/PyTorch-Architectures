@@ -7,7 +7,8 @@ class FNetConfig:
             padding_idx=0,
             p_drop=0.1,
             depth=8,
-            eps=1e-12,):
+            eps=1e-12,
+            num_labels=2,):
 
         self.vocab_size = vocab_size
         self.dim = dim
@@ -17,3 +18,4 @@ class FNetConfig:
         self.p_drop = p_drop
         self.depth = depth
         self.eps = eps
+        self.num_labels = num_labels
