@@ -2,6 +2,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
+class FourierBlock(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self):
+        pass
+
 class PreNormResidual(nn.Module):
     def __init__(self, dim, fn):
         super().__init__()
