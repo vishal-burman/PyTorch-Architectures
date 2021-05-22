@@ -4,10 +4,12 @@ import torch.nn.functional as F
 
 class Embeddings(nn.Module):
     def __init__(self, vocab_size, embed_dim, max_position_embed, padding_idx=None, p_drop=0.1):
+        super().__init__()
         self.vocab_size = vocab_size
         self.embed_dim = embed_dim
         self.max_position_embed = max_position_embed
         self.padding_idx = padding_idx
+        self.p_drop = p_drop
         self.word_embeddings = nn.Embedding(self.vocab_size, self.embed_dim, padding_idx=self.padding_idx)
         self.position_embeddings = nn.Embedding(self.max_position_embed, self.embed_dim)
         self.layer_norm = nn.LayerNorm(self.embed_dim, eps=1e-12)
