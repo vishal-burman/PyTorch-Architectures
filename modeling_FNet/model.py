@@ -2,6 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class PreNormResidual(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self):
+        pass
+
 class Embeddings(nn.Module):
     def __init__(self, vocab_size, embed_dim, max_position_embed, padding_idx=None, p_drop=0.1):
         super().__init__()
