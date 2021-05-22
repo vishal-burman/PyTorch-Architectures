@@ -83,7 +83,7 @@ class FNetClassify(nn.Module):
         self.dropout = nn.Dropout(config.p_drop)
         self.relu = nn.GELU()
 
-    def forward(self, input_ids, labels):
+    def forward(self, input_ids, attention_mask=None, labels=None):
         fnet_output = self.fnet(input_ids)
         pooled_output = fnet_output[:, 0]
         pooled_output = self.pre_classifier(pooled_output)
