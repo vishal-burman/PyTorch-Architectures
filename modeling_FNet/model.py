@@ -81,6 +81,17 @@ class FNetClassify(nn.Module):
         self.pre_classifier = nn.Linear(config.dim, config.dim)
         self.classifier = nn.Linear(config.dim, confid.num_labels)
         self.dropout = nn.Dropout(config.p_drop)
+        self.relu = nn.ReLU()
 
-    def forward(self):
-        pass
+    def forward(self, input_ids, labels):
+        fnet_output = self.fnet(input_ids)
+        pooled_output = fnet_output[:, 0]
+        pooled_output = self.pre_classifier(pooled_output)
+        pooled_output = self.relu(pooled_output)
+        pooled_output = self.dropout(pooled_output)
+        logits = self.classifier(pooled_output)
+        loss = None
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+        return (loss, logits)
