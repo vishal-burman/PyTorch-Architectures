@@ -3,9 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class PreNormResidual(nn.Module):
-    def __init__(self):
+    def __init__(self, dim):
         super().__init__()
-        pass
+        self.dim = dim
+        self.layer_norm = nn.LayerNorm(self.dim, eps=1e-12)
 
     def forward(self):
         pass
