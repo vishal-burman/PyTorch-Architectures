@@ -62,3 +62,11 @@ class Embeddings(nn.Module):
         embeddings = self.layer_norm(embeddings)
         embeddings = self.dropout(embeddings)
         return embeddings
+
+class FNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self):
+        pass
