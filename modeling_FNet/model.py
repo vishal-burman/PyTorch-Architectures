@@ -81,7 +81,7 @@ class FNetClassify(nn.Module):
         self.pre_classifier = nn.Linear(config.dim, config.dim)
         self.classifier = nn.Linear(config.dim, config.num_labels)
         self.dropout = nn.Dropout(config.p_drop)
-        self.relu = nn.ReLU()
+        self.relu = nn.GELU()
 
     def forward(self, input_ids, labels):
         fnet_output = self.fnet(input_ids)
