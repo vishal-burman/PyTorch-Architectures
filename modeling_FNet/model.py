@@ -1,17 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from config import FNetConfig
+
+config = FNetConfig()
 
 class FeedForwardLayer(nn.Module):
-    def __init__(self, dim, expansion_factor=4, p_drop=0):
+    def __init__(self, config):
         super().__init__()
-        self.dim = self.dim
-        self.expansion_factor = self.expansion_factor
-        self.p_drop = p_drop
         self.gelu = nn.GELU()
-        self.dropout = nn.Dropout(self.p_drop)
-        self.dense_1 = nn.Linear(self.dim, self.dim * self.expansion_factor)
-        self.dense_2 = nn.Linear(self.dim * self.expansion_factor, self.dim)
+        self.dropout = nn.Dropout(config.p_drop)
+        self.dense_1 = nn.Linear(config.dim, config.expanded_dim)
+        self.dense_2 = nn.Linear(config.expanded_dim, config.dim)
 
     def forward(self, x):
         x = self.dense_1(x)
@@ -30,27 +30,21 @@ class FourierLayer(nn.Module):
         return x
 
 class PreNormResidual(nn.Module):
-    def __init__(self, dim, fn):
+    def __init__(self, config, fn):
         super().__init__()
         self.fn = fn
-        self.dim = dim
-        self.layer_norm = nn.LayerNorm(self.dim, eps=1e-12)
+        self.layer_norm = nn.LayerNorm(config.dim, eps=config.eps)
 
     def forward(self, x):
         x = self.fn(self.layer_norm(x)) + x
 
 class Embeddings(nn.Module):
-    def __init__(self, vocab_size, embed_dim, max_position_embed, padding_idx=None, p_drop=0.1):
+    def __init__(self, config):
         super().__init__()
-        self.vocab_size = vocab_size
-        self.embed_dim = embed_dim
-        self.max_position_embed = max_position_embed
-        self.padding_idx = padding_idx
-        self.p_drop = p_drop
-        self.word_embeddings = nn.Embedding(self.vocab_size, self.embed_dim, padding_idx=self.padding_idx)
-        self.position_embeddings = nn.Embedding(self.max_position_embed, self.embed_dim)
-        self.layer_norm = nn.LayerNorm(self.embed_dim, eps=1e-12)
-        self.dropout = nn.Dropout(self.p_drop)
+        self.word_embeddings = nn.Embedding(config.vocab_size, config.dim, padding_idx=config.padding_idx)
+        self.position_embeddings = nn.Embedding(config.max_position_embed, config.dim)
+        self.layer_norm = nn.LayerNorm(config.dim, eps=config.eps)
+        self.dropout = nn.Dropout(config.p_drop)
     
     def forward(self, input_ids):
         seq_len = input_ids.size(1)
@@ -64,7 +58,7 @@ class Embeddings(nn.Module):
         return embeddings
 
 class FNet(nn.Module):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
         pass
 
