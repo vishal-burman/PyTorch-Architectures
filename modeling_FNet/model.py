@@ -55,7 +55,7 @@ class Embeddings(nn.Module):
         embeddings = self.dropout(embeddings)
         return embeddings
 
-class FNet(nn.Module):
+class FNetModel(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.embeddings = Embeddings(config)
@@ -72,3 +72,15 @@ class FNet(nn.Module):
             embeds = fft(embeds) 
             embeds = ff(embeds)
         return embeds
+
+class FNetClassify(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.fnet = FNetModel(config)
+        self.num_labels = config.num_labels
+        self.pre_classifier = nn.Linear(config.dim, config.dim)
+        self.classifier = nn.Linear(config.dim, confid.num_labels)
+        self.dropout = nn.Dropout(config.p_drop)
+
+    def forward(self):
+        pass
