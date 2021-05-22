@@ -1,9 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from config import FNetConfig
-
-config = FNetConfig()
 
 class FeedForwardLayer(nn.Module):
     def __init__(self, config):
@@ -37,6 +34,7 @@ class PreNormResidual(nn.Module):
 
     def forward(self, x):
         x = self.fn(self.layer_norm(x)) + x
+        return x
 
 class Embeddings(nn.Module):
     def __init__(self, config):
@@ -62,8 +60,8 @@ class FNet(nn.Module):
         super().__init__()
         self.embeddings = Embeddings(config)
         self.layers = nn.ModuleList([])
-        for _ in config.depth:
-            layers.append(nn.ModuleList([
+        for _ in range(config.depth):
+            self.layers.append(nn.ModuleList([
                 PreNormResidual(config, FourierLayer()),
                 PreNormResidual(config, FeedForwardLayer(config)),
                 ]))
@@ -71,6 +69,6 @@ class FNet(nn.Module):
     def forward(self, input_ids):
         embeds = self.embeddings(input_ids)
         for fft, ff in self.layers:
-            embeds = fft(embeds)
+            embeds = fft(embeds) 
             embeds = ff(embeds)
         return embeds
