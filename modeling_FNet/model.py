@@ -3,13 +3,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class PreNormResidual(nn.Module):
-    def __init__(self, dim):
+    def __init__(self, dim, fn):
         super().__init__()
+        self.fn = fn
         self.dim = dim
         self.layer_norm = nn.LayerNorm(self.dim, eps=1e-12)
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = self.fn(self.layer_norm(x)) + x
 
 class Embeddings(nn.Module):
     def __init__(self, vocab_size, embed_dim, max_position_embed, padding_idx=None, p_drop=0.1):
