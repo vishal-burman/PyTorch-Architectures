@@ -9,11 +9,17 @@ class FeedForwardLayer(nn.Module):
         self.expansion_factor = self.expansion_factor
         self.p_drop = p_drop
         self.gelu = nn.GELU()
+        self.dropout = nn.Dropout(self.p_drop)
         self.dense_1 = nn.Linear(self.dim, self.dim * self.expansion_factor)
         self.dense_2 = nn.Linear(self.dim * self.expansion_factor, self.dim)
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = self.dense_1(x)
+        x = self.gelu(x)
+        x = self.dropout(x)
+        x = self.dense_2(x)
+        x = self.dropout(x)
+        return x
 
 class FourierLayer(nn.Module):
     def __init__(self):
