@@ -60,7 +60,13 @@ class Embeddings(nn.Module):
 class FNet(nn.Module):
     def __init__(self, config):
         super().__init__()
-        pass
+        self.embeddings = Embeddings(config)
+        self.layers = nn.ModuleList([])
+        for _ in config.depth:
+            layers.append(nn.ModuleList([
+                PreNormResidual(config, FourierLayer()),
+                PreNormResidual(config, FeedForwardLayer(config)),
+                ]))
 
     def forward(self):
         pass
