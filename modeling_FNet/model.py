@@ -68,5 +68,9 @@ class FNet(nn.Module):
                 PreNormResidual(config, FeedForwardLayer(config)),
                 ]))
 
-    def forward(self):
-        pass
+    def forward(self, input_ids):
+        embeds = self.embeddings(input_ids)
+        for fft, ff in self.layers:
+            embeds = fft(embeds)
+            embeds = ff(embeds)
+        return embeds
