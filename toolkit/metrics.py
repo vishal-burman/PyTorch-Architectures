@@ -21,8 +21,8 @@ def compute_accuracy(model, data_loader, device):
 
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
             if type(outputs) is tuple:
-                logits = outputs[0]
-                loss = outputs[1]
+                loss = outputs[0]
+                logits = outputs[1]
             else:
                 logits = outputs
 
