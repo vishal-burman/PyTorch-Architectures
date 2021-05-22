@@ -2,7 +2,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class FourierBlock(nn.Module):
+class FeedForwardLayer(nn.Module):
+    def __init__(self, dim, expansion_factor=4, p_drop=0):
+        super().__init__()
+        self.dim = self.dim
+        self.expansion_factor = self.expansion_factor
+        self.p_drop = p_drop
+        self.gelu = nn.GELU()
+        self.dense_1 = nn.Linear(self.dim, self.dim * self.expansion_factor)
+        self.dense_2 = nn.Linear(self.dim * self.expansion_factor, self.dim)
+
+    def forward(self):
+        pass
+
+class FourierLayer(nn.Module):
     def __init__(self):
         super().__init__()
 
