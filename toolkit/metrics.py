@@ -18,6 +18,7 @@ def compute_accuracy(model, data_loader, device):
                 assert sample['input_ids'].shape == sample['attention_mask'].shape, 'input_ids and attention_mask shape do not match'
                 input_ids = sample['input_ids'].to(device)
                 attention_mask = sample['attention_mask'].to(device)
+                labels = sample['labels'].to(device)
 
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
             if type(outputs) is tuple:
