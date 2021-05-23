@@ -18,6 +18,7 @@
 | NiN: Network in Network | [Paper](https://arxiv.org/pdf/1312.4400) | [Notebook](https://github.com/vishal-burman/PyTorch-Architectures/blob/master/modeling_NiN/test_sample_NiN.ipynb) |
 | FRN: Filter Response Normalization | [Paper](https://arxiv.org/pdf/1911.09737) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_FRN/test_sample_FRN.ipynb) |
 | ViT: Transformer for Image Recognition | [Paper](https://arxiv.org/pdf/2010.11929) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_ViT/test_sample_ViT.ipynb) |
+| MLPMixer | [Paper](https://arxiv.org/pdf/2105.01601) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_MLPMixer/test_sample_MLPMixer.ipynb) |
 | NNLM: Neural Language Model | [Paper](https://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_NNLM/test_sample_NNLM.ipynb) |
 | Word2Vec | [Paper](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_Word2Vec/test_sample_Word2Vec.ipynb) |
 | FastText | [Paper](https://arxiv.org/pdf/1607.01759) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_FastText/test_sample_FastText.ipynb) |
@@ -32,6 +33,7 @@
 | OpenAI GPT2 | [Paper](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_GPT2/test_sample_GPT2.ipynb) |
 | Transformer XLM | [Paper](https://arxiv.org/pdf/1901.07291.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_XLM/test_sample_XLM.ipynb) |
 | XLNet | [Paper](https://arxiv.org/pdf/1906.08237) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_XLNet/test_sample_XLNet.ipynb) |
+| FNet | [Paper](https://arxiv.org/pdf/2105.03824) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_FNet/test_sample_FNet.ipynb) |
 | Structured Self-Attentive Sentence Embedding | [Paper](https://arxiv.org/pdf/1703.03130) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_SSE/test_sample_SSE.ipynb) |
 | TabTransformer | [Paper](https://arxiv.org/pdf/2012.06678) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_TabTransformer/test_sample_TabTransformer.ipynb) |
 | BPR: Bayesian Personalized Ranking from Implicit Feedback | [Paper](https://arxiv.org/ftp/arxiv/papers/1205/1205.2618.pdf) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_BPR/test_sample_BPR.ipynb) |
