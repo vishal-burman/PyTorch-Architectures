@@ -5,21 +5,28 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class MLPBlock(nn.Module):
-    def __init__(self, mlp_dim):
+    def __init__(self, input_dim, mlp_dim):
         super().__init__()
-        pass
+        self.dense_1 = nn.Linear(input_dim, mlp_dim)
+        self.gelu = nn.GELU()
+        self.dense_2 = nn.Linear(mlp_dim, input_dim)
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = self.dense_1(x)
+        x = self.gelu(x)
+        x = self.dense_2(x)
+        return y
 
 class MixerBlock(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.layer_norm = nn.LayerNorm(config.hidden_dim)
-        self.token_mixing = MLPBlock(config.tokens_mlp_dim)
+        self.token_mixing = MLPBlock(config.patch_size ** 2, config.tokens_mlp_dim)
 
     def forward(self, x):
-        x = self.layer_norm(x)
+        y = self.layer_norm(x)
+        y = y.transpose(1, 2)
+        y = self.token_mixing(y)
         return x
 
 class MLPMixer(nn.Module):
