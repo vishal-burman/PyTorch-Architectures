@@ -41,9 +41,14 @@ class MLPMixer(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(config.num_blocks):
             self.layers.append(MixerBlock(config))
+        self.layer_norm = nn.LayerNorm(config.hidden_dim)
+        self.head = nn.Linear(config.hidden_dim, config.num_classes)
 
     def forward(self, x): # x ~ [batch_size, num_channels, height, width]
         x = self.conv(x).flatten(2).transpose(1, 2)
         for layer in self.layers:
             x = layer(x)
+        x = self.layer_norm(x)
+        x = x.mean(dim=1)
+        x = self.head(x)
         return x
