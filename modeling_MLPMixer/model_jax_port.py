@@ -4,24 +4,36 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class MixerBlock(nn.Module):
-    def __init__(self, tokens_mlp_dim, channels_mlp_dim):
+class MLPBlock(nn.Module):
+    def __init__(self):
         super().__init__()
         pass
 
     def forward(self):
         pass
 
-class MLPMixer(nn.Module):
-    def __init__(self, num_classes=2, num_blocks=4, patch_size=16, hidden_dim=32, tokens_mlp_dim=64, channels_mlp_dim=128):
+class MixerBlock(nn.Module):
+    def __init__(self, config):
         super().__init__()
-        self.num_blocks = num_blocks
-        self.tokens_mlp_dim = tokens_mlp_dim
-        self.channels_mlp_dim = channels_mlp_dim
-        self.conv = nn.Conv2d(in_channels=3, out_channels=hidden_dim, kernel_size=patch_size, stride=patch_size)
+        self.layer_norm = nn.LayerNorm(config.hidden_dim)
+        self.token_mixing = MLPBlock(config.tokens_mlp_dim)
+
+    def forward(self, x):
+        x = self.layer_norm(x)
+        return x
+
+class MLPMixer(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.num_blocks = config.num_blocks
+        self.tokens_mlp_dim = config.tokens_mlp_dim
+        self.channels_mlp_dim = config.channels_mlp_dim
+        self.conv = nn.Conv2d(in_channels=3, out_channels=config.hidden_dim, kernel_size=config.patch_size, stride=config.patch_size)
+        self.layers = nn.ModuleList([])
+        for _ in range(config.num_blocks):
+            self.layers.append(MixerBlock(config))
 
     def forward(self, x): # x ~ [batch_size, num_channels, height, width]
         x = self.conv(x)
         x = x.permute(0, 2, 3, 1).flatten(1, 2)
-        for _ in range(self.num_blocks):
-            x = MLPMixerBlock(self.tokens_mlp_dim, self.channels_mlp_dim)
+        return x
