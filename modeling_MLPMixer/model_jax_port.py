@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class MLPBlock(nn.Module):
-    def __init__(self):
+    def __init__(self, mlp_dim):
         super().__init__()
         pass
 
@@ -34,6 +34,5 @@ class MLPMixer(nn.Module):
             self.layers.append(MixerBlock(config))
 
     def forward(self, x): # x ~ [batch_size, num_channels, height, width]
-        x = self.conv(x)
-        x = x.permute(0, 2, 3, 1).flatten(1, 2)
+        x = self.conv(x).flatten(2).transpose(1, 2)
         return x
