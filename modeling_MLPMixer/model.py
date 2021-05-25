@@ -54,7 +54,7 @@ class MLPMixer(nn.Module):
         embed = self.proj_to_embedding(proj) # embed ~ [batch_size, height * width, dim]
         return embed
     
-    def forward(self, img): # img ~ [batch_size, channels, height, width]
+    def forward(self, img, labels=None): # img ~ [batch_size, channels, height, width]
         embed = self.embed_layer(img) # embed ~ [batch_size, height * width, dim]
         for _ in range(self.depth):
             embed = self.mixer_layer_first(embed) # embed ~ [batch_size, height * width, dim]
