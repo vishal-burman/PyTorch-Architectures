@@ -1,6 +1,9 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from datasets import load_dataset
+import torchvision
+from torchvision import transforms
+
 class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True):
         self.tokenizer = tokenizer
