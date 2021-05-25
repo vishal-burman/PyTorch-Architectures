@@ -1,5 +1,6 @@
 import torchvision
 from torchvision import transforms
+from torch.utils.data import DataLoader
 
 class DataLoaderCIFAR10Classification:
     def __init__(self, train=True):
