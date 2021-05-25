@@ -1,8 +1,6 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from datasets import load_dataset
-import torchvision
-from torchvision import transforms
 
 class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True):
@@ -55,11 +53,3 @@ class DataLoaderTextClassification:
 
     def return_dataloader(self, batch_size=4, shuffle=False):
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
-
-class DataLoaderCIFAR10Classification:
-    def __init__(self, train=True):
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        self.dataset = torchvision.datasets.CIFAR10(root='./data', train=train, download=True, transform=self.transform)
-
-    def return_dataloader(self, batch_size=4, shuffle=False):
-        return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle)
