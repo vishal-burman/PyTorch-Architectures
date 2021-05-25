@@ -2,7 +2,31 @@ import warnings
 import torch
 import torch.nn.functional as F
 
-def compute_accuracy(model, data_loader, device):
+def cv_compute_accuracy(model, data_loader, device):
+    if model.training:
+        warnings.warn('Model is in training mode...switching to eval mode')
+        model.eval()
+    correct, total = 0, 0
+    with torch.set_grad_enabled(False):
+        for sample in data_loader:
+            assert sample['img'].dim() == 4, 'Images should be 4-dimensional'
+            img = sample['img'].to(device)
+            labels = sample['labels'].to(device)
+            outputs = model(img=img, labels=labels)
+            if type(outputs) == tuple:
+                loss = outputs[0]
+                logits = outputs[1]
+            else:
+                logits = outputs
+
+            prob = F.softmax(logits, dim=-1)
+            _, preds = torch.max(prob, dim=1)
+            correct += (preds == labels).sum()
+            total += labels.size(0)
+    return (correct.float() / total * 100).item()
+
+
+def nlp_compute_accuracy(model, data_loader, device):
     if model.training:
         warnings.warn('Model is in training mode...switching to eval mode')
         model.eval()
@@ -31,9 +55,9 @@ def compute_accuracy(model, data_loader, device):
             _, preds = torch.max(prob, dim=1)
             correct += (preds == labels).sum()
             total += labels.size(0)
-    return correct.float() / total * 100
+    return (correct.float() / total * 100).item()
 
-def compute_mean_loss(model, data_loader, device):
+def nlp_compute_mean_loss(model, data_loader, device):
     if model.training:
         warnings.warn('Model is in training mode...switching to eval mode')
         model.eval()
