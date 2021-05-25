@@ -9,9 +9,16 @@ def cv_compute_accuracy(model, data_loader, device):
     correct, total = 0, 0
     with torch.set_grad_enabled(False):
         for sample in data_loader:
-            assert sample['img'].dim() == 4, 'Images should be 4-dimensional'
-            img = sample['img'].to(device)
-            labels = sample['labels'].to(device)
+            if 'img' in sample and 'labels' in sample
+                assert sample['img'].dim() == 4, 'Images should be 4-dimensional'
+                assert sample['img'].size(0) == sample['labels'].size(0), 'Number of Images and Labels should be same'
+                img = sample['img'].to(device)
+                labels = sample['labels'].to(device)
+            elif type(sample) == list and (isinstance(sample[0], torch.Tensor) and isinstance(sample[1], torch.Tensor)):
+                assert sample[0].dim() == 4, 'Images should be 4-dimensional'
+                assert sample[0].size(0) == sample[1].size(0), 'Number of Images and Labels should be same'
+                img = sample[0].to(device)
+                labels = sample[1].to(device)
             outputs = model(img=img, labels=labels)
             if type(outputs) == tuple:
                 loss = outputs[0]
