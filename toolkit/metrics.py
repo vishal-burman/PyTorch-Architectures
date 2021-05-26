@@ -19,7 +19,7 @@ def cv_compute_accuracy(model, data_loader, device):
                 assert sample[0].size(0) == sample[1].size(0), 'Number of Images and Labels should be same'
                 img = sample[0].to(device)
                 labels = sample[1].to(device)
-            outputs = model(img=img, labels=labels)
+            outputs = model(img, labels=labels)
             if type(outputs) == tuple:
                 loss = outputs[0]
                 logits = outputs[1]
