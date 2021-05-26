@@ -9,7 +9,7 @@ def cv_compute_accuracy(model, data_loader, device):
     correct, total = 0, 0
     with torch.set_grad_enabled(False):
         for sample in data_loader:
-            if 'img' in sample and 'labels' in sample
+            if 'img' in sample and 'labels' in sample:
                 assert sample['img'].dim() == 4, 'Images should be 4-dimensional'
                 assert sample['img'].size(0) == sample['labels'].size(0), 'Number of Images and Labels should be same'
                 img = sample['img'].to(device)
