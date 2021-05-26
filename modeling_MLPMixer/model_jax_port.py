@@ -50,5 +50,9 @@ class MLPMixer(nn.Module):
             x = layer(x)
         x = self.layer_norm(x)
         x = x.mean(dim=1)
-        x = self.head(x)
-        return x
+        logits = self.head(x)
+        loss = None
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(logits, labels)
+        return (loss, logits)
