@@ -51,5 +51,9 @@ class DataLoaderTextClassification:
         self.train = train
         self.dataset = DatasetTextClassification(self.tokenizer, self.max_input_length, self.train)
 
-    def return_dataloader(self, batch_size=4, shuffle=False):
+    def return_dataloader(self, batch_size=4, shuffle=False, sortish_sampler=False):
+        if sortish_sampler:
+            src_lens = [len(x.split()) for x in self.dataset.sents]
+            sampler = SortishSampler(src_lens, batch_size, shuffle=shuffle)
+            return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn, sampler=sampler)
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
