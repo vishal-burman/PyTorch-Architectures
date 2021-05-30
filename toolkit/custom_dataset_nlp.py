@@ -62,10 +62,13 @@ class DatasetLanguageModeling(Dataset):
             self.sents = self.sents[:split]
 
     def __len__(self):
-        pass
+        return len(self.sents)
 
     def __getitem__(self, idx):
-        pass
+        sents = self.sents[idx]
+        return {
+                'sents': sents,
+                }
 
     def collate_fn(self):
         pass
