@@ -65,13 +65,25 @@ class DatasetLanguageModeling(Dataset):
         return len(self.sents)
 
     def __getitem__(self, idx):
-        sents = self.sents[idx]
-        return {
-                'sents': sents,
-                }
+        return self.sents[idx]
 
-    def collate_fn(self):
-        pass
+    def collate_fn(self, batch):
+        sentences = []
+        for sentence in batch:
+            sentences.append(sentence)
+        if isinstance(self.tokenizer, XLNetTokenizer):
+            tokens = self.tokenizer(sentences,
+                                    max_length=self.max_input_length,
+                                    padding='max_length',
+                                    truncation=True,
+                                    return_tensors='pt')
+        else:
+            tokens = self.tokenizer(sentences,
+                                    max_length=self.max_input_length,
+                                    padding=True,
+                                    truncation=True,
+                                    return_tensors='pt')
+        return tokens
 
 
 class DataLoaderTextClassification:
