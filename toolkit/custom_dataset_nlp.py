@@ -44,6 +44,19 @@ class DatasetTextClassification(Dataset):
                 'labels': torch.tensor(labels),
                 }
 
+class DatasetLanguageModeling(Dataset):
+    def __init__(self):
+        pass
+
+    def __len__(self):
+        pass
+
+    def __getitem__(self, idx):
+        pass
+
+    def collate_fn(self):
+        pass
+
 
 class DataLoaderTextClassification:
     def __init__(self, tokenizer, max_input_length=16, train=True):
