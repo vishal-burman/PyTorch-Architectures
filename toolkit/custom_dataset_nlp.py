@@ -71,20 +71,12 @@ class DatasetLanguageModeling(Dataset):
         sentences = []
         for sentence in batch:
             sentences.append(sentence)
-        if isinstance(self.tokenizer, XLNetTokenizer):
-            tokens = self.tokenizer(sentences,
-                                    max_length=self.max_input_length,
-                                    padding='max_length',
-                                    truncation=True,
-                                    return_tensors='pt')
-        else:
-            tokens = self.tokenizer(sentences,
-                                    max_length=self.max_input_length,
-                                    padding=True,
-                                    truncation=True,
-                                    return_tensors='pt')
+        tokens = self.tokenizer(sentences,
+                                max_length=self.max_input_length,
+                                padding='max_length' if isinstance(self.tokenizer, XLNetTokenizer) else True,
+                                truncation=True,
+                                return_tensors='pt')
         return tokens
-
 
 class DataLoaderTextClassification:
     def __init__(self, tokenizer, max_input_length=16, train=True):
