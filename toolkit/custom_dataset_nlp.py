@@ -50,7 +50,7 @@ class DatasetLanguageModeling(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
         self.tokenizer = tokenizer
         if isinstance(self.tokenizer, XLNetTokenizer):
-            if self.max_input_length % 2 != 0:
+            if max_input_length % 2 != 0:
                 raise ValueError('Use even lengths for XLNet Model')
         self.max_input_length = max_input_length
         self.dataset = load_dataset('wikitext', 'wikitext-103-v1')
