@@ -1,5 +1,7 @@
+import os
 import torch
 from torch.utils.data import Dataset, DataLoader
+from transformers import XLNetTokenizer
 from datasets import load_dataset
 from sampler import SortishSampler
 
@@ -45,8 +47,19 @@ class DatasetTextClassification(Dataset):
                 }
 
 class DatasetLanguageModeling(Dataset):
-    def __init__(self):
-        pass
+    def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
+        self.tokenizer = tokenizer
+        if isinstance(self.tokenizer, XLNetTokenizer):
+            if self.max_input_length % 2 != 0:
+                raise ValueError('Use even lengths for XLNet Model')
+        self.max_input_length = max_input_length
+        self.dataset = load_dataset('wikitext', 'wikitext-103-v1')
+        if self.train:
+            self.sents = self.dataset['train']['text']
+        else:
+            self.sents = self.dataset['validation']['text']
+        if split is not None:
+            self.sents = self.sents[:split]
 
     def __len__(self):
         pass
