@@ -71,7 +71,7 @@ class DatasetLanguageModeling(Dataset):
                 self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', 'train.csv' if train else 'test.csv')).readlines()
         if train and isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
             self.sents = self.dataset['train']['text']
-        elif not train and is isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
+        elif not train and isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
             self.sents = self.dataset['validation']['text']
         else:
             self.sents = self.dataset
