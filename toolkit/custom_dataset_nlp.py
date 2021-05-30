@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import XLNetTokenizer
 from datasets import load_dataset
-from sampler import SortishSampler
+from .sampler import SortishSampler
 
 class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True):
