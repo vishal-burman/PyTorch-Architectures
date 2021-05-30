@@ -1,1 +1,1 @@
-from toolkit.sampler import SortishSampler
+from toolkit import sampler
