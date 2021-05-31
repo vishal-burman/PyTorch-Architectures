@@ -8,6 +8,7 @@ from transformers import XLNetTokenizer
 import datasets
 from datasets import load_dataset
 from .sampler import SortishSampler
+from .utils import remove_punctuation
 
 class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True):
@@ -61,18 +62,18 @@ class DatasetLanguageModeling(Dataset):
             self.dataset = load_dataset('wikitext', 'wikitext-103-v1')
         except:
             if os.path.exists(os.path.join(os.getcwd(), 'wikitext-103')):
-                print('Path Exists!!')
-                self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', 'train.csv' if train else 'test.csv')).readlines()
+                print('wikitext-103 exists...')
+                self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
             else:
                 warnings.warn('Manual download from https://course.fastai/datasets')
                 urllib.request.urlretrieve('https://s3.amazonaws.com/fast-ai-nlp/wikitext-103.tgz', 'wikitext-103.tgz')
+                print('wikitext-103.tgz downloaded...')
                 tf = tarfile.open('wikitext-103.tgz')
                 tf.extractall(path='.')
-                self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', 'train.csv' if train else 'test.csv')).readlines()
-        if train and isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
-            self.sents = self.dataset['train']['text']
-        elif not train and isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
-            self.sents = self.dataset['validation']['text']
+                print('wikitext-103.tgz extracted...')
+                self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
+        if isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
+            self.sents = self.dataset[('train' if train else 'validation')]['text']
         else:
             self.sents = self.dataset
 
