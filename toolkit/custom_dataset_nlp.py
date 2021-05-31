@@ -92,17 +92,14 @@ class DatasetLanguageModeling(Dataset):
             sentences.append(sentence)
         tokens = self.tokenizer(sentences,
                                 max_length=self.max_input_length,
-                                padding='max_length' if isinstance(self.tokenizer, XLNetTokenizer) else True,
+                                padding=('max_length' if isinstance(self.tokenizer, XLNetTokenizer) else True),
                                 truncation=True,
                                 return_tensors='pt')
         return tokens
 
 class DataLoaderTextClassification:
     def __init__(self, tokenizer, max_input_length=16, train=True):
-        self.tokenizer = tokenizer
-        self.max_input_length = max_input_length
-        self.train = train
-        self.dataset = DatasetTextClassification(self.tokenizer, self.max_input_length, self.train)
+        self.dataset = DatasetTextClassification(tokenizer, max_input_length, train)
 
     def return_dataloader(self, batch_size=4, shuffle=False, sortish_sampler=False):
         if sortish_sampler:
@@ -110,3 +107,10 @@ class DataLoaderTextClassification:
             sampler = SortishSampler(src_lens, batch_size, shuffle=shuffle)
             return DataLoader(self.dataset, batch_size, collate_fn=self.dataset.collate_fn, sampler=sampler)
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
+
+class DataLoaderLanguageModeling:
+    def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
+        self.dataset = DatasetLanguageModeling(tokenizer, max_input_length, train, split)
+
+    def return_dataloader(self, batch_size=4, shuffle=False):
+        return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
