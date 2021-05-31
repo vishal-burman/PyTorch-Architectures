@@ -52,8 +52,9 @@ class DatasetTextClassification(Dataset):
                 }
 
 class DatasetLanguageModeling(Dataset):
-    def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
+    def __init__(self, tokenizer, max_input_length=16, train=True, split=None, mlm=0.15):
         self.tokenizer = tokenizer
+        self.mlm_probability = mlm
         if isinstance(self.tokenizer, XLNetTokenizer):
             if max_input_length % 2 != 0:
                 raise ValueError('Use even lengths for XLNet Model')
@@ -95,7 +96,39 @@ class DatasetLanguageModeling(Dataset):
                                 padding=('max_length' if isinstance(self.tokenizer, XLNetTokenizer) else True),
                                 truncation=True,
                                 return_tensors='pt')
+        if self.mlm_probability is not None:
+            tokens['input_ids'], tokens['target_ids'] = self.mask_tokens_mlm(tokens)
         return tokens
+
+    def mask_tokens_mlm(self, tokens):
+        input_ids = tokens['input_ids']
+        special_tokens_mask = tokens.pop('special_tokens_mask', None)
+        labels = input_ids.clone()
+        probability_matrix = torch.full(labels.shape, self.mlm_probability)
+        if special_tokens_mask is None:
+            special_tokens_mask = [
+                    self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
+                    ]
+            special_tokens_mask = torch.tensor(special_tokens_mask, dtype=torch.bool)
+        else:
+            special_tokens_mask = special_tokens_mask.bool()
+        
+        probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
+        masked_indices = torch.bernoulli(probability_matrix).bool()
+        labels[~masked_indices] = -100 # Only compute loss on masked tokens
+
+        # 80% of time, we replace masked input tokens with [MASK] token
+        indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
+        input_ids[indices_replaced] = self.tokenizer.convert_tokens_to_ids(self.tokenizer.mask_token)
+
+        # 10% of time, we replace masked input tokens with random word
+        indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
+        random_words = torch.randint(len(self.tokenizer), labels.shape, dtype=torch.long)
+        input_ids[indices_random] = random_words[indices_random]
+
+        # The  rest of the 10% we keep the masked input tokens unchanged
+        return input_ids, labels
+
 
 class DataLoaderTextClassification:
     def __init__(self, tokenizer, max_input_length=16, train=True):
