@@ -1,3 +1,4 @@
+import math
 import warnings
 import torch
 import torch.nn.functional as F
@@ -87,4 +88,4 @@ def nlp_compute_mean_loss(model, data_loader, device):
             else:
                 loss = outputs.item()
             loss_list.append(loss)
-    return torch.tensor(loss_list).mean().item()
+    return math.exp(torch.tensor(loss_list).mean().item())
