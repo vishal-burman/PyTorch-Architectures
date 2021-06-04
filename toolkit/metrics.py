@@ -3,6 +3,9 @@ import warnings
 import torch
 import torch.nn.functional as F
 
+## Updated as and when required
+from transformers import DistilBertForMaskedLM, DistilBertForSequenceClassification
+
 def cv_compute_accuracy(model, data_loader, device):
     if model.training:
         warnings.warn('Model is in training mode...switching to eval mode')
@@ -56,6 +59,9 @@ def nlp_compute_accuracy(model, data_loader, device):
             if type(outputs) is tuple:
                 loss = outputs[0]
                 logits = outputs[1]
+            elif isinstance(model, DistilBertForSequenceClassification): # --> Add when experiment grows
+                logits = outputs.logits
+                loss = outputs.loss
             else:
                 logits = outputs
 
