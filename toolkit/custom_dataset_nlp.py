@@ -9,7 +9,7 @@ import datasets
 from datasets import load_dataset
 
 class DatasetTextClassification(Dataset):
-    def __init__(self, tokenizer, max_input_length=16, train=True):
+    def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
         self.tokenizer = tokenizer
         self.max_input_length = max_input_length
         self.train = train
@@ -21,6 +21,9 @@ class DatasetTextClassification(Dataset):
             self.sents = self.dataset['validation']['sentence']
             self.labels = self.dataset['validation']['label']
         assert len(self.sents) == len(self.labels), 'Size of sentences and labels do not match'
+        if split is not None:
+            self.sents = self.sents[:split]
+            self.labels = self.labels[:split]
 
     def __len__(self):
         return len(self.sents)
@@ -134,8 +137,8 @@ class DatasetLanguageModeling(Dataset):
 
 
 class DataLoaderTextClassification:
-    def __init__(self, tokenizer, max_input_length=16, train=True):
-        self.dataset = DatasetTextClassification(tokenizer, max_input_length, train)
+    def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
+        self.dataset = DatasetTextClassification(tokenizer, max_input_length, train, split)
 
     def return_dataloader(self, batch_size=4, shuffle=False, sampler=None):
         if sampler is not None:
