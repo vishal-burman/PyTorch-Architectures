@@ -52,33 +52,38 @@ class DatasetTextClassification(Dataset):
                 }
 
 class DatasetLanguageModeling(Dataset):
-    def __init__(self, tokenizer, max_input_length=16, train=True, split=None, mlm=0.15):
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, split=None, mlm=0.15):
         self.tokenizer = tokenizer
         self.mlm_probability = mlm
         if isinstance(self.tokenizer, XLNetTokenizer):
             if max_input_length % 2 != 0:
                 raise ValueError('Use even lengths for XLNet Model')
         self.max_input_length = max_input_length
-        try:
-            self.dataset = load_dataset('wikitext', 'wikitext-103-v1')
-        except:
-            if os.path.exists(os.path.join(os.getcwd(), 'wikitext-103')):
-                print('wikitext-103 exists...')
-                self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
-            else:
-                warnings.warn('Manual download from https://course.fastai/datasets')
-                urllib.request.urlretrieve('https://s3.amazonaws.com/fast-ai-nlp/wikitext-103.tgz', 'wikitext-103.tgz')
-                print('wikitext-103.tgz downloaded...')
-                tf = tarfile.open('wikitext-103.tgz')
-                tf.extractall(path='.')
-                print('wikitext-103.tgz extracted...')
-                self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
+        if input_texts is not None:
+            self.dataset = input_texts
+        else:
+            try:
+                self.dataset = load_dataset('wikitext', 'wikitext-103-v1')
+            except:
+                if os.path.exists(os.path.join(os.getcwd(), 'wikitext-103')):
+                    print('wikitext-103 exists...')
+                    self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
+                else:
+                    warnings.warn('Manual download from https://course.fastai/datasets')
+                    urllib.request.urlretrieve('https://s3.amazonaws.com/fast-ai-nlp/wikitext-103.tgz', 'wikitext-103.tgz')
+                    print('wikitext-103.tgz downloaded...')
+                    tf = tarfile.open('wikitext-103.tgz')
+                    tf.extractall(path='.')
+                    print('wikitext-103.tgz extracted...')
+                    self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
         if isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
             self.sents = self.dataset[('train' if train else 'validation')]['text']
         else:
             self.sents = self.dataset
 
         if split is not None:
+            if input_texts is not None and not train:
+                self.sents = self.sents[split:]
             self.sents = self.sents[:split]
 
     def __len__(self):
@@ -142,8 +147,8 @@ class DataLoaderTextClassification:
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
 
 class DataLoaderLanguageModeling:
-    def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
-        self.dataset = DatasetLanguageModeling(tokenizer, max_input_length, train, split)
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, split=None):
+        self.dataset = DatasetLanguageModeling(tokenizer, input_texts, max_input_length, train, split)
 
     def return_dataloader(self, batch_size=4, shuffle=False):
         return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
