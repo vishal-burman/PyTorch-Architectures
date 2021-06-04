@@ -7,8 +7,6 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import XLNetTokenizer
 import datasets
 from datasets import load_dataset
-#from .sampler import SortishSampler
-from .utils import remove_punctuation
 
 class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True):
@@ -139,11 +137,9 @@ class DataLoaderTextClassification:
     def __init__(self, tokenizer, max_input_length=16, train=True):
         self.dataset = DatasetTextClassification(tokenizer, max_input_length, train)
 
-    def return_dataloader(self, batch_size=4, shuffle=False, sortish_sampler=False):
-        #if sortish_sampler:
-        #    src_lens = [len(x) for x in self.dataset.sents]
-        #    sampler = SortishSampler(src_lens, batch_size, shuffle=shuffle)
-        #    return DataLoader(self.dataset, batch_size, collate_fn=self.dataset.collate_fn, sampler=sampler)
+    def return_dataloader(self, batch_size=4, shuffle=False, sampler=None):
+        if sampler is not None:
+            return DataLoader(self.dataset, batch_size, collate_fn=self.dataset.collate_fn, sampler=sampler)
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
 
 class DataLoaderLanguageModeling:
