@@ -2,9 +2,13 @@ import torch
 import torch.nn as nn
 
 class Generator(nn.Module):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
-        pass
+        self.linear_1 = nn.Linear(config.latent_dim, config.model_dim)
+        self.act_1 = nn.LeakyReLU(inplace=True)
+        self.dropout = nn.Dropout(config.dropout)
+        self.linear_2 = nn.Linear(config.model_dim, img_size)
+        self.act_2 = nn.Tanh()
 
     def forward(self):
         pass
