@@ -10,8 +10,13 @@ class Generator(nn.Module):
         self.linear_2 = nn.Linear(config.model_dim, img_size)
         self.act_2 = nn.Tanh()
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = self.linear_1(x)
+        x = self.act_1(x)
+        x = self.dropout(x)
+        x = self.linear_2(x)
+        x = self.act_2(x)
+        return x
 
 class Discriminator(nn.Module):
     def __init__(self):
