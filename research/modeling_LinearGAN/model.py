@@ -27,8 +27,13 @@ class Discriminator(nn.Module):
         self.linear_2 = nn.Linear(config.model_dim, 1)
         self.act_2 = nn.Sigmoid()
 
-    def forward(self):
-        pass
+    def forward(self, x):
+        x = self.linear_1(x)
+        x = self.act_1(x)
+        x = self.dropout(x)
+        x = self.linear_2(x)
+        x = self.act(x)
+        return x
 
 class LinearGAN(nn.Module):
     def __init__(self):
