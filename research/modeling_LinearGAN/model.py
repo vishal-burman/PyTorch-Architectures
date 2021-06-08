@@ -7,7 +7,7 @@ class Generator(nn.Module):
         self.linear_1 = nn.Linear(config.latent_dim, config.model_dim)
         self.act_1 = nn.LeakyReLU(inplace=True)
         self.dropout = nn.Dropout(config.dropout)
-        self.linear_2 = nn.Linear(config.model_dim, img_size)
+        self.linear_2 = nn.Linear(config.model_dim, config.img_size)
         self.act_2 = nn.Tanh()
 
     def forward(self, x):
