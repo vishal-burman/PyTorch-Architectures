@@ -19,9 +19,13 @@ class Generator(nn.Module):
         return x
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
-        pass
+        self.linear_1 = nn.Linear(config.img_size, config.model_dim)
+        self.act_1 = nn.LeakyReLU(inplace=True)
+        self.dropout = nn.Dropout(config.dropout)
+        self.linear_2 = nn.Linear(config.model_dim, 1)
+        self.act_2 = nn.Sigmoid()
 
     def forward(self):
         pass
