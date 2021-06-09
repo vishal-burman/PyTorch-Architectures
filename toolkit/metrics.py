@@ -56,7 +56,7 @@ def nlp_compute_accuracy(model, data_loader, device):
             if type(outputs) is tuple:
                 loss = outputs[0]
                 logits = outputs[1]
-            elif hasattr(outputs, 'logits'): # --> Add when experiment grows
+            elif hasattr(outputs, 'logits'): 
                 logits = outputs.logits
                 loss = None
                 if hasattr(outputs, 'loss'):
