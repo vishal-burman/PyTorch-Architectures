@@ -1,4 +1,5 @@
 import string
+import torch
 from torch.optim.lr_scheduler import LambdaLR
 
 def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
@@ -12,3 +13,12 @@ def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_st
 def remove_punctuation(text):
     text = text.translate(str.maketrans('', '', string.punctuation))
     return text
+
+def dict_to_device(sample_dict, device):
+    final_dict = sample_dict.copy()
+    if not all(isinstance(x, torch.Tensor) for x in final_dict.values()):
+        raise TypeError('Only torch.Tensor values can be shifted to CUDA')
+    for key in final_dict:
+        value = final_dict[key].to(device)
+        final_dict[key] = value
+    return final_dict
