@@ -14,7 +14,7 @@ def remove_punctuation(text):
     text = text.translate(str.maketrans('', '', string.punctuation))
     return text
 
-def dict_to_device(sample_dict, device):
+def dict_to_device(sample_dict, device=torch.device('cpu')):
     final_dict = sample_dict.copy()
     if not all(isinstance(x, torch.Tensor) for x in final_dict.values()):
         raise TypeError('Only torch.Tensor values can be shifted to CUDA')
