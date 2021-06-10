@@ -103,7 +103,7 @@ class DatasetLanguageModeling(Dataset):
                                 truncation=True,
                                 return_tensors='pt')
         if self.mlm_probability is not None:
-            tokens['input_ids'], tokens['target_ids'] = self.mask_tokens_mlm(tokens)
+            tokens['input_ids'], tokens['labels'] = self.mask_tokens_mlm(tokens)
         return tokens
 
     def mask_tokens_mlm(self, tokens):
