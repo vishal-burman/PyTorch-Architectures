@@ -84,9 +84,9 @@ def nlp_compute_mean_loss(model, data_loader, device):
                 labels = sample['labels'].squeeze(1).to(device)
             else:
                 assert sample['labels'].dim() == 2
-                input_ids = sample['input_ids']
-                attention_mask = sample['attention_mask']
-                labels = sample['labels']
+                input_ids = sample['input_ids'].to(device)
+                attention_mask = sample['attention_mask'].to(device)
+                labels = sample['labels'].to(device)
             outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
             if type(outputs) is tuple:
                 loss = outputs[1].item()
