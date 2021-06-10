@@ -90,7 +90,7 @@ def nlp_compute_mean_loss(model, data_loader, device):
             outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
             if type(ouputs) is tuple:
                 loss = outputs[1].item()
-            if hasattr(outputs, 'loss'):
+            elif hasattr(outputs, 'loss'):
                 loss = outputs.loss.item()
             else:
                 loss = outputs.item()
