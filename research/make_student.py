@@ -130,7 +130,10 @@ def create_student_by_copying_alternating_layers(
             e = teacher_e
         if d is None:
             d = teacher_d
-        init_kwargs.update({"num_layers": e, "num_decoder_layers": d})
+        if hasattr(teacher.config, 'num_encoder_layers'):
+            init_kwargs.update({"num_encoder_layers":e, "num_decoder_layers": d})
+        else:
+            init_kwargs.update({"num_layers": e, "num_decoder_layers": d})
 
     # Kwargs to instantiate student: teacher kwargs with updated layer numbers + **extra_config_kwargs
     init_kwargs.update(extra_config_kwargs)
