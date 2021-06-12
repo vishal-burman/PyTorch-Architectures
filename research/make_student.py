@@ -125,7 +125,7 @@ def create_student_by_copying_alternating_layers(
         try:
             teacher_e, teacher_d = teacher.config.num_layers, teacher.config.num_decoder_layers
         except AttributeError: # ProphetNet
-            teacher_e, teacher_d = teacher.config.num_encoder_layers, teacher.num_decoder_layers
+            teacher_e, teacher_d = teacher.config.num_encoder_layers, teacher.config.num_decoder_layers
         if e is None:
             e = teacher_e
         if d is None:
