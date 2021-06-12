@@ -157,8 +157,12 @@ def create_student_by_copying_alternating_layers(
         d_layers_to_copy: List[int] = pick_layers_to_copy(d, teacher_d)
 
     try:
-        copy_layers(teacher.model.encoder.layers, student.model.encoder.layers, e_layers_to_copy)
-        copy_layers(teacher.model.decoder.layers, student.model.decoder.layers, d_layers_to_copy)
+        if hasattr(teacher, 'prophetnet'): # For ProphetNet, student.model.encoder.layers is called student.prophetnet.encoder.layers
+            copy_layers(teacher.prophetnet.encoder.layers, student.prophetnet.encoder.layers, e_layers_to_copy)
+            copy_layers(teacher.prophetnet.decoder.layers, student.prophetnet.decoder.layers, d_layers_to_copy)
+        else:
+            copy_layers(teacher.model.encoder.layers, student.model.encoder.layers, e_layers_to_copy)
+            copy_layers(teacher.model.decoder.layers, student.model.decoder.layers, d_layers_to_copy)
     except AttributeError:  # For t5, student.model.encoder.layers is called student.encoder.block
         copy_layers(teacher.encoder.block, student.encoder.block, e_layers_to_copy)
         copy_layers(teacher.decoder.block, student.decoder.block, d_layers_to_copy)
