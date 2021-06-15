@@ -15,7 +15,7 @@ def get_classification_dataset(train=True, split=None):
     if split is not None:
         sents = sents[:split]
         labels = labels[:split]
-    return (sents, labels)
+    return sents, labels
 
 def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
     def lr_lambda(current_step: int):
