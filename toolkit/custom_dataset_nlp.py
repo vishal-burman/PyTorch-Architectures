@@ -113,6 +113,24 @@ class DatasetPermutationLanguageModeling(Dataset):
     def __getitem__(self, idx):
         return self.sents[idx]
 
+    def collate_fn(self, batch):
+        sentences = []
+        for sentence in batch:
+            sentences.append(sentence)
+        tokens = self.tokenizer(
+                sentences,
+                max_length=self.max_input_length,
+                padding='max_length',
+                truncation=True,
+                return_tensors='pt',
+                )
+        if self.plm_probability is not None:
+            tokens['input_ids'], tokens['perm_mask'], tokens['target_mapping'], tokens['labels'] = self.mask_tokens_plm(tokens)
+        return tokens
+
+    def mask_tokens_plm(self, tokens):
+        raise NotImplementedError
+
 
 class DataLoaderTextClassification:
     def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
