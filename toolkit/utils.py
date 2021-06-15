@@ -1,6 +1,21 @@
 import string
 import torch
 from torch.optim.lr_scheduler import LambdaLR
+from datasets import load_dataset
+
+def get_classification_dataset(train=True, split=None):
+    dataset = load_dataset('glue', 'sst2')
+    if train:
+        sents = dataset['train']['sentence']
+        labels = dataset['train']['label']
+    else:
+        sents = dataset['validation']['sentence']
+        labels = dataset['validation']['label']
+    assert len(sents) == len(labels), 'Input and Output shape do not match'
+    if split is not None:
+        sents = sents[:split]
+        labels = labels[:split]
+    return (sents, labels)
 
 def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
     def lr_lambda(current_step: int):
