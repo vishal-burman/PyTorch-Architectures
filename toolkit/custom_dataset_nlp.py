@@ -43,9 +43,9 @@ class DatasetLanguageModeling(Dataset):
         self.mlm_probability = mlm
         self.max_input_length = max_input_length
         if input_texts is not None:
-            self.dataset = input_texts
+            self.sents = input_texts
         else:
-            self.dataset = get_language_modeling_dataset(train, hf)
+            self.sents = get_language_modeling_dataset(train, hf)
 
     def __len__(self):
         return len(self.sents)
