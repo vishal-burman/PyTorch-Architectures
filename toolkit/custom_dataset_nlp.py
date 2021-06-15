@@ -37,7 +37,7 @@ class DatasetTextClassification(Dataset):
                 'labels': torch.tensor(labels),
                 }
 
-class DatasetLanguageModeling(Dataset):
+class DatasetMaskedLanguageModeling(Dataset):
     def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, mlm=0.15, hf=True):
         self.tokenizer = tokenizer
         self.mlm_probability = mlm
@@ -95,6 +95,24 @@ class DatasetLanguageModeling(Dataset):
         # The  rest of the 10% we keep the masked input tokens unchanged
         return input_ids, labels
 
+class DatasetPermutationLanguageModeling(Dataset):
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, plm=1/6, hf=True):
+        self.tokenizer = tokenizer
+        self.plm_probability = plm
+        if max_input_length % 2 != 0:
+            raise ValueError('To prevent leakage use even-length')
+        self.max_input_length = max_input_length
+        if input_texts is not None:
+            self.sents = input_texts
+        else:
+            self.sents = get_language_modeling_dataset(train, hf)
+
+    def __len__(self):
+        return len(self.sents)
+
+    def __getitem__(self, idx):
+        return self.sents[idx]
+
 
 class DataLoaderTextClassification:
     def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
@@ -105,7 +123,7 @@ class DataLoaderTextClassification:
             return DataLoader(self.dataset, batch_size, collate_fn=self.dataset.collate_fn, sampler=sampler)
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
 
-class DataLoaderLanguageModeling:
+class DataLoaderMaskedLanguageModeling:
     def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, mlm=0.15, hf=True):
         self.dataset = DatasetLanguageModeling(
                 tokenizer=tokenizer,
