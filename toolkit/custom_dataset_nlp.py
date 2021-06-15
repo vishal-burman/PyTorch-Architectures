@@ -37,6 +37,38 @@ class DatasetTextClassification(Dataset):
                 'labels': torch.tensor(labels),
                 }
 
+class DatasetCausalLanguageModeling(Dataset):
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, hf=True):
+        self.tokenizer = tokenizer
+        if input_texts is not None:
+            self.sents = input_texts
+        else:
+            self.sents = get_language_modeling_dataset(train, hf)
+        self.max_input_length = max_input_length
+
+    def __len__(self):
+        return len(self.sents)
+
+    def __getitem__(self, idx):
+        return self.sents[idx]
+
+    def collate_fn(self, batch):
+        sentences = []
+        for sentence in batch:
+            sentences.append(sentence)
+        tokens = self.tokenizer(
+                sentences,
+                max_length=self.max_input_length,
+                padding=True,
+                truncation=True,
+                return_tensors='pt',
+                )
+        labels = tokens['input_ids'].clone()
+        if self.tokenizer.pad_token_id is not None:
+            labels[labels == self.tokenizer.pad_token_id] = -100
+        tokens['labels'] = labels
+        return tokens
+
 class DatasetMaskedLanguageModeling(Dataset):
     def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, mlm=0.15, hf=True):
         self.tokenizer = tokenizer
