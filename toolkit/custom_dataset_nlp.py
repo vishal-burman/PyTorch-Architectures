@@ -173,6 +173,19 @@ class DataLoaderTextClassification:
             return DataLoader(self.dataset, batch_size, collate_fn=self.dataset.collate_fn, sampler=sampler)
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
 
+class DataLoaderCausalLanguageModeling:
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, hf=True):
+        self.dataset = DatasetCausalLanguageModeling(
+                tokenizer=tokenizer,
+                input_texts=input_texts,
+                max_input_length=max_input_length,
+                train=train,
+                hf=hf
+                )
+
+    def return_dataloader(self, batch_size=4, shuffle=False):
+        return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
+
 class DataLoaderMaskedLanguageModeling:
     def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, mlm=0.15, hf=True):
         self.dataset = DatasetLanguageModeling(
