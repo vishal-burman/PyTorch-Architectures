@@ -1,12 +1,8 @@
-import os
-import urllib
-import tarfile
-import warnings
 import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import XLNetTokenizer
 import datasets
-from .utils import get_classification_dataset
+from .utils import get_classification_dataset, get_language_modeling_dataset
 
 class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
@@ -42,39 +38,14 @@ class DatasetTextClassification(Dataset):
                 }
 
 class DatasetLanguageModeling(Dataset):
-    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, split=None, mlm=0.15):
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, split=None, mlm=0.15, hf=True):
         self.tokenizer = tokenizer
         self.mlm_probability = mlm
-        if isinstance(self.tokenizer, XLNetTokenizer):
-            if max_input_length % 2 != 0:
-                raise ValueError('Use even lengths for XLNet Model')
         self.max_input_length = max_input_length
         if input_texts is not None:
             self.dataset = input_texts
         else:
-            try:
-                self.dataset = load_dataset('wikitext', 'wikitext-103-v1')
-            except:
-                if os.path.exists(os.path.join(os.getcwd(), 'wikitext-103')):
-                    print('wikitext-103 exists...')
-                    self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
-                else:
-                    warnings.warn('Manual download from https://course.fastai/datasets')
-                    urllib.request.urlretrieve('https://s3.amazonaws.com/fast-ai-nlp/wikitext-103.tgz', 'wikitext-103.tgz')
-                    print('wikitext-103.tgz downloaded...')
-                    tf = tarfile.open('wikitext-103.tgz')
-                    tf.extractall(path='.')
-                    print('wikitext-103.tgz extracted...')
-                    self.dataset = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
-        if isinstance(self.dataset, datasets.dataset_dict.DatasetDict):
-            self.sents = self.dataset[('train' if train else 'validation')]['text']
-        else:
-            self.sents = self.dataset
-
-        if split is not None:
-            if input_texts is not None and not train:
-                self.sents = self.sents[split:]
-            self.sents = self.sents[:split]
+            self.dataset = get_language_modeling_dataset(train, hf)
 
     def __len__(self):
         return len(self.sents)
@@ -88,7 +59,7 @@ class DatasetLanguageModeling(Dataset):
             sentences.append(sentence)
         tokens = self.tokenizer(sentences,
                                 max_length=self.max_input_length,
-                                padding=('max_length' if isinstance(self.tokenizer, XLNetTokenizer) else True),
+                                padding=True,
                                 truncation=True,
                                 return_tensors='pt')
         if self.mlm_probability is not None:
