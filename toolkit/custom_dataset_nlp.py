@@ -6,24 +6,13 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import XLNetTokenizer
 import datasets
-from datasets import load_dataset
+from .utils import get_classification_dataset
 
 class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
         self.tokenizer = tokenizer
         self.max_input_length = max_input_length
-        self.train = train
-        self.dataset = load_dataset('glue', 'sst2')
-        if self.train:
-            self.sents = self.dataset['train']['sentence']
-            self.labels = self.dataset['train']['label']
-        else:
-            self.sents = self.dataset['validation']['sentence']
-            self.labels = self.dataset['validation']['label']
-        assert len(self.sents) == len(self.labels), 'Size of sentences and labels do not match'
-        if split is not None:
-            self.sents = self.sents[:split]
-            self.labels = self.labels[:split]
+        sents, labels = get_classification_dataset(train, split)
 
     def __len__(self):
         return len(self.sents)
