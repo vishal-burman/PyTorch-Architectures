@@ -38,7 +38,7 @@ class DatasetTextClassification(Dataset):
                 }
 
 class DatasetLanguageModeling(Dataset):
-    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, split=None, mlm=0.15, hf=True):
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, mlm=0.15, hf=True):
         self.tokenizer = tokenizer
         self.mlm_probability = mlm
         self.max_input_length = max_input_length
@@ -106,8 +106,15 @@ class DataLoaderTextClassification:
         return DataLoader(self.dataset, batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
 
 class DataLoaderLanguageModeling:
-    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, split=None):
-        self.dataset = DatasetLanguageModeling(tokenizer, input_texts, max_input_length, train, split)
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, mlm=0.15, hf=True):
+        self.dataset = DatasetLanguageModeling(
+                tokenizer=tokenizer,
+                input_texts=input_texts, 
+                max_input_length=max_input_length, 
+                train=train,
+                mlm=mlm,
+                hf=hf,
+                )
 
     def return_dataloader(self, batch_size=4, shuffle=False):
         return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
