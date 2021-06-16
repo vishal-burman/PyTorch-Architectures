@@ -54,6 +54,24 @@ print('Output --> ', tokenizer.decode(sample['labels'][0]))
 # Output -->  [UNK] the quick [UNK] [UNK] [UNK] [UNK] [UNK] [UNK] [UNK] [UNK]
 ```
 
+## Create a PLM(Permutation Language Modeling) objective from input texts
+
+```python
+from transformers import XLNetTokenizer
+from toolkit.custom_dataset_nlp import DataLoaderPermutationLanguageModeling
+
+tokenizer = XLNetTokenizer.from_pretrained('xlnet-large-cased')
+input_texts = ['The quick brown fox jumped over the lazy dog']
+
+loader = DataLoaderPermutationLanguageModeling(tokenizer, input_texts=input_texts)
+loader = loader.return_dataloader(batch_size=1)
+sample = next(iter(loader))
+input_ids = sample['input_ids']
+perm_mask = sample['perm_mask']
+target_mapping = sample['target_mapping']
+labels = sample['labels']
+```
+
 ## Function to calculate accuracy for NLP Tasks
 
 ```python
