@@ -244,3 +244,18 @@ class DataLoaderMaskedLanguageModeling:
 
     def return_dataloader(self, batch_size=4, shuffle=False):
         return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
+
+class DataLoaderPermutationLanguageModeling:
+    def __init__(self, tokenizer, input_texts=None, max_input_length=16, train=True, plm=1/6, max_span_length=5, hf=True):
+        self.dataset = DatasetPermutationLanguageModeling(
+                tokenizer=tokenizer,
+                input_texts=input_texts,
+                max_input_length=max_input_length,
+                train=train,
+                plm=plm,
+                max_span_length=max_span_length,
+                hf=hf
+                )
+
+    def return_dataloader(self, batch_size=4, shuffle=False):
+        return DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=self.dataset.collate_fn)
