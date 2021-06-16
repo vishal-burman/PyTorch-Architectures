@@ -66,10 +66,10 @@ input_texts = ['The quick brown fox jumped over the lazy dog']
 loader = DataLoaderPermutationLanguageModeling(tokenizer, input_texts=input_texts)
 loader = loader.return_dataloader(batch_size=1)
 sample = next(iter(loader))
-input_ids = sample['input_ids']
-perm_mask = sample['perm_mask']
-target_mapping = sample['target_mapping']
-labels = sample['labels']
+input_ids = sample['input_ids'] # [bs, max_len]
+perm_mask = sample['perm_mask'] # [bs, max_len, max_len]
+target_mapping = sample['target_mapping'] # [bs, max_len, max_len]
+labels = sample['labels'] # [bs, max_len]
 ```
 
 ## Function to calculate accuracy for NLP Tasks
