@@ -1,6 +1,48 @@
+import os
+import logging
+import urllib
+import tarfile
 import string
 import torch
 from torch.optim.lr_scheduler import LambdaLR
+from datasets import load_dataset
+
+def get_classification_dataset(train=True, split=None):
+    dataset = load_dataset('glue', 'sst2')
+    if train:
+        sents = dataset['train']['sentence']
+        labels = dataset['train']['label']
+    else:
+        sents = dataset['validation']['sentence']
+        labels = dataset['validation']['label']
+    assert len(sents) == len(labels), 'Input and Output shape do not match'
+    if split is not None:
+        sents = sents[:split]
+        labels = labels[:split]
+    return sents, labels
+
+def get_language_modeling_dataset(train=True, hf=True):
+    if hf:
+        dataset = load_dataset('wikitext', 'wikitext-103-v1')
+        sents = dataset[('train' if train else 'validation')]['text']
+    else:
+        if os.path.exists(os.path.join(os.getcwd(), 'wikitext-103')):
+            logging.warn('wikitext-103 exists...')
+        else:
+            logging.warn('Manual download from https://course.fastai/datasets')
+            urllib.request.urlretrieve('https://s3.amazonaws.com/fast-ai-nlp/wikitext-103.tgz', 'wikitext-103.tgz')
+            print('wikitext-103 downloaded...')
+            tf = tarfile.open('wikitext-103.tgz')
+            tf.extractall(path='.')
+            print('wikitext-103.tgz extracted...')
+        total_sents = open(os.path.join(os.getcwd(), 'wikitext-103', ('train.csv' if train else 'test.csv'))).readlines()
+        split = 80 * len(total_sents) // 100
+        logging.warn('Using an 80% train and 20% validation split')
+        train_sents = total_sents[:split]
+        valid_sents = total_sents[split:]
+        assert len(train_sents) + len(valid_sents) == len(total_sents), 'Split not successful'
+        sents = train_sents if train else valid_sents
+    return sents
 
 def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
     def lr_lambda(current_step: int):

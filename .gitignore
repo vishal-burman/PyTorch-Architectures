@@ -2,3 +2,4 @@ __pycache__/
 *.csv
 test.py
 wikitext-103/
+*.tgz
