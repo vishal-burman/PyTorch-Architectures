@@ -38,7 +38,12 @@ train_loader = DataLoaderTextClassification(tokenizer, max_input_length=64, trai
 ## Create an MLM(Masked Language Modeling) objective from input texts
 
 ```python
+from transformers import DistilBertTokenizer
+from toolkit.custom_dataset_nlp import DataLoaderMaskedLanguageModeling
+
 input_texts = ['The quick brown fox jumped over the lazy dog']
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+
 loader = DataLoaderMaskedLanguageModeling(tokenizer, input_texts=input_texts)
 loader = loader.return_dataloader(batch_size=1)
 sample = next(iter(loader))
