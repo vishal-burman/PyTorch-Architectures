@@ -102,7 +102,7 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
     model.to(device)
     bs = 1
     dataloader = DataLoader(dataset, batch_size=bs)
-    for _ in max_trials:
+    for _ in range(max_trials):
         gc_cuda()
         try:
             sample = next(iter(dataloader))
