@@ -97,6 +97,8 @@ def gc_cuda():
                 raise
 
 def get_optimal_batchsize(dataset, model, max_trials=25):
+    if not hasattr(dataset, 'collate_fn'):
+        raise AttributeError('Define a collate_fn in your Dataset and make sure it returns dict type')
     device = torch.device('cuda:0' if torch.cuda.is_available() \
                            else 'cpu')
     model.to(device)
@@ -114,7 +116,7 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
                 sample = dict_to_device(sample.data, device)
                 outputs = model(**sample)
             else:
-                raise NotImplementedError('DataLoader should yield dict or BatchEncoding types')
+                raise ValueError('DataLoader should yield dict or BatchEncoding types')
 
             bs = int(bs * 2.0)
             dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
