@@ -5,6 +5,7 @@ import tarfile
 import string
 import gc
 import torch
+from torch.utils.data import Dataset, DataLoader
 from torch.optim.lr_scheduler import LambdaLR
 from datasets import load_dataset
 
