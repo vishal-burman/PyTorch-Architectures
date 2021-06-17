@@ -126,4 +126,4 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
                 break
             else:
                 raise # some other error not memory related
-        return bs
+    return bs
