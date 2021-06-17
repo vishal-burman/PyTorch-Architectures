@@ -101,7 +101,7 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
                            else 'cpu')
     model.to(device)
     bs = 1
-    dataloader = DataLoader(dataset, batch_size=bs)
+    dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
     for _ in range(max_trials):
         gc_cuda()
         try:
@@ -117,12 +117,12 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
                 raise NotImplementedError('DataLoader should yield dict or BatchEncoding types')
 
             bs = int(bs * 2.0)
-            dataloader = DataLoader(dataset, batch_size=bs)
+            dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
         except RuntimeError as exception:
             if is_oom_error(exception):
                 gc_cuda()
                 bs = int(bs * 0.5)
-                dataloader = DataLoader(dataset, batch_size=bs)
+                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
                 break
             else:
                 raise # some other error not memory related
