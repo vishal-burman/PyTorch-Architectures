@@ -8,7 +8,7 @@ class DatasetTextClassification(Dataset):
     def __init__(self, tokenizer, max_input_length=16, train=True, split=None):
         self.tokenizer = tokenizer
         self.max_input_length = max_input_length
-        sents, labels = get_classification_dataset(train, split)
+        self.sents, self.labels = get_classification_dataset(train, split)
 
     def __len__(self):
         return len(self.sents)
