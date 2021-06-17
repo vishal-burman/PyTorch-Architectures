@@ -94,3 +94,35 @@ def gc_cuda():
         except:
             if not is_oom_error(exception):
                 raise
+
+def get_optimal_batchsize(dataset, model, max_trials=25):
+    device = torch.device('cuda:0' if torch.cuda.is_available() \
+                           else 'cpu')
+    model.to(device)
+    bs = 1
+    dataloader = DataLoader(dataset, batch_size=bs)
+    for _ in max_trials:
+        gc_cuda()
+        try:
+            sample = next(iter(dataloader))
+            
+            if type(sample) is dict:
+                sample = dict_to_device(sample, device)
+                outputs = model(**sample)
+            elif hasattr(sample, 'data'):
+                sample = dict_to_device(sample.data, device)
+                outputs = model(**sample)
+            else:
+                raise NotImplementedError('DataLoader should yield dict or BatchEncoding types')
+
+            bs = int(bs * 2.0)
+            dataloader = DataLoader(dataset, batch_size=bs)
+        except RuntimeError as exception:
+            if is_oom_error(exception):
+                gc_cuda()
+                bs = int(bs * 0.5)
+                dataloader = DataLoader(dataset, batch_size=bs)
+                break
+            else:
+                raise # some other error not memory related
+        return bs
