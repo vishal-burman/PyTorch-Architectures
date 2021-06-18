@@ -1,13 +1,14 @@
+import copy
 import os
 import logging
 import urllib
 import tarfile
 import string
-import gc
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.lr_scheduler import LambdaLR
 from datasets import load_dataset
+from .cuda_memory_utils import gc_cuda, is_oom_error
 
 def get_classification_dataset(train=True, split=None):
     dataset = load_dataset('glue', 'sst2')
@@ -66,66 +67,54 @@ def dict_to_device(sample_dict, device=torch.device('cpu')):
     final_dict = dict(zip(keys, values))
     return final_dict
 
-def is_cuda_out_of_memory(exception):
-    return isinstance(exception, RuntimeError) \
-            and len(exception.args) == 1 \
-            and "CUDA" in exception.args[0] \
-            and "out of memory" in exception.args[0]
 
-def is_cudnn_snafu(exception):
-    return isinstance(exception, RuntimeError) \
-            and len(exception.args) == 1 \
-            and "cuDNN error: CUDNN_STATUS_NOT_SUPPORTED." in exception.args[0]
+def _trial_run(model, dataloader, device, step_limit=3):
+    model_copy = copy.deepcopy(model)
+    model_copy.to(device)
+    
+    for idx, sample in enumerate(dataloader):
+        if idx >= step_limit:
+            break
 
-def is_out_of_cpu_memory(exception):
-    return isinstance(exception, RuntimeError) \
-            and len(exception.args) == 1 \
-            and "DefaultCPUAllocator: can't allocate memory" in exception.args[0]
+        if type(sample) is dict:
+            sample = dict_to_device(sample, device)
+            outputs = model_copy(**sample)
+        elif hasattr(sample, 'data'):
+            sample = dict_to_device(sample.data, device)
+            outputs = model_copy(**sample)
+        else:
+            raise ValueError('DataLoader should yield dict or BatchEncoding types')
 
-def is_oom_error(exception):
-    return is_cuda_out_of_memory(exception) \
-            or is_cudnn_snafu(exception) \
-            or is_out_of_cpu_memory(exception)
+    del model_copy
 
-def gc_cuda():
-    gc.collect()
-    if torch.cuda.is_available():
-        try: # Last thing which should cause OOM error but seemingly it can
-            torch.cuda.empty_cache()
-        except:
-            if not is_oom_error(exception):
-                raise
-
-def get_optimal_batchsize(dataset, model, max_trials=25):
-    if not hasattr(dataset, 'collate_fn'):
-        raise AttributeError('Define a collate_fn in your Dataset and make sure it returns dict type')
+def _run_power_scaling(model, dataset, max_trials):
     device = torch.device('cuda:0' if torch.cuda.is_available() \
                            else 'cpu')
-    model.to(device)
     bs = 1
-    dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+    dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
     for _ in range(max_trials):
         gc_cuda()
         try:
-            sample = next(iter(dataloader))
-            
-            if type(sample) is dict:
-                sample = dict_to_device(sample, device)
-                outputs = model(**sample)
-            elif hasattr(sample, 'data'):
-                sample = dict_to_device(sample.data, device)
-                outputs = model(**sample)
-            else:
-                raise ValueError('DataLoader should yield dict or BatchEncoding types')
+            _trial_run(model, dataloader, device)
 
             bs = int(bs * 2.0)
-            dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+            dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
         except RuntimeError as exception:
             if is_oom_error(exception):
                 gc_cuda()
                 bs = int(bs * 0.5)
-                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+                dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
                 break
             else:
                 raise # some other error not memory related
+    return bs
+
+def get_optimal_batchsize(dataset, model, max_trials=25):
+    if not hasattr(dataset, 'collate_fn'):
+        raise AttributeError('Define a collate_fn in your Dataset and make sure it returns dict type')
+
+    device = torch.device('cuda:0' if torch.cuda.is_available() \
+                           else 'cpu')
+    model.to(device)
+    bs = _run_power_scaling(model, dataset, max_trials) 
     return bs
