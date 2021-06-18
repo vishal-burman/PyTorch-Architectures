@@ -1,4 +1,5 @@
 import gc
+import torch
 
 def is_cuda_out_of_memory(exception):
     return isinstance(exception, RuntimeError) \
