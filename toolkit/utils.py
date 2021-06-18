@@ -1,3 +1,4 @@
+import pdb
 import copy
 import os
 import logging
@@ -138,6 +139,8 @@ def _run_power_scaling(model, dataset, max_trials):
             _trial_run(model, dataloader, device)
 
             bs = int(bs * 2.0)
+            if bs == 512:
+                pdb.set_trace()
             dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
         except RuntimeError as exception:
             if is_oom_error(exception):
