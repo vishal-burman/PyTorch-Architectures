@@ -126,19 +126,19 @@ def _run_power_scaling(model, dataset, max_trials):
                            else 'cpu')
     model.to(device)
     bs = 1
-    dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+    dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
     for _ in range(max_trials):
         gc_cuda()
         try:
             _trial_run(model, dataloader, device)
 
             bs = int(bs * 2.0)
-            dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+            dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
         except RuntimeError as exception:
             if is_oom_error(exception):
                 gc_cuda()
                 bs = int(bs * 0.5)
-                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+                dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
                 break
             else:
                 raise # some other error not memory related
