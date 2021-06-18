@@ -136,11 +136,21 @@ def _run_power_scaling(model, dataset, max_trials):
     for _ in range(max_trials):
         gc_cuda()
         try:
-            _trial_run(model, dataloader, device)
+            #_trial_run(model, dataloader, device)
+            for idx, sample in train_loader:
+                if idx >= 3:
+                    break
+                
+                if type(sample) is dict:
+                    sample = dict_to_device(sample, device)
+                    outputs = model(**sample)
+                elif hasattr(sample, 'data'):
+                    sample = dict_to_device(sample.data, device)
+                    outputs = model(**sample)
+                else:
+                    raise ValueError('DataLoader should yield dict or BatchEncoding types')
 
             bs = int(bs * 2.0)
-            #if bs == 512:
-            #    pdb.set_trace()
             dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
         except RuntimeError as exception:
             if is_oom_error(exception):
