@@ -137,6 +137,7 @@ def _run_power_scaling(model, dataset, max_trials):
         except RuntimeError as exception:
             if is_oom_error(exception):
                 gc_cuda()
+                print('exception catched at', bs)
                 bs = int(bs * 0.5)
                 dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
                 break
