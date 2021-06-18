@@ -132,6 +132,8 @@ def _run_binsearch_scaling(model, dataset, max_trials):
     high = None
     count = 0
     bs = 1
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
     dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
     while True:
         gc_cuda()
