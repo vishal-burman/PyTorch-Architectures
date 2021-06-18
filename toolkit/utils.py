@@ -1,4 +1,4 @@
-import pdb
+import copy
 import os
 import logging
 import urllib
@@ -98,16 +98,17 @@ def gc_cuda():
                 raise
 
 def _trial_run(model, dataloader, device, step_limit=3):
-    gc_cuda()
     print('Starting trial run with batch-size: %d' % (dataloader.batch_size))
     optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+    model_copy = copy.deepcopy(model)
+    model_copy.to(device)
     for idx, sample in enumerate(dataloader):
         if idx > step_limit:
             break
         if type(sample) is dict:
-            outputs = model(**dict_to_device(sample, device))
+            outputs = model_copy(**dict_to_device(sample, device))
         elif hasattr(sample, 'data'):
-            outputs = model(**dict_to_device(sample.data, device))
+            outputs = model_copy(**dict_to_device(sample.data, device))
         else:
             raise ValueError('DataLoader should yeild dict or BatchEncoding types')
  
@@ -122,11 +123,13 @@ def _trial_run(model, dataloader, device, step_limit=3):
         optimizer.step()
         optimizer.zero_grad()
 
+    del model_copy
+    del optimizer
+    del loss
+
 def _run_power_scaling(model, dataset, max_trials):
     device = torch.device('cuda:0' if torch.cuda.is_available() \
                            else 'cpu')
-    model.to(device)
-    pdb.set_trace()
     bs = 1
     dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
     for _ in range(max_trials):
