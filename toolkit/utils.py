@@ -96,9 +96,40 @@ def gc_cuda():
             if not is_oom_error(exception):
                 raise
 
+def _run_power_scaling(model, dataset, max_trials):
+    device = torch.device('cuda:0' if torch.cuda.is_available() \
+                           else 'cpu')
+    model.to(device)
+    bs = 1
+    dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+    for _ in range(max_trials):
+        gc_cuda()
+        try:
+            sample = next(iter(dataloader))
+            
+            if type(sample) is dict:
+                sample = dict_to_device(sample, device)
+                outputs = model(**sample)
+            elif hasattr(sample, 'data'):
+                sample = dict_to_device(sample.data, device)
+                outputs = model(**sample)
+            else:
+                raise ValueError('DataLoader should yield dict or BatchEncoding types')
+
+            bs = int(bs * 2.0)
+            dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+        except RuntimeError as exception:
+            if is_oom_error(exception):
+                gc_cuda()
+                bs = int(bs * 0.5)
+                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+                break
+            else:
+                raise # some other error not memory related
+
 def get_optimal_batchsize(dataset, model, max_trials=25, power=True, binary_search=False):
     if power and binary_search:
-        raise ValueError('Choose either power or binary_search as strategy')
+        raise ValueError('Choose either power or binary_search as optimal batch-size strategy')
     if not hasattr(dataset, 'collate_fn'):
         raise AttributeError('Define a collate_fn in your Dataset and make sure it returns dict type')
 
@@ -106,32 +137,7 @@ def get_optimal_batchsize(dataset, model, max_trials=25, power=True, binary_sear
                            else 'cpu')
     model.to(device)
     if power:
-        bs = 1
-        dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
-        for _ in range(max_trials):
-            gc_cuda()
-            try:
-                sample = next(iter(dataloader))
-                
-                if type(sample) is dict:
-                    sample = dict_to_device(sample, device)
-                    outputs = model(**sample)
-                elif hasattr(sample, 'data'):
-                    sample = dict_to_device(sample.data, device)
-                    outputs = model(**sample)
-                else:
-                    raise ValueError('DataLoader should yield dict or BatchEncoding types')
-
-                bs = int(bs * 2.0)
-                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
-            except RuntimeError as exception:
-                if is_oom_error(exception):
-                    gc_cuda()
-                    bs = int(bs * 0.5)
-                    dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
-                    break
-                else:
-                    raise # some other error not memory related
+        bs = _run_power_scaling(model, dataset, max_trials) 
     else:
         raise NotImplementedError
     return bs
