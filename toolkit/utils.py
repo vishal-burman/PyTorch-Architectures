@@ -96,6 +96,31 @@ def gc_cuda():
             if not is_oom_error(exception):
                 raise
 
+def _trial_run(model, dataloader, device, steps):
+    logging.warn('Using AdamW as optimizer and learning_rate is kept at default=5e-5')
+    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+    model.train()
+    for idx, sample in enumerate(dataloader):
+        if idx > 3:
+            break
+        if type(sample) is dict:
+            outputs = model(**dict_to_device(sample, device))
+        elif hasattr(sample, 'data'):
+            outputs = model(**dict_to_device(sample.data, device))
+        else:
+            raise ValueError('DataLoader should yeild dict or BatchEncoding types')
+ 
+        if type(outputs) is tuple:
+            loss = outputs[1]
+        elif hasattr(outputs, 'loss'):
+            loss = outputs.loss
+        else:
+            loss = outputs
+
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
 def _run_power_scaling(model, dataset, max_trials):
     device = torch.device('cuda:0' if torch.cuda.is_available() \
                            else 'cpu')
@@ -175,11 +200,10 @@ def _run_binsearch_scaling(model, dataset, max_trials):
                 dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
                 if high - low <= 1:
                     break
-
             else:
                 raise
 
-    return (bs - 4)
+    return bs
 
 def get_optimal_batchsize(dataset, model, max_trials=25, power=True, binary_search=False):
     if power and binary_search:
