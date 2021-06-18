@@ -126,6 +126,7 @@ def _run_power_scaling(model, dataset, max_trials):
                 break
             else:
                 raise # some other error not memory related
+    return bs
 
 def get_optimal_batchsize(dataset, model, max_trials=25, power=True, binary_search=False):
     if power and binary_search:
