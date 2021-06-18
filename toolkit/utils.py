@@ -98,35 +98,24 @@ def gc_cuda():
             if not is_oom_error(exception):
                 raise
 
-def _trial_run(model, dataloader, device, step_limit=10):
-    print('Starting trial run with batch-size: %d' % (dataloader.batch_size))
+def _trial_run(model, dataloader, device, step_limit=3):
     model_copy = copy.deepcopy(model)
     model_copy.to(device)
-    optimizer = torch.optim.AdamW(model_copy.parameters(), lr=5e-5)
+    
     for idx, sample in enumerate(dataloader):
-        if idx > step_limit:
+        if idx >= step_limit:
             break
-        if type(sample) is dict:
-            outputs = model_copy(**dict_to_device(sample, device))
-        elif hasattr(sample, 'data'):
-            outputs = model_copy(**dict_to_device(sample.data, device))
-        else:
-            raise ValueError('DataLoader should yeild dict or BatchEncoding types')
- 
-        if type(outputs) is tuple:
-            loss = outputs[1]
-        elif hasattr(outputs, 'loss'):
-            loss = outputs.loss
-        else:
-            loss = outputs
 
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+        if type(sample) is dict:
+            sample = dict_to_device(sample, device)
+            outputs = model_copy(**sample)
+        elif hasattr(sample, 'data'):
+            sample = dict_to_device(sample.data, device)
+            outputs = model_copy(**sample)
+        else:
+            raise ValueError('DataLoader should yield dict or BatchEncoding types')
 
     del model_copy
-    del optimizer
-    del loss
 
 def _run_power_scaling(model, dataset, max_trials):
     device = torch.device('cuda:0' if torch.cuda.is_available() \
@@ -136,19 +125,19 @@ def _run_power_scaling(model, dataset, max_trials):
     for _ in range(max_trials):
         gc_cuda()
         try:
-            #_trial_run(model, dataloader, device)
-            for idx, sample in enumerate(dataloader):
-                if idx >= 3:
-                    break
-                
-                if type(sample) is dict:
-                    sample = dict_to_device(sample, device)
-                    outputs = model(**sample)
-                elif hasattr(sample, 'data'):
-                    sample = dict_to_device(sample.data, device)
-                    outputs = model(**sample)
-                else:
-                    raise ValueError('DataLoader should yield dict or BatchEncoding types')
+            _trial_run(model, dataloader, device)
+            #for idx, sample in enumerate(dataloader):
+            #    if idx >= 3:
+            #        break
+            #    
+            #    if type(sample) is dict:
+            #        sample = dict_to_device(sample, device)
+            #        outputs = model(**sample)
+            #    elif hasattr(sample, 'data'):
+            #        sample = dict_to_device(sample.data, device)
+            #        outputs = model(**sample)
+            #    else:
+            #        raise ValueError('DataLoader should yield dict or BatchEncoding types')
 
             bs = int(bs * 2.0)
             dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
