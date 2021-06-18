@@ -99,9 +99,9 @@ def gc_cuda():
 
 def _trial_run(model, dataloader, device, step_limit=3):
     print('Starting trial run with batch-size: %d' % (dataloader.batch_size))
-    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
     model_copy = copy.deepcopy(model)
     model_copy.to(device)
+    optimizer = torch.optim.AdamW(model_copy.parameters(), lr=5e-5)
     for idx, sample in enumerate(dataloader):
         if idx > step_limit:
             break
