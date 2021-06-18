@@ -98,7 +98,7 @@ def gc_cuda():
             if not is_oom_error(exception):
                 raise
 
-def _trial_run(model, dataloader, device, step_limit=3):
+def _trial_run(model, dataloader, device, step_limit=10):
     print('Starting trial run with batch-size: %d' % (dataloader.batch_size))
     model_copy = copy.deepcopy(model)
     model_copy.to(device)
@@ -139,8 +139,8 @@ def _run_power_scaling(model, dataset, max_trials):
             _trial_run(model, dataloader, device)
 
             bs = int(bs * 2.0)
-            if bs == 512:
-                pdb.set_trace()
+            #if bs == 512:
+            #    pdb.set_trace()
             dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
         except RuntimeError as exception:
             if is_oom_error(exception):
