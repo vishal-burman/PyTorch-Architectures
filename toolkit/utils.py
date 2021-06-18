@@ -137,7 +137,7 @@ def _run_power_scaling(model, dataset, max_trials):
         gc_cuda()
         try:
             #_trial_run(model, dataloader, device)
-            for idx, sample in train_loader:
+            for idx, sample in enumerate(dataloader):
                 if idx >= 3:
                     break
                 
