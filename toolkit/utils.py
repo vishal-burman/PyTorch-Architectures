@@ -1,3 +1,4 @@
+import pdb
 import os
 import logging
 import urllib
@@ -125,6 +126,7 @@ def _run_power_scaling(model, dataset, max_trials):
     device = torch.device('cuda:0' if torch.cuda.is_available() \
                            else 'cpu')
     model.to(device)
+    pdb.set_trace()
     bs = 1
     dataloader = DataLoader(dataset, batch_size=bs, shuffle=True, collate_fn=dataset.collate_fn)
     for _ in range(max_trials):
