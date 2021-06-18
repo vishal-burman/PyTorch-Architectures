@@ -179,7 +179,7 @@ def _run_binsearch_scaling(model, dataset, max_trials):
             else:
                 raise
 
-    return bs
+    return (bs - 4)
 
 def get_optimal_batchsize(dataset, model, max_trials=25, power=True, binary_search=False):
     if power and binary_search:
