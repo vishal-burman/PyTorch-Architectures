@@ -128,6 +128,57 @@ def _run_power_scaling(model, dataset, max_trials):
                 raise # some other error not memory related
     return bs
 
+def _run_binsearch_scaling(model, dataset, max_trials):
+    high = None
+    count = 0
+    bs = 1
+    dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+    while True:
+        gc_cuda()
+
+        try:
+            sample = next(iter(dataloader))
+
+            if type(sample) is dict:
+                sample = dict_to_device(sample, device)
+                outputs = model(**sample)
+            elif hasattr(sample, 'data'):
+                sample = dict_to_device(sample.data, device)
+                outputs = model(**sample)
+            else:
+                raise ValueError('DataLoader should yeild dict or BatchEncoding types')
+
+            count += 1
+            if count > max_trials:
+                break
+            
+            # Double in size
+            low = bs
+            if high:
+                if high - low <= 1:
+                    break
+                midval = (high + low) // 2
+                bs = midval
+                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+            else:
+                bs = bs * 2
+                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+
+        except RuntimeError as exception:
+            if is_oom_error(exception):
+                gc_cuda()
+                high = bs
+                midval = (high + low) // 2
+                bs = midval
+                dataloader = DataLoader(dataset, batch_size=bs, collate_fn=dataset.collate_fn)
+                if high - low <= 1:
+                    break
+
+            else:
+                raise
+
+    return bs
+
 def get_optimal_batchsize(dataset, model, max_trials=25, power=True, binary_search=False):
     if power and binary_search:
         raise ValueError('Choose either power or binary_search as optimal batch-size strategy')
@@ -140,5 +191,5 @@ def get_optimal_batchsize(dataset, model, max_trials=25, power=True, binary_sear
     if power:
         bs = _run_power_scaling(model, dataset, max_trials) 
     else:
-        raise NotImplementedError
+        bs = _run_binsearch_scaling(model, dataset, max_trials)
     return bs
