@@ -32,7 +32,7 @@ class Discriminator(nn.Module):
         x = self.act_1(x)
         x = self.dropout(x)
         x = self.linear_2(x)
-        x = self.act(x)
+        x = self.act_2(x)
         return x
 
 class LinearGAN(nn.Module):
