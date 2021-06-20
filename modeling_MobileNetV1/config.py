@@ -7,6 +7,8 @@ class MobileNetV1Config:
             first_stage_stride=False,
             dw_use_bn=True,
             dw_activation=(lambda: nn.ReLU(inplace=True)),
+            in_size=224,
+            in_channels=3,
             ):
         
         self.width_scale = width_scale
@@ -15,3 +17,5 @@ class MobileNetV1Config:
         self.first_stage_stride = first_stage_stride
         self.dw_use_bn = dw_use_bn
         self.dw_activation = dw_activation
+        self.in_size = in_size
+        self.in_channels = 3
