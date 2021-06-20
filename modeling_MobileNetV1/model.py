@@ -8,3 +8,11 @@ class MobileNetV1(nn.Module):
 
     def forward(self,):
         pass
+
+class ConvBlock(nn.Module):
+    def __init__(self,):
+        super().__init__()
+        pass
+
+    def forward(self,):
+        pass
