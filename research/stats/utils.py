@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def make_linear_regresssion_data(no_samples=10, mean=0.0, std=1.0):
     """
@@ -24,3 +25,16 @@ def minimize_rss(inputs, labels):
     
     B0 = np.mean(labels) - (B1 * np.mean(inputs))
     return B1, B0
+
+def residual_standard_error(errors):
+    "Returns Residual Standard Error
+    """
+    calc = rss(errors) / (len(errors) - 2)
+    rse = math.sqrt(calc)
+    return rse
+
+def standard_error_B0(inputs, errors):
+    pass
+
+def standard_error_B1(inputs, errors):
+    pass
