@@ -16,14 +16,13 @@ class ConvBlock(nn.Module):
             activation=nn.ReLU(inplace=True)
             ):
         super().__init__()
-        self.activate = (activate is not None)
+        self.activate = (activation is not None)
         self.use_bn = use_bn
-        self.use_pad = (isinstance(padding, (list, tuple)) and (len(padding) == 4))
 
         self.conv = nn.Conv2d(
                 in_channels=in_channels,
                 out_channels=out_channels,
-                kernel_size=kernel_size,
+                kernel_size=3,
                 stride=stride,
                 padding=padding,
                 dilation=dilation,
@@ -36,8 +35,13 @@ class ConvBlock(nn.Module):
         if self.activate:
             self.activ = activation
 
-    def forward(self,):
-        pass
+    def forward(self, x):
+        x = self.conv(x)
+        if self.use_bn:
+            x = self.bn(x)
+        if self.activate:
+            x = self.activ(x)
+        return x
 
 class MobileNetV1(nn.Module):
     def __init__(self, config):
