@@ -36,9 +36,15 @@ class Discriminator(nn.Module):
         return x
 
 class LinearGAN(nn.Module):
-    def __init__(self):
+    def __init__(self, generator, discriminator):
         super().__init__()
-        pass
+        self.generator = generator
+        self.discriminator = discriminator
 
-    def forward(self):
-        pass
+    def generator_forward(self, x):
+        img = self.generator(z)
+        return img
+
+    def discriminator_forward(self):
+        pred = self.discriminator(img)
+        return pred.view(-1)
