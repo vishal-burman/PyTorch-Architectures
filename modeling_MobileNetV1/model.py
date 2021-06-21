@@ -8,17 +8,12 @@ class Conv3x3Block(nn.Module):
             out_channels,
             kernel_size=3,
             stride=1,
-            padding=1,
-            dilation=1,
             groups=1,
+            padding=1,
             bias=False,
-            use_bn=True,
             bn_eps=1e-5,
-            activation=nn.ReLU(inplace=True)
             ):
         super().__init__()
-        self.activate = (activation is not None)
-        self.use_bn = use_bn
 
         self.conv = nn.Conv2d(
                 in_channels=in_channels,
@@ -26,22 +21,17 @@ class Conv3x3Block(nn.Module):
                 kernel_size=kernel_size,
                 stride=stride,
                 padding=padding,
-                dilation=dilation,
                 groups=groups,
-                bias=bias
+                bias=bias,
                 )
-        if self.use_bn:
-            self.bn = nn.BatchNorm2d(num_features=out_channels,
+        self.bn = nn.BatchNorm2d(num_features=out_channels,
                     eps=bn_eps,)
-        if self.activate:
-            self.activ = activation
+        self.activ = nn.ReLU()
 
     def forward(self, x):
         x = self.conv(x)
-        if self.use_bn:
-            x = self.bn(x)
-        if self.activate:
-            x = self.activ(x)
+        x = self.bn(x)
+        x = self.activ(x)
         return x
 
 class DWSConv3x3Block(nn.Module):
@@ -52,41 +42,29 @@ class DWSConv3x3Block(nn.Module):
             kernel_size=3,
             stride=1,
             padding=1,
-            dilation=1,
             bias=False,
-            dw_use_bn=True,
-            pw_use_bn=True,
             bn_eps=1e-5,
-            dw_activation=nn.ReLU(inplace=True),
-            pw_activation=nn.ReLU(inplace=True),
+            **kwargs,
             ):
         super().__init__()
         self.dw_conv_block = Conv3x3Block(
                 in_channels=in_channels,
-                out_channels=out_channels,
+                out_channels=in_channels,
                 kernel_size=kernel_size,
                 stride=stride,
                 padding=padding,
-                dilation=dilation,
-                groups=out_channels,
+                groups=in_channels,
                 bias=bias,
-                use_bn=dw_use_bn,
-                bn_eps=bn_eps,
-                activation=dw_activation,
                 )
 
         self.pw_conv_block = Conv3x3Block(
                 in_channels=in_channels,
                 out_channels=out_channels,
-                kernel_size=kernel_size,
+                kernel_size=1,
                 stride=1,
                 padding=0,
-                dilation=dilation,
                 groups=1,
                 bias=bias,
-                use_bn=pw_use_bn,
-                bn_eps=bn_eps,
-                activation=pw_activation,
                 )
 
     def forward(self, x):
@@ -111,21 +89,26 @@ class MobileNetV1(nn.Module):
         for i, channels_per_stage in enumerate(config.channels[1:]):
             stage = nn.Sequential()
             for j, out_channels in enumerate(channels_per_stage):
-                stride = 2 if (j == 0) and ((i != 0) or config.first_stage_stride) else 1
+                stride = 2 if ((j == 0) and (i != 0)) else 1
                 stage.add_module("unit{}".format(j + 1), DWSConv3x3Block(
                     in_channels=in_channels,
                     out_channels=out_channels,
                     stride=stride,
-                    dw_use_bn=config.dw_use_bn,
-                    dw_activation=config.dw_activation,
                     ))
+                in_channels = out_channels
             self.features.add_module("stage{}".format(i + 1), stage)
-        self.features.add_module("final_pool", nn.AvgPool2d(
+        self.features.add_module('final_pool', nn.AvgPool2d(
             kernel_size=7,
             stride=1,
             ))
 
-        self.output = nn.Linear(in_features=in_channels, out_features=self.num_classes)
+        self.output = nn.Linear(
+                in_features=in_channels,
+                out_features=self.num_classes,
+                )
 
-    def forward(self,):
-        pass
+    def forward(self, x):
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
+        logits = self.output(x)
+        return logits
