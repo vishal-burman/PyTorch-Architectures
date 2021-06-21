@@ -9,6 +9,7 @@ class MobileNetV1Config:
             dw_activation=(lambda: nn.ReLU(inplace=True)),
             in_size=224,
             in_channels=3,
+            num_classes=2,
             ):
         
         self.width_scale = width_scale
@@ -18,4 +19,5 @@ class MobileNetV1Config:
         self.dw_use_bn = dw_use_bn
         self.dw_activation = dw_activation
         self.in_size = in_size
-        self.in_channels = 3
+        self.in_channels = in_channels
+        self.num_classes = num_classes
