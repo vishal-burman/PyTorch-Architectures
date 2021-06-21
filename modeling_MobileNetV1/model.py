@@ -102,7 +102,7 @@ class MobileNetV1(nn.Module):
 
         self.features = nn.Sequential()
         init_block_channels = config.channels[0][0]
-        self.features.add_module("init_block", ConvBlock(
+        self.features.add_module("init_block", Conv3x3Block(
             in_channels=config.in_channels,
             out_channels=init_block_channels,
             stride=2,
@@ -112,13 +112,20 @@ class MobileNetV1(nn.Module):
             stage = nn.Sequential()
             for j, out_channels in enumerate(channels_per_stage):
                 stride = 2 if (j == 0) and ((i != 0) or config.first_stage_stride) else 1
-                stage.add_module("unit{}".format(j + 1), DWConvBlock(
+                stage.add_module("unit{}".format(j + 1), DWSConv3x3Block(
                     in_channels=in_channels,
                     out_channels=out_channels,
                     stride=stride,
                     dw_use_bn=config.dw_use_bn,
                     dw_activation=config.dw_activation,
                     ))
+            self.features.add_module("stage{}".format(i + 1), stage)
+        self.features.add_module("final_pool", nn.AvgPool2d(
+            kernel_size=7,
+            stride=1,
+            ))
+
+        self.output = nn.Linear(in_features=in_channels, out_features=self.num_classes)
 
     def forward(self,):
         pass
