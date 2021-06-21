@@ -1,11 +1,12 @@
 import torch
 import torch.nn as nn
 
-class ConvBlock(nn.Module):
+class Conv3x3Block(nn.Module):
     def __init__(
             self,
             in_channels,
             out_channels,
+            kernel_size=3,
             stride=1,
             padding=1,
             dilation=1,
@@ -22,7 +23,7 @@ class ConvBlock(nn.Module):
         self.conv = nn.Conv2d(
                 in_channels=in_channels,
                 out_channels=out_channels,
-                kernel_size=3,
+                kernel_size=kernel_size,
                 stride=stride,
                 padding=padding,
                 dilation=dilation,
@@ -43,13 +44,55 @@ class ConvBlock(nn.Module):
             x = self.activ(x)
         return x
 
-class DWConvBlock(nn.Module):
-    def __init__(self,):
+class DWSConv3x3Block(nn.Module):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            dilation=1,
+            bias=False,
+            dw_use_bn=True,
+            pw_use_bn=True,
+            bn_eps=1e-5,
+            dw_activation=nn.ReLU(inplace=True),
+            pw_activation=nn.ReLU(inplace=True),
+            ):
         super().__init__()
-        pass
+        self.dw_conv_block = Conv3x3Block(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=padding,
+                dilation=dilation,
+                groups=out_channels,
+                bias=bias,
+                use_bn=dw_use_bn,
+                bn_eps=bn_eps,
+                activation=dw_activation,
+                )
 
-    def forward(self,):
-        pass
+        self.pw_conv_block = Conv3x3Block(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                stride=1,
+                padding=0,
+                dilation=dilation,
+                groups=1,
+                bias=bias,
+                use_bn=pw_use_bn,
+                bn_eps=bn_eps,
+                activation=pw_activation,
+                )
+
+    def forward(self, x):
+        x = self.dw_conv_block(x)
+        x = self.pw_conv_block(x)
+        return x
 
 class MobileNetV1(nn.Module):
     def __init__(self, config):
