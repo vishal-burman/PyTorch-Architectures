@@ -4,6 +4,7 @@ import logging
 import urllib
 import tarfile
 import string
+import wget
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.lr_scheduler import LambdaLR
@@ -46,6 +47,25 @@ def get_language_modeling_dataset(train=True, hf=True):
         assert len(train_sents) + len(valid_sents) == len(total_sents), 'Split not successful'
         sents = train_sents if train else valid_sents
     return sents
+
+def get_image_classification_dataset(train=True,):
+    if os.path.exists(os.path.join(os.getcwd(), 'cifar10')):
+        print('cifar10 exists...')
+    else:
+        filename = wget.download('https://s3.amazonaws.com/fast-ai-imageclas/cifar10.tgz')
+        tf = tarfile.open('cifar10.tgz')
+        tf.extractall(path='.')
+        print('cifar10 extracted...')
+
+    parent_path = os.path.join(os.getcwd(), 'cifar10', ('train' if train else 'test'))
+    labels = os.listdir(parent_path)
+    final_list = []
+    for idx, label in enumerate(labels):
+        path = os.path.join(parent_path, label)
+        images_paths = [os.path.join(path, f) for f in os.listdir(path)]
+        tuple_list = [(image_path, idx) for image_path in images_paths]
+        final_list.extend(tuple_list)
+    return final_list
 
 def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
     def lr_lambda(current_step: int):
