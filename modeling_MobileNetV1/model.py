@@ -107,6 +107,21 @@ class MobileNetV1(nn.Module):
                 out_features=self.num_classes,
                 )
 
+        self._init_params()
+
+    def _init_params(self):
+        for name, module in self.named_modules():
+            if "dw_conv_block.conv" in name:
+                nn.init.kaiming_normal_(module.weight, mode='fan_in')
+            elif name == "init_block.conv" or "pw_conv_block.conv" in name:
+                nn.init.kaiming_normal_(module.weight, mode='fan_out')
+            elif "bn" in name:
+                nn.init.constant_(module.weight, 1)
+                nn.init.constant_(module.bias, 0)
+            elif "output" in name:
+                nn.init.kaiming_normal_(module.weight, mode='fan_out')
+                nn.init.constant_(module.bias, 0)
+
     def forward(self, pixel_values, labels=None):
         x = self.features(pixel_values)
         x = x.view(x.size(0), -1)
