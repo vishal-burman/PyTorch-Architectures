@@ -25,10 +25,11 @@ def cv_compute_accuracy(model, data_loader, device):
             else:
                 logits = outputs
 
+            labels = sample['labels'].to(device)
             prob = F.softmax(logits, dim=-1)
             _, preds = torch.max(prob, dim=1)
-            correct += (preds == sample['labels']).sum()
-            total += sample['labels'].size(0)
+            correct += (preds == labels).sum()
+            total += labels.size(0)
     return (correct.float() / total * 100).item()
 
 def nlp_compute_accuracy(model, data_loader, device):
