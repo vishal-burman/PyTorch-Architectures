@@ -107,8 +107,12 @@ class MobileNetV1(nn.Module):
                 out_features=self.num_classes,
                 )
 
-    def forward(self, x):
-        x = self.features(x)
+    def forward(self, img, labels=None):
+        x = self.features(img)
         x = x.view(x.size(0), -1)
         logits = self.output(x)
-        return logits
+        loss = None
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(logits.view(logits.size(0), -1), labels.view(-1))
+        return (logits, loss)
