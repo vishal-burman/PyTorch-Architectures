@@ -67,6 +67,13 @@ def dict_to_device(sample_dict, device=torch.device('cpu')):
     final_dict = dict(zip(keys, values))
     return final_dict
 
+def tuple_to_device(sample_tuple, device=torch.device('cpu')):
+    assert len(sample_tuple) == 2, 'The tuple should contain inputs and labels'
+    if not (isinstance(sample_tuple[0], torch.Tensor) and \
+            isinstance(sample_tuple[1], torch.Tensor)):
+        raise TypeError('Only torch.Tensor values can be shifted to CUDA')
+    new_tuple = tuple(map(lambda x: x.to(device), sample_tuple))
+    return new_tuple
 
 def _trial_run(model, dataloader, device, step_limit=3):
     model_copy = copy.deepcopy(model)
