@@ -2,6 +2,7 @@ import math
 import warnings
 import torch
 import torch.nn.functional as F
+from .utils import dict_to_device
 
 def cv_compute_accuracy(model, data_loader, device):
     if model.training:
@@ -10,17 +11,14 @@ def cv_compute_accuracy(model, data_loader, device):
     correct, total = 0, 0
     with torch.set_grad_enabled(False):
         for sample in data_loader:
-            if 'img' in sample and 'labels' in sample:
-                assert sample['img'].dim() == 4, 'Images should be 4-dimensional'
-                assert sample['img'].size(0) == sample['labels'].size(0), 'Number of Images and Labels should be same'
-                img = sample['img'].to(device)
-                labels = sample['labels'].to(device)
+            if 'pixel_values' in sample and 'labels' in sample:
+                assert sample['pixel_values'].dim() == 4, 'Images should be 4-dimensional'
+                assert sample['pixel_values'].size(0) == sample['labels'].size(0), 'Number of Images and Labels should be same'
             elif type(sample) == list and (isinstance(sample[0], torch.Tensor) and isinstance(sample[1], torch.Tensor)):
                 assert sample[0].dim() == 4, 'Images should be 4-dimensional'
                 assert sample[0].size(0) == sample[1].size(0), 'Number of Images and Labels should be same'
-                img = sample[0].to(device)
-                labels = sample[1].to(device)
-            outputs = model(img, labels=labels)
+                sample = {'pixel_values': sample[0], 'labels': sample[1]}
+            outputs = model(**dict_to_device(sample, device))
             if type(outputs) == tuple:
                 loss = outputs[0]
                 logits = outputs[1]
