@@ -68,6 +68,7 @@ def dict_to_device(sample_dict, device=torch.device('cpu')):
     return final_dict
 
 def tuple_to_device(sample_tuple, device=torch.device('cpu')):
+    assert len(sample_tuple) == 2, 'Tuple should be of the format (Inputs, Labels)'
     if not all(isinstance(x, torch.Tensor) for x in sample_tuple):
         raise TypeError('Only torch.Tensor values can be shifted to CUDA')
     new_tuple = tuple(map(lambda x: x.to(device), sample_tuple))
@@ -84,6 +85,9 @@ def _trial_run(model, dataloader, device, step_limit=3):
         if type(sample) is dict:
             sample = dict_to_device(sample, device)
             outputs = model_copy(**sample)
+        elif type(sample) is tuple:
+            sample = tuple_to_device(sample, device)
+            outputs = model_copy(sample[0], sample[1])
         elif hasattr(sample, 'data'):
             sample = dict_to_device(sample.data, device)
             outputs = model_copy(**sample)
