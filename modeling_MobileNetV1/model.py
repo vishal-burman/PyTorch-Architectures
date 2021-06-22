@@ -107,8 +107,8 @@ class MobileNetV1(nn.Module):
                 out_features=self.num_classes,
                 )
 
-    def forward(self, img, labels=None):
-        x = self.features(img)
+    def forward(self, pixel_values, labels=None):
+        x = self.features(pixel_values)
         x = x.view(x.size(0), -1)
         logits = self.output(x)
         loss = None
