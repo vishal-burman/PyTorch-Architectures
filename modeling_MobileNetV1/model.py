@@ -130,4 +130,4 @@ class MobileNetV1(nn.Module):
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(logits.view(logits.size(0), -1), labels.view(-1))
-        return (logits, loss)
+        return (loss, logits)
