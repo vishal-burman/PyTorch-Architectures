@@ -30,8 +30,11 @@ class Conv3x3Block(nn.Module):
         )
         self.activ = nn.ReLU()
 
-    def forward(self,):
-        pass
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.activ(x)
+        return x
 
 
 class DWSConv3x3Block(nn.Module):
