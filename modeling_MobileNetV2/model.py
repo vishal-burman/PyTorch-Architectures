@@ -38,13 +38,39 @@ class Conv3x3Block(nn.Module):
 
 
 class DWSConv3x3Block(nn.Module):
-    def __init__(self,):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
+            bn_eps=1e-5,
+            ):
         super().__init__()
-        pass
+        self.dw_conv_block = Conv3x3Block(
+                in_channels=in_channels,
+                out_channels=in_channels,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=padding,
+                groups=in_channels,
+                bias=bias,
+                )
+
+        self.pw_conv_block = Conv3x3Block(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                groups=1,
+                bias=bias
+                )
 
     def forward(self,):
         pass
-
 
 class LinearBottleneck(nn.Module):
     def __init__(self,):
