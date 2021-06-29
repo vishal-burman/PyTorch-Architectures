@@ -69,8 +69,10 @@ class DWSConv3x3Block(nn.Module):
                 bias=bias
                 )
 
-    def forward(self,):
-        pass
+    def forward(self, x):
+        x = self.dw_conv_block(x)
+        x = self.pw_conv_block(x)
+        return x
 
 class LinearBottleneck(nn.Module):
     def __init__(self,):
