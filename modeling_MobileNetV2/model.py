@@ -90,6 +90,7 @@ class LinearBottleneck(nn.Module):
 
     def forward(self,):
         # Sample comment
+        # sample comment
         pass
 
 
