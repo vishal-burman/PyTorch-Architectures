@@ -75,9 +75,18 @@ class DWSConv3x3Block(nn.Module):
         return x
 
 class LinearBottleneck(nn.Module):
-    def __init__(self,):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            stride,
+            expansion,
+            remove_exp_conv,
+            ):
         super().__init__()
-        pass
+        self.residual = (in_channels == out_channels) and (stride == 1)
+        mid_channels = in_channels * 6 if expansion else in_channels
+        self.use_exp_conv = (expansion or (not remove_exp_conv))
 
     def forward(self,):
         pass
