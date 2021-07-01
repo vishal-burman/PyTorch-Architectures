@@ -120,11 +120,16 @@ class LinearBottleneck(nn.Module):
             activation=None
         )
 
-    def forward(self,):
-        # Sample comment
-        # sample comment
-        pass
-
+    def forward(self, x):
+        if self.residual:
+            identity = x
+        if self.use_exp_conv:
+            x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        if self.residual:
+            x = x + identity
+        return x
 
 class MobileNetV2(nn.Module):
     def __init__(self,):
