@@ -117,7 +117,7 @@ class LinearBottleneck(nn.Module):
         self.conv3 = Conv3x3Block(
             in_channels=in_channels,
             out_channels=out_channels,
-            activation=None
+            activation=None,
         )
 
     def forward(self, x):
@@ -131,10 +131,54 @@ class LinearBottleneck(nn.Module):
             x = x + identity
         return x
 
+
 class MobileNetV2(nn.Module):
-    def __init__(self,):
+    def __init__(
+            self,
+            config,
+            ):
         super().__init__()
-        pass
+        self.in_size = config.in_size
+        self.num_classes = num_classes
+
+        self.features = nn.Sequential()
+        self.features.add_module("init_block", Conv3x3Block(
+            in_channels=config.in_channels,
+            out_channels=config.init_block_channels,
+            stride=2,
+            activation='relu6',
+            ))
+        in_channels = init_block_channels
+        for i, channels_per_stage in enumerate(channels):
+            stage = nn.Sequential()
+            for j, out_channels in enumerate(channels_per_stage):
+                stride = 2 if (j == 0) and (i != 0) else 1
+                expansion = (i != 0) or (j != 0)
+                stage.add_module("unit{}".format(j + 1), LinearBottleneck(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    stride=stride,
+                    expansion=expansion,
+                    remove_exp_conv=config.remove_exp_conv,
+                    ))
+                in_channels=out_channels
+            self.features.add_module("stage{}".format(i + 1), stage)
+        self.features.add_module("final_block", Conv3x3Block(
+            in_channels=in_channels,
+            out_channels=config.final_block_channels,
+            activation="relu6",
+            ))
+        in_channels = config.final_block_channels
+        self.features.add_module("final_pool", nn.AvgPool2d(
+            kernel_size=7,
+            stride=1,
+            ))
+
+        self.output = Conv3x3Block(
+                in_channels=in_channels,
+                out_channels=num_classes,
+                bias=False,
+                )
 
     def forward(self,):
         pass
