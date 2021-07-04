@@ -139,7 +139,7 @@ class MobileNetV2(nn.Module):
             ):
         super().__init__()
         self.in_size = config.in_size
-        self.num_classes = num_classes
+        self.num_classes = config.num_classes
 
         self.features = nn.Sequential()
         self.features.add_module("init_block", Conv3x3Block(
@@ -148,8 +148,8 @@ class MobileNetV2(nn.Module):
             stride=2,
             activation='relu6',
             ))
-        in_channels = init_block_channels
-        for i, channels_per_stage in enumerate(channels):
+        in_channels = config.init_block_channels
+        for i, channels_per_stage in enumerate(config.channels):
             stage = nn.Sequential()
             for j, out_channels in enumerate(channels_per_stage):
                 stride = 2 if (j == 0) and (i != 0) else 1
@@ -176,7 +176,7 @@ class MobileNetV2(nn.Module):
 
         self.output = Conv3x3Block(
                 in_channels=in_channels,
-                out_channels=num_classes,
+                out_channels=config.num_classes,
                 bias=False,
                 )
 
