@@ -180,5 +180,8 @@ class MobileNetV2(nn.Module):
                 bias=False,
                 )
 
-    def forward(self,):
-        pass
+    def forward(self, pixel_values, labels=None):
+        pixel_values = self.features(pixel_values)
+        pixel_values = self.output(pixel_values)
+        logits = pixel_values.view(pixel_values.size(0), -1)
+        return logits
