@@ -8,6 +8,7 @@ import wget
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.lr_scheduler import LambdaLR
+import torch.onnx
 from datasets import load_dataset
 from .cuda_memory_utils import gc_cuda, is_oom_error
 
@@ -147,3 +148,13 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
     model.to(device)
     bs = _run_power_scaling(model, dataset, max_trials) 
     return bs
+
+def convert_to_onnx(torch_model, sample_input: torch.Tensor, save_path: str):
+    """Converts a torch module to onnx"""
+    if torch_model.training:
+        logging.warn("Model is in training mode...switching to eval mode")
+        torch_model.eval()
+
+    assert sample_input.requires_grad, "Needs sample_input's requires_grad to be True"
+
+    raise NotImplementedError('TBD')
