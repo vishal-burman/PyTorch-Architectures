@@ -2,9 +2,15 @@ import torch
 import torch.nn as nn
 
 class ChannelShuffle(nn.Module):
-    def __init__(self,):
+    def __init__(
+            self,
+            channels,
+            groups,
+            ):
         super().__init__()
-        pass
+        if channels % groups != 0:
+            raise ValueError('channels must be divisible by groups')
+        self.groups = groups
 
     def forward(self,):
         pass
