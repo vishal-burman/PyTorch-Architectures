@@ -12,8 +12,13 @@ class ChannelShuffle(nn.Module):
             raise ValueError('channels must be divisible by groups')
         self.groups = groups
 
-    def forward(self,):
-        pass
+    def forward(self, x):
+        batch, channels, height, width = x.size()
+        channels_per_group = channels // groups
+        x = x.view(batch, groups, channels_per_group, height, width)
+        x = torch.transpose(x, 1, 2).contiguous()
+        x = x.view(batch, channels, height, width)
+        return x
 
 class Conv3x3Block(nn.Module):
     def __init__(self,):
