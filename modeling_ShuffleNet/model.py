@@ -14,8 +14,8 @@ class ChannelShuffle(nn.Module):
 
     def forward(self, x):
         batch, channels, height, width = x.size()
-        channels_per_group = channels // groups
-        x = x.view(batch, groups, channels_per_group, height, width)
+        channels_per_group = channels // self.groups
+        x = x.view(batch, self.groups, channels_per_group, height, width)
         x = torch.transpose(x, 1, 2).contiguous()
         x = x.view(batch, channels, height, width)
         return x
