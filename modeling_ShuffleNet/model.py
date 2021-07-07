@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
 
+
 class ChannelShuffle(nn.Module):
     def __init__(
             self,
             channels,
             groups,
-            ):
+    ):
         super().__init__()
         if channels % groups != 0:
             raise ValueError('channels must be divisible by groups')
@@ -20,6 +21,7 @@ class ChannelShuffle(nn.Module):
         x = x.view(batch, channels, height, width)
         return x
 
+
 class Conv3x3Block(nn.Module):
     def __init__(self,):
         super().__init__()
@@ -27,6 +29,7 @@ class Conv3x3Block(nn.Module):
 
     def forward(self,):
         pass
+
 
 class Conv1x1Block(nn.Module):
     def __init__(self,):
@@ -36,6 +39,7 @@ class Conv1x1Block(nn.Module):
     def forward(self,):
         pass
 
+
 class DWSConv3x3Block(nn.Module):
     def __init__(self,):
         super().__init__()
@@ -43,6 +47,7 @@ class DWSConv3x3Block(nn.Module):
 
     def forward(self,):
         pass
+
 
 class ShuffleNet(nn.Module):
     def __init__(self,):
