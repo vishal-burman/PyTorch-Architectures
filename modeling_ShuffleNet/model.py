@@ -81,6 +81,14 @@ def depthwise_conv3x3(
             bias=bias,
             )
 
+class ShuffleInitBlock(nn.Module):
+    def __init__(self,):
+        super().__init__()
+        pass
+
+    def forward(self,):
+        pass
+
 
 class ShuffleNet(nn.Module):
     def __init__(self,):
