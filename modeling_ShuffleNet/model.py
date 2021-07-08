@@ -82,9 +82,24 @@ def depthwise_conv3x3(
             )
 
 class ShuffleInitBlock(nn.Module):
-    def __init__(self,):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            ):
         super().__init__()
-        pass
+        self.conv = conv3x3(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                stride=2,
+                )
+        self.bn = nn.BatchNorm2d(num_features=out_channels)
+        self.activ = nn.ReLU(inplace=True)
+        self.pool = nn.MaxPool2d(
+                kernel_size=3,
+                stride=2,
+                padding=1,
+                )
 
     def forward(self,):
         pass
