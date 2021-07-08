@@ -104,6 +104,7 @@ class ShuffleInitBlock(nn.Module):
 
     def forward(
         self,
+        x,
     ):
         x = self.conv(x)
         x = self.bn(x)
