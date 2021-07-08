@@ -32,12 +32,26 @@ class Conv3x3Block(nn.Module):
 
 
 class Conv1x1Block(nn.Module):
-    def __init__(self,):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            stride=1,
+            groups=1,
+            bias=False,
+    ):
         super().__init__()
-        pass
+        self.conv = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=1,
+            stride=stride,
+            groups=groups,
+            bias=bias
+        )
 
-    def forward(self,):
-        pass
+    def forward(self, x):
+        return self.conv(x)
 
 
 class DWSConv3x3Block(nn.Module):
