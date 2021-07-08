@@ -68,41 +68,46 @@ def depthwise_conv3x3(
         padding=1,
         dilation=1,
         bias=False,
-        ):
+):
 
     return nn.Conv2d(
-            in_channels=channels,
-            out_channels=channels,
-            kernel_size=3,
-            stride=stride,
-            padding=padding,
-            dilation=dilation,
-            groups=channels,
-            bias=bias,
-            )
+        in_channels=channels,
+        out_channels=channels,
+        kernel_size=3,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        groups=channels,
+        bias=bias,
+    )
+
 
 class ShuffleInitBlock(nn.Module):
     def __init__(
             self,
             in_channels,
             out_channels,
-            ):
+    ):
         super().__init__()
         self.conv = conv3x3(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                stride=2,
-                )
+            in_channels=in_channels,
+            out_channels=out_channels,
+            stride=2,
+        )
         self.bn = nn.BatchNorm2d(num_features=out_channels)
         self.activ = nn.ReLU(inplace=True)
         self.pool = nn.MaxPool2d(
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                )
+            kernel_size=3,
+            stride=2,
+            padding=1,
+        )
 
     def forward(self,):
-        pass
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.activ(x)
+        x = self.pool(x)
+        return x
 
 
 class ShuffleNet(nn.Module):
