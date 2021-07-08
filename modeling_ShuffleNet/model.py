@@ -22,13 +22,26 @@ class ChannelShuffle(nn.Module):
         return x
 
 
-class Conv3x3Block(nn.Module):
-    def __init__(self,):
-        super().__init__()
-        pass
+def conv3x3(
+        in_channels,
+        out_channels,
+        stride=1,
+        padding=1,
+        dilation=1,
+        groups=1,
+        bias=False,
+):
 
-    def forward(self,):
-        pass
+    return nn.Conv2d(
+        in_channels=in_channels,
+        out_channels=out_channels,
+        kernel_size=3,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        groups=groups,
+        bias=bias,
+    )
 
 
 def conv1x1(
