@@ -62,13 +62,24 @@ def conv1x1(
     )
 
 
-class DWSConv3x3Block(nn.Module):
-    def __init__(self,):
-        super().__init__()
-        pass
+def depthwise_conv3x3(
+        channels,
+        stride=1,
+        padding=1,
+        dilation=1,
+        bias=False,
+        ):
 
-    def forward(self,):
-        pass
+    return nn.Conv2d(
+            in_channels=channels,
+            out_channels=channels,
+            kernel_size=3,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=channels,
+            bias=bias,
+            )
 
 
 class ShuffleNet(nn.Module):
