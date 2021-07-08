@@ -4,13 +4,13 @@ import torch.nn as nn
 
 class ChannelShuffle(nn.Module):
     def __init__(
-            self,
-            channels,
-            groups,
+        self,
+        channels,
+        groups,
     ):
         super().__init__()
         if channels % groups != 0:
-            raise ValueError('channels must be divisible by groups')
+            raise ValueError("channels must be divisible by groups")
         self.groups = groups
 
     def forward(self, x):
@@ -23,13 +23,13 @@ class ChannelShuffle(nn.Module):
 
 
 def conv3x3(
-        in_channels,
-        out_channels,
-        stride=1,
-        padding=1,
-        dilation=1,
-        groups=1,
-        bias=False,
+    in_channels,
+    out_channels,
+    stride=1,
+    padding=1,
+    dilation=1,
+    groups=1,
+    bias=False,
 ):
 
     return nn.Conv2d(
@@ -45,11 +45,11 @@ def conv3x3(
 
 
 def conv1x1(
-        in_channels,
-        out_channels,
-        stride=1,
-        groups=1,
-        bias=False,
+    in_channels,
+    out_channels,
+    stride=1,
+    groups=1,
+    bias=False,
 ):
 
     return nn.Conv2d(
@@ -63,11 +63,11 @@ def conv1x1(
 
 
 def depthwise_conv3x3(
-        channels,
-        stride=1,
-        padding=1,
-        dilation=1,
-        bias=False,
+    channels,
+    stride=1,
+    padding=1,
+    dilation=1,
+    bias=False,
 ):
 
     return nn.Conv2d(
@@ -84,9 +84,9 @@ def depthwise_conv3x3(
 
 class ShuffleInitBlock(nn.Module):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
+        self,
+        in_channels,
+        out_channels,
     ):
         super().__init__()
         self.conv = conv3x3(
@@ -102,7 +102,9 @@ class ShuffleInitBlock(nn.Module):
             padding=1,
         )
 
-    def forward(self,):
+    def forward(
+        self,
+    ):
         x = self.conv(x)
         x = self.bn(x)
         x = self.activ(x)
@@ -111,9 +113,13 @@ class ShuffleInitBlock(nn.Module):
 
 
 class ShuffleNet(nn.Module):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         super().__init__()
         pass
 
-    def forward(self,):
+    def forward(
+        self,
+    ):
         pass
