@@ -116,11 +116,24 @@ class ShuffleInitBlock(nn.Module):
 class ShuffleNet(nn.Module):
     def __init__(
         self,
+        config,
     ):
         super().__init__()
-        pass
+        self.in_size = config.in_size
+        self.num_classes = config.num_classes
+
+        self.features = nn.Sequential()
+        self.features.add_module(
+            "init_block",
+            ShuffleInitBlock(
+                in_channels=config.in_channels,
+                out_channels=config.init_block_channels,
+            ),
+        )
 
     def forward(
         self,
+        pixel_values,
     ):
-        pass
+        pixel_values = self.features(pixel_values)
+        return pixel_values
