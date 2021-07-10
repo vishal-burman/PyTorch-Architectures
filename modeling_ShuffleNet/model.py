@@ -129,6 +129,30 @@ class ShuffleUnit(nn.Module):
         if self.downsample:
             out_channels -= in_channels
 
+        self.compress_conv1 = conv1x1(
+            in_channels=in_channels,
+            mid_channels=mid_channels,
+            groups=(1 if ignore_group else groups),
+        )
+        self.compress_bn1 = nn.BatchNorm2d(num_features=mid_channels)
+        self.c_shuffle = ChannelShuffle(
+            channels=mid_channels,
+            groups=groups,
+        )
+        self.dw_conv2 = depthwise_conv3x3(
+            channels=mid_channels, stride=(2 if self.downsample else 1)
+        )
+        self.dw_bn2 = nn.BatchNorm2d(num_features=mid_channels)
+        self.expand_conv3 = conv1x1(
+            in_channels=mid_channels,
+            out_channels=out_channels,
+            groups=groups,
+        )
+        self.expand_bn3 = nn.BatchNorm2d(num_features=out_channels)
+        if downsample:
+            self.avgpool = nn.AvgPool2d(kernel_size=3, stride=2, padding=1)
+        self.activ = nn.ReLU(inplace=True)
+
     def forward(
         self,
     ):
