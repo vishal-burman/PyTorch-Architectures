@@ -116,9 +116,18 @@ class ShuffleInitBlock(nn.Module):
 class ShuffleUnit(nn.Module):
     def __init__(
         self,
+        in_channels,
+        out_channels,
+        groups,
+        downsample,
+        ignore_group,
     ):
         super().__init__()
-        pass
+        self.downsample = downsample
+        mid_channels = out_channels // 4
+
+        if self.downsample:
+            out_channels -= in_channels
 
     def forward(
         self,
