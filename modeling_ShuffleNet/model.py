@@ -155,8 +155,24 @@ class ShuffleUnit(nn.Module):
 
     def forward(
         self,
+        x,
     ):
-        pass
+        identity = x
+        x = self.compress_conv1(x)
+        x = self.compress_bn1(x)
+        x = self.activ(x)
+        x = self.c_shuffle(x)
+        x = self.dw_conv2(x)
+        x = self.dw_bn2(x)
+        x = self.expand_conv3(x)
+        x = self.expand_bn3(x)
+        if self.downsample:
+            identity = self.avgpool(identity)
+            x = torch.cat((x, identity), dim=1)
+        else:
+            x = x + identity
+        x = self.activ(x)
+        return x
 
 
 class ShuffleNet(nn.Module):
