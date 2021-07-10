@@ -192,6 +192,24 @@ class ShuffleNet(nn.Module):
                 out_channels=config.init_block_channels,
             ),
         )
+        in_channels = init_block_channels
+        for i, channels_per_stage in enumerate(config.channels):
+            stage = nn.Sequential()
+            for j, out_channels in enumerate(channels_per_stage):
+                downsample = j == 0
+                ignore_group = (i == 0) and (j == 0)
+                stage.add_module(
+                    f"unit{j + 1}",
+                    ShuffleUnit(
+                        in_channels=in_channels,
+                        out_channels=out_channels,
+                        groups=config.groups,
+                        downsample=downsample,
+                        ignore_group=ignore_group,
+                    ),
+                )
+                in_channels = out_channels
+            self.features.add_module(f"stage{i + 1}", stage)
 
     def forward(
         self,
