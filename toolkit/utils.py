@@ -6,6 +6,7 @@ import tarfile
 import string
 import wget
 import torch
+import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.lr_scheduler import LambdaLR
 import torch.onnx
@@ -183,6 +184,26 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
     model.to(device)
     bs = _run_power_scaling(model, dataset, max_trials)
     return bs
+
+
+def image_interpolation(image: torch.Tensor, target_size):
+    batch, channels, height, width = image.size()
+    assert height == width, "Height and Width of the image is not equal"
+
+    if type(target_size) is tuple:
+        target_height, target_width = target_size[0], target_size[1]
+    elif type(target_size) is int:
+        target_height, target_width = target_size, target_size
+    else:
+        raise TypeError("target_size should either be int or tuple")
+    assert target_height == target_width, "Target Height and Target Width is not equal"
+
+    if height < target_height:
+        image = F.interpolate(image, size=target, mode="bilinear")
+    else:
+        image = F.interpolate(image, size=target, mode="nearest")
+
+    return image
 
 
 def convert_to_onnx(torch_model, sample_input: torch.Tensor, save_path: str):
