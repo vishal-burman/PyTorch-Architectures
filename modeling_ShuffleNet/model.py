@@ -131,7 +131,7 @@ class ShuffleUnit(nn.Module):
 
         self.compress_conv1 = conv1x1(
             in_channels=in_channels,
-            mid_channels=mid_channels,
+            out_channels=mid_channels,
             groups=(1 if ignore_group else groups),
         )
         self.compress_bn1 = nn.BatchNorm2d(num_features=mid_channels)
@@ -192,7 +192,7 @@ class ShuffleNet(nn.Module):
                 out_channels=config.init_block_channels,
             ),
         )
-        in_channels = init_block_channels
+        in_channels = config.init_block_channels
         for i, channels_per_stage in enumerate(config.channels):
             stage = nn.Sequential()
             for j, out_channels in enumerate(channels_per_stage):
@@ -210,10 +210,28 @@ class ShuffleNet(nn.Module):
                 )
                 in_channels = out_channels
             self.features.add_module(f"stage{i + 1}", stage)
+        self.features.add_module(
+            "final_pool",
+            nn.AvgPool2d(
+                kernel_size=7,
+                stride=1,
+            ),
+        )
+        self.output = nn.Linear(
+            in_features=in_channels,
+            out_features=config.num_classes,
+        )
 
     def forward(
         self,
         pixel_values,
+        labels=None,
     ):
         pixel_values = self.features(pixel_values)
-        return pixel_values
+        pixel_values = pixel_values.view(pixel_values.size(0), -1)
+        logits = self.output(pixel_values)
+        loss = None
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(logits, labels.view(-1))
+        return (loss, logits)
