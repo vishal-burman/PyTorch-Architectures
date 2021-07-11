@@ -3,11 +3,11 @@ import torchvision
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 from PIL import Image
-from .utils import get_image_classification_dataset
+from .utils import get_image_classification_dataset, image_interpolation
 
 
 class DatasetCIFAR10Classification(Dataset):
-    def __init__(self, resize=224, train=True):
+    def __init__(self, resize=224, train=True, upsample_size=None):
         self.tuple_list = get_image_classification_dataset(train=train)
         self.transforms = transforms.Compose(
             [
@@ -16,6 +16,7 @@ class DatasetCIFAR10Classification(Dataset):
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
         )
+        self.upsample_size = upsample_size
 
     def __len__(
         self,
@@ -35,6 +36,8 @@ class DatasetCIFAR10Classification(Dataset):
         if self.transforms is not None:
             images = [self.transforms(image) for image in images]
         images = torch.stack(images)
+        if self.upsample_size is not None:
+            images = image_interpolation(images, target_size=self.upsample_size)
         labels = torch.tensor(labels)
         return {
             "pixel_values": images,
@@ -43,8 +46,10 @@ class DatasetCIFAR10Classification(Dataset):
 
 
 class DataLoaderCIFAR10Classification:
-    def __init__(self, resize=256, train=True):
-        self.dataset = DatasetCIFAR10Classification(resize=resize, train=train)
+    def __init__(self, resize=256, train=True, upsample_size=None):
+        self.dataset = DatasetCIFAR10Classification(
+            resize=resize, train=train, upsample_size=upsample_size
+        )
 
     def return_dataloader(self, batch_size=4, shuffle=False):
         return DataLoader(
