@@ -222,6 +222,15 @@ class ShuffleNet(nn.Module):
             out_features=config.num_classes,
         )
 
+        self._init_params()
+
+    def _init_params(self):
+        for name, module in self.named_modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.kaiming_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
+
     def forward(
         self,
         pixel_values,
