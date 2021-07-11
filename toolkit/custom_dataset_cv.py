@@ -7,16 +7,17 @@ from .utils import get_image_classification_dataset, image_interpolation
 
 
 class DatasetCIFAR10Classification(Dataset):
-    def __init__(self, resize=224, train=True, upsample_size=None):
+    def __init__(self, resize=224, train=True):
         self.tuple_list = get_image_classification_dataset(train=train)
+        assert resize <= 224, "resize should be less than or equal to 224"
         self.transforms = transforms.Compose(
             [
-                transforms.Resize(resize),
+                transforms.Resize(224),
+                transforms.RandomCrop(resize),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
         )
-        self.upsample_size = upsample_size
 
     def __len__(
         self,
@@ -36,8 +37,6 @@ class DatasetCIFAR10Classification(Dataset):
         if self.transforms is not None:
             images = [self.transforms(image) for image in images]
         images = torch.stack(images)
-        if self.upsample_size is not None:
-            images = image_interpolation(images, target_size=self.upsample_size)
         labels = torch.tensor(labels)
         return {
             "pixel_values": images,
@@ -46,9 +45,10 @@ class DatasetCIFAR10Classification(Dataset):
 
 
 class DataLoaderCIFAR10Classification:
-    def __init__(self, resize=256, train=True, upsample_size=None):
+    def __init__(self, resize=224, train=True):
         self.dataset = DatasetCIFAR10Classification(
-            resize=resize, train=train, upsample_size=upsample_size
+            resize=resize,
+            train=train,
         )
 
     def return_dataloader(self, batch_size=4, shuffle=False):
