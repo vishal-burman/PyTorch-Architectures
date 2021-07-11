@@ -199,9 +199,11 @@ def image_interpolation(image: torch.Tensor, target_size):
     assert target_height == target_width, "Target Height and Target Width is not equal"
 
     if height < target_height:
-        image = F.interpolate(image, size=target, mode="bilinear")
+        image = F.interpolate(
+            image, size=target_height, mode="bilinear", align_corners=True
+        )
     else:
-        image = F.interpolate(image, size=target, mode="nearest")
+        image = F.interpolate(image, size=target_height, mode="nearest")
 
     return image
 
