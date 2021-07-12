@@ -233,23 +233,37 @@ class EarlyStopping:
         self.counter = 0
         self.best_score = None
         self.early_stop = False
-        self.val_loss_min = np.INF
+        self.val_loss_min = np.Inf
+        self.val_acc_max = -np.Inf
         self.delta = delta
         self.path = path
 
-    def __call__(self, item):
+    def __call__(self, item, model):
         if type(item) is torch.Tensor:
             item = item.item()
 
         if self.metric == "val_loss":
-            self._early_stop_loss(item)
+            self._early_stop_loss(item, model)
         else:
-            self._early_stop_accuracy(item)
+            self._early_stop_accuracy(item, model)
 
-    def _early_stop_accuracy(self, val_acc):
-        raise NotImplementedError
+    def _early_stop_accuracy(self, val_acc, model):
+        score = val_acc
 
-    def _early_stop_loss(self, val_loss):
+        if self.best_score is None:
+            self.best_score = score
+            self.save_checkpoint(val_acc, model)
+        elif score < self.best_score + self.delta:
+            self.counter += 1
+            print(f"EarlyStopping counter: {self.counter} out of {self.patience}")
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.save_checkpoint(val_acc, model)
+            self.counter = 0
+
+    def _early_stop_loss(self, val_loss, model):
         score = -val_loss
 
         if self.best_score is None:
@@ -265,11 +279,18 @@ class EarlyStopping:
             self.save_checkpoint(val_loss, model)
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model):
+    def save_checkpoint(self, item, model):
         """Saves model when validation loss decrease"""
-        if self.verbose:
-            print(
-                f"Validation loss decreased from {self.val_loss_min:.3f} to {self.val_loss}"
-            )
+        if self.metric == "val_loss":
+            if self.verbose:
+                print(
+                    f"Validation loss decreased from {self.val_loss_min:.3f} to {item:.3f}"
+                )
+            self.val_loss_min = item
+        else:
+            if self.verbose:
+                print(
+                    f"Validation accuracy increased from {self.val_acc_max:.2f} to {item:.2f}"
+                )
+            self.val_acc_max = item
         torch.save(model.state_dict(), self.path)
-        self.val_loss_min = val_loss
