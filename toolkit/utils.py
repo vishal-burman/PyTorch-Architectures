@@ -242,6 +242,10 @@ class EarlyStopping:
         if type(item) is torch.Tensor:
             item = item.item()
 
+        if model.training:
+            print("Model is in train mode...switching to eval mode")
+            model.eval()
+
         if self.metric == "val_loss":
             self._early_stop_loss(item, model)
         else:
@@ -290,7 +294,7 @@ class EarlyStopping:
         else:
             if self.verbose:
                 print(
-                    f"Validation accuracy increased from {self.val_acc_max:.2f} to {item:.2f}"
+                    f"Validation accuracy increased from {self.val_acc_max:.2f}% to {item:.2f}%"
                 )
             self.val_acc_max = item
         torch.save(model.state_dict(), self.path)
