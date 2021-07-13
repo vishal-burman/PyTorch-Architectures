@@ -48,3 +48,16 @@ def conv1x1_block(
         bn_eps=bn_eps,
         activation=activation,
     )
+
+
+class ConvBlock(nn.Module):
+    def __init__(
+        self,
+    ):
+        super().__init__()
+        pass
+
+    def forward(
+        self,
+    ):
+        pass
