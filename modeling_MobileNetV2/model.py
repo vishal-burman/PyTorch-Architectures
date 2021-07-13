@@ -2,6 +2,14 @@ import torch
 import torch.nn as nn
 
 
+def get_activation_layer(activation):
+    assert activation is not None, "activation shouldn't be of None type"
+    if isinstance(activation, "__call__"):
+        return activation()
+    else:
+        raise TypeError("activation is not callable function")
+
+
 def conv1x1(
     in_channels,
     out_channels,
@@ -53,9 +61,40 @@ def conv1x1_block(
 class ConvBlock(nn.Module):
     def __init__(
         self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation=1,
+        groups=1,
+        bias=False,
+        use_bn=True,
+        bn_eps=True,
+        activation=(lambda: nn.ReLU(inplace=True)),
     ):
         super().__init__()
-        pass
+        self.activate = activation is not None
+        self.use_bn = use_bn
+
+        self.conv = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+        )
+
+        if self.use_bn:
+            self.bn = nn.BatchNorm2d(
+                num_features=out_channels,
+                eps=bn_eps,
+            )
+        if self.activate:
+            self.activ = get_activation_layer(activation)
 
     def forward(
         self,
