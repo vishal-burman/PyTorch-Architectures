@@ -98,5 +98,11 @@ class ConvBlock(nn.Module):
 
     def forward(
         self,
+        x,
     ):
-        pass
+        x = self.conv(x)
+        if self.use_bn:
+            x = self.bn(x)
+        if self.activate:
+            x = self.activ(x)
+        return x
