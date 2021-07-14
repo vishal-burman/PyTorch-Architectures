@@ -4,7 +4,7 @@ import torch.nn as nn
 
 def get_activation_layer(activation):
     assert activation is not None, "activation shouldn't be of None type"
-    if isinstance(activation, "__call__"):
+    if hasattr(activation, "__call__"):
         return activation()
     else:
         raise TypeError("activation is not callable function")
