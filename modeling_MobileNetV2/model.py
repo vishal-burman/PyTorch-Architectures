@@ -58,6 +58,36 @@ def conv1x1_block(
     )
 
 
+def conv3x3_block(
+    in_channels,
+    out_channels,
+    stride=1,
+    padding=1,
+    dilation=1,
+    groups=1,
+    bias=False,
+    use_bn=True,
+    bn_eps=1e-5,
+    activation=(lambda: nn.ReLU(inplace=True)),
+):
+    """
+    3x3 version of the standard convolution block
+    """
+    return ConvBlock(
+        in_channels=in_channels,
+        out_channels=out_channels,
+        kernel_size=3,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        groups=groups,
+        bias=bias,
+        use_bn=use_bn,
+        bn_eps=bn_eps,
+        activation=activation,
+    )
+
+
 class ConvBlock(nn.Module):
     def __init__(
         self,
