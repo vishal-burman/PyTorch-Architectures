@@ -153,3 +153,16 @@ def _test():
         3
     ), "Dimension modified with default values"
     print("conv1x1 function tested!")
+
+    # Check conv1x1_block
+    conv_func = conv1x1_block(in_channels=3, out_channels=8)
+    dummy_outputs = conv_func(dummy_inputs)
+    assert dummy_outputs.dim() == 4, "Shape error"
+    assert dummy_outputs.size(1) == 8, "Output channel error"
+    assert dummy_outputs.size(2) == dummy_inputs.size(
+        2
+    ), "Dimension modified with default values"
+    assert dummy_outputs.size(3) == dummy_inputs.size(
+        3
+    ), "Dimension modified with default values"
+    print("conv1x1_block function tested!")
