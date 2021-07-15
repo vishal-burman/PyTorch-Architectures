@@ -266,3 +266,17 @@ def _test():
         3
     ), "Dimension modified with default values"
     print("dwconv_block function tested")
+
+    # Check dwconv3x3_block
+    conv_func = dwconv3x3_block(in_channels=3, out_channels=1)
+    with torch.no_grad():
+        dummy_outputs = conv_func(dummy_inputs)
+    assert dummy_outputs.dim() == 4, "Shape error"
+    assert dummy_outputs.size(1) == 1, "Output channel error"
+    assert dummy_outputs.size(2) == dummy_inputs.size(
+        2
+    ), "Dimension modified with default values"
+    assert dummy_outputs.size(3) == dummy_inputs.size(
+        3
+    ), "Dimension modified with default values"
+    print("dwconv3x3_block function tested")
