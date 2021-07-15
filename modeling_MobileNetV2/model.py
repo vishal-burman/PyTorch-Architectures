@@ -309,7 +309,7 @@ def _test():
     assert dummy_outputs.size(3) == dummy_inputs.size(
         3
     ), "Dimension modified with default values"
-    print("dwconv_block function tested")
+    print("dwconv_block function tested!")
 
     # Check dwconv3x3_block
     conv_func = dwconv3x3_block(in_channels=3, out_channels=1)
@@ -323,4 +323,24 @@ def _test():
     assert dummy_outputs.size(3) == dummy_inputs.size(
         3
     ), "Dimension modified with default values"
-    print("dwconv3x3_block function tested")
+    print("dwconv3x3_block function tested!")
+
+    # Check LinearBottleneck
+    conv_func = LinearBottleneck(
+        in_channels=3,
+        out_channels=8,
+        stride=1,
+        expansion=True,
+        remove_exp_conv=False,
+    )
+    with torch.no_grad():
+        dummy_outputs = conv_func(dummy_inputs)
+    assert dummy_outputs.dim() == 4, "Shape error"
+    assert dummy_outputs.size(1) == 8, "Output channel error"
+    assert dummy_outputs.size(2) == dummy_inputs.size(
+        2
+    ), "Dimension modified with default values"
+    assert dummy_outputs.size(3) == dummy_inputs.size(
+        3
+    ), "Dimension modified with default values"
+    print("LinearBottleneck class tested!")
