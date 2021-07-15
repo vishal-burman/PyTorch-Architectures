@@ -139,11 +139,12 @@ class ConvBlock(nn.Module):
 
 
 def _test():
-    dummy_inputs = torch.rand(2, 3, 224, 224)
+    dummy_inputs = torch.rand(2, 3, 224, 224, requires_grad=False)
 
     # Check conv1x1
     conv_func = conv1x1(in_channels=3, out_channels=8)
-    dummy_outputs = conv_func(dummy_inputs)
+    with torch.no_grad():
+        dummy_outputs = conv_func(dummy_inputs)
     assert dummy_outputs.dim() == 4, "Shape error"
     assert dummy_outputs.size(1) == 8, "Output channel error"
     assert dummy_outputs.size(2) == dummy_inputs.size(
@@ -158,7 +159,8 @@ def _test():
     conv_func = ConvBlock(
         in_channels=3, out_channels=8, kernel_size=3, stride=1, padding=1
     )
-    dummy_outputs = conv_func(dummy_inputs)
+    with torch.no_grad():
+        dummy_outputs = conv_func(dummy_inputs)
     assert conv_func.use_bn, "BatchNorm not activated"
     assert conv_func.activate, "Default ReLU not applied"
     assert dummy_outputs.dim() == 4, "Shape error"
@@ -173,7 +175,8 @@ def _test():
 
     # Check conv1x1_block
     conv_func = conv1x1_block(in_channels=3, out_channels=8)
-    dummy_outputs = conv_func(dummy_inputs)
+    with torch.no_grad():
+        dummy_outputs = conv_func(dummy_inputs)
     assert dummy_outputs.dim() == 4, "Shape error"
     assert dummy_outputs.size(1) == 8, "Output channel error"
     assert dummy_outputs.size(2) == dummy_inputs.size(
@@ -186,7 +189,8 @@ def _test():
 
     # Check conv3x3_block
     conv_func = conv3x3_block(in_channels=3, out_channels=8)
-    dummy_outputs = conv_func(dummy_inputs)
+    with torch.no_grad():
+        dummy_outputs = conv_func(dummy_inputs)
     assert dummy_outputs.dim() == 4, "Shape error"
     assert dummy_outputs.size(1) == 8, "Output channel error"
     assert dummy_outputs.size(2) == dummy_inputs.size(
