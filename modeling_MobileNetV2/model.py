@@ -88,6 +88,34 @@ def conv3x3_block(
     )
 
 
+def dwconv_block(
+    in_channels,
+    out_channels,
+    kernel_size,
+    stride=1,
+    padding=1,
+    dilation=1,
+    bias=False,
+    use_bn=True,
+    bn_eps=1e-5,
+    activation=(lambda: nn.ReLU(inplace=True)),
+):
+
+    return ConvBlock(
+        in_channels=in_channels,
+        out_channels=out_channels,
+        kernel_size=kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        groups=out_channels,
+        bias=bias,
+        use_bn=use_bn,
+        bn_eps=bn_eps,
+        activation=activation,
+    )
+
+
 class ConvBlock(nn.Module):
     def __init__(
         self,
@@ -200,3 +228,17 @@ def _test():
         3
     ), "Dimension modified with default values"
     print("conv3x3_block function tested!")
+
+    # Check dwconv_block
+    conv_func = dwconv_block(in_channels=3, out_channels=1, kernel_size=3)
+    with torch.no_grad():
+        dummy_outputs = conv_func(dummy_inputs)
+    assert dummy_outputs.dim() == 4, "Shape error"
+    assert dummy_outputs.size(1) == 1, "Output channel error"
+    assert dummy_outputs.size(2) == dummy_inputs.size(
+        2
+    ), "Dimension modified with default values"
+    assert dummy_outputs.size(3) == dummy_inputs.size(
+        3
+    ), "Dimension modified with default values"
+    print("dwconv_block function tested")
