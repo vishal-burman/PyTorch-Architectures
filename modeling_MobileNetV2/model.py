@@ -116,6 +116,30 @@ def dwconv_block(
     )
 
 
+def dwconv3x3_block(
+    in_channels,
+    out_channels,
+    stride=1,
+    padding=1,
+    dilation=1,
+    bias=False,
+    bn_eps=1e-5,
+    activation=(lambda: nn.ReLU(inplace=True)),
+):
+
+    return dwconv_block(
+        in_channels=in_channels,
+        out_channels=out_channels,
+        kernel_size=3,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        bias=bias,
+        bn_eps=bn_eps,
+        activation=activation,
+    )
+
+
 class ConvBlock(nn.Module):
     def __init__(
         self,
