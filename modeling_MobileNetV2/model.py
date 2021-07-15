@@ -190,6 +190,19 @@ class ConvBlock(nn.Module):
         return x
 
 
+class LinearBottleneck(nn.Module):
+    def __init__(
+        self,
+    ):
+        super().__init__()
+        pass
+
+    def forward(
+        self,
+    ):
+        pass
+
+
 def _test():
     dummy_inputs = torch.rand(2, 3, 224, 224, requires_grad=False)
 
