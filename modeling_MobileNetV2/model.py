@@ -203,11 +203,35 @@ class LinearBottleneck(nn.Module):
         self.residual = (in_channels == out_channels) and (stride == 1)
         mid_channels = in_channels * 6 if expansion else in_channels
         self.use_exp_conv = expansion or (not remove_exp_conv)
+        if self.use_exp_conv:
+            self.conv1 = conv1x1_block(
+                in_channels=in_channels,
+                out_channels=mid_channels,
+            )
+        self.conv2 = dwconv3x3_block(
+            in_channels=mid_channels,
+            out_channels=mid_channels,
+            stride=stride,
+        )
+        self.conv3 = conv1x1_block(
+            in_channels=mid_channels,
+            out_channels=out_channels,
+            activation=None,
+        )
 
     def forward(
         self,
+        x,
     ):
-        pass
+        if self.residual:
+            identity = x
+        if self.use_exp_conv:
+            x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        if self.residual:
+            x = x + identity
+        return x
 
 
 def _test():
