@@ -154,6 +154,23 @@ def _test():
     ), "Dimension modified with default values"
     print("conv1x1 function tested!")
 
+    # Check ConvBlock
+    conv_func = ConvBlock(
+        in_channels=3, out_channels=8, kernel_size=3, stride=1, padding=1
+    )
+    dummy_outputs = conv_func(dummy_inputs)
+    assert conv_func.use_bn, "BatchNorm not activated"
+    assert conv_func.activate, "Default ReLU not applied"
+    assert dummy_outputs.dim() == 4, "Shape error"
+    assert dummy_outputs.size(1) == 8, "Output channel error"
+    assert dummy_outputs.size(2) == dummy_inputs.size(
+        2
+    ), "Dimension modified with default values"
+    assert dummy_outputs.size(3) == dummy_inputs.size(
+        3
+    ), "Dimension modified with default values"
+    print("ConvBlock class tested!")
+
     # Check conv1x1_block
     conv_func = conv1x1_block(in_channels=3, out_channels=8)
     dummy_outputs = conv_func(dummy_inputs)
@@ -166,3 +183,16 @@ def _test():
         3
     ), "Dimension modified with default values"
     print("conv1x1_block function tested!")
+
+    # Check conv3x3_block
+    conv_func = conv3x3_block(in_channels=3, out_channels=8)
+    dummy_outputs = conv_func(dummy_inputs)
+    assert dummy_outputs.dim() == 4, "Shape error"
+    assert dummy_outputs.size(1) == 8, "Output channel error"
+    assert dummy_outputs.size(2) == dummy_inputs.size(
+        2
+    ), "Dimension modified with default values"
+    assert dummy_outputs.size(3) == dummy_inputs.size(
+        3
+    ), "Dimension modified with default values"
+    print("conv3x3_block function tested!")
