@@ -234,6 +234,51 @@ class LinearBottleneck(nn.Module):
         return x
 
 
+class MobileNetV2(nn.Module):
+    def __init__(
+        self,
+        config,
+    ):
+        super().__init__()
+        self.in_size = config.in_size
+        self.num_classes = config.num_classes
+
+        self.features = nn.Sequential()
+        self.features.add_module(
+            "init_block",
+            conv3x3_block(
+                in_channels=config.in_channels,
+                out_channels=config.init_block_channels,
+                stride=2,
+            ),
+        )
+        in_channels = config.init_block_channels
+        for i, channels_per_stage in enumerate(config.channels):
+            stage = nn.Sequential()
+            for j, out_channels in enumerate(channels_per_stage):
+                stride = 2 if (j == 0) and (i != 0) else 1
+                expansion = (i != 0) or (j != 0)
+                stage.add_module(
+                    f"unit{j + 1}",
+                    LinearBottleneck(
+                        in_channels=in_channels,
+                        out_channels=out_channels,
+                        stride=stride,
+                        expansion=expansion,
+                        remove_exp_conv=config.remove_exp_conv,
+                    ),
+                )
+                in_channels = out_channels
+            self.features.add_module(f"stage{i + 1}", stage)
+
+    def forward(
+        self,
+        x,
+    ):
+        x = self.features(x)
+        return x
+
+
 def _test():
     dummy_inputs = torch.rand(2, 3, 224, 224, requires_grad=False)
 
