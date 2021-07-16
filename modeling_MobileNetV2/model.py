@@ -295,10 +295,16 @@ class MobileNetV2(nn.Module):
     def forward(
         self,
         x,
+        labels=None,
     ):
         x = self.features(x)
         x = self.output(x)
-        return x
+        logits = x.view(x.size(0), -1)
+        loss = None
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(logits, labels.view(-1))
+        return (loss, logits)
 
 
 def _test():
