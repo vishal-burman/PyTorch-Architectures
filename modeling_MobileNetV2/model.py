@@ -270,12 +270,34 @@ class MobileNetV2(nn.Module):
                 )
                 in_channels = out_channels
             self.features.add_module(f"stage{i + 1}", stage)
+        self.features.add_module(
+            "final_block",
+            conv1x1_block(
+                in_channels=in_channels,
+                out_channels=config.final_block_channels,
+            ),
+        )
+        in_channels = config.final_block_channels
+        self.features.add_module(
+            "final_pool",
+            nn.AvgPool2d(
+                kernel_size=7,
+                stride=1,
+            ),
+        )
+
+        self.output = conv1x1(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            bias=False,
+        )
 
     def forward(
         self,
         x,
     ):
         x = self.features(x)
+        x = self.output(x)
         return x
 
 
