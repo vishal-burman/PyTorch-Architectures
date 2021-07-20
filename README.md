@@ -18,7 +18,7 @@
 | NiN: Network in Network | [Paper](https://arxiv.org/pdf/1312.4400) | [Notebook](https://github.com/vishal-burman/PyTorch-Architectures/blob/master/modeling_NiN/test_sample_NiN.ipynb) |
 | FRN: Filter Response Normalization | [Paper](https://arxiv.org/pdf/1911.09737) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_FRN/test_sample_FRN.ipynb) |
 | MobileNetV1 | [Paper](https://arxiv.org/pdf/1704.04861) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_MobileNetV1/test_sample_MobileNetV1.ipynb) | 
-| MobileNetV2 | [TBD](link) | [TBD](link) |
+| MobileNetV2 | [TBD](https://arxiv.org/pdf/1801.04381) | [TBD](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_MobileNetV2/test_sample_MobileNetV2.ipynb) |
 | ShuffleNet | [Paper](https://arxiv.org/pdf/1707.01083) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_ShuffleNet/test_sample_ShuffleNet.ipynb) |
 | ViT: Transformer for Image Recognition | [Paper](https://arxiv.org/pdf/2010.11929) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_ViT/test_sample_ViT.ipynb) |
 | MLPMixer | [Paper](https://arxiv.org/pdf/2105.01601) | [Notebook](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/modeling_MLPMixer/test_sample_MLPMixer.ipynb) |
