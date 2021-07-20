@@ -147,7 +147,7 @@ def _trial_run(model, dataloader, device, step_limit=3):
     del model_copy
 
 
-def _run_power_scaling(model, dataset, max_trials):
+def _run_power_scaling(model, dataset, max_trials, fp16):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     bs = 1
     dataloader = DataLoader(
@@ -156,7 +156,11 @@ def _run_power_scaling(model, dataset, max_trials):
     for _ in range(max_trials):
         gc_cuda()
         try:
-            _trial_run(model, dataloader, device)
+            if fp16:
+                with torch.cuda.amp.autocast():
+                    _trial_run(model, dataloader, device)
+            else:
+                _trial_run(model, dataloader, device)
 
             bs = int(bs * 2.0)
             dataloader = DataLoader(
@@ -175,7 +179,7 @@ def _run_power_scaling(model, dataset, max_trials):
     return bs
 
 
-def get_optimal_batchsize(dataset, model, max_trials=25):
+def get_optimal_batchsize(dataset, model, max_trials=25, fp16=False):
     if not hasattr(dataset, "collate_fn"):
         raise AttributeError(
             "Define a collate_fn in your Dataset and make sure it returns dict type"
@@ -183,7 +187,7 @@ def get_optimal_batchsize(dataset, model, max_trials=25):
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    bs = _run_power_scaling(model, dataset, max_trials)
+    bs = _run_power_scaling(model, dataset, max_trials, fp16)
     return bs
 
 
