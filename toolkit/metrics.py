@@ -8,9 +8,11 @@ from .utils import dict_to_device
 def cv_compute_accuracy(model, data_loader, device, fp16=False):
     if not torch.cuda.is_available() and fp16:
         raise RuntimeError("fp16 only available for cuda devices")
+
     if model.training:
         warnings.warn("Model is in training mode...switching to eval mode")
         model.eval()
+
     correct, total = 0, 0
     with torch.set_grad_enabled(False):
         for sample in data_loader:
@@ -49,10 +51,14 @@ def cv_compute_accuracy(model, data_loader, device, fp16=False):
     return (correct.float() / total * 100).item()
 
 
-def nlp_compute_accuracy(model, data_loader, device):
+def nlp_compute_accuracy(model, data_loader, device, fp16=False):
+    if not torch.cuda.is_available() and fp16:
+        raise RuntimeError("fp16 available only for cuda devices")
+
     if model.training:
         warnings.warn("Model is in training mode...switching to eval mode")
         model.eval()
+
     correct, total = 0, 0
     with torch.set_grad_enabled(False):
         for sample in data_loader:
@@ -71,7 +77,11 @@ def nlp_compute_accuracy(model, data_loader, device):
                 attention_mask = sample["attention_mask"].to(device)
                 labels = sample["labels"].to(device)
 
-            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            if fp16:
+                with torch.cuda.amp.autocast():
+                    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            else:
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
             if type(outputs) is tuple:
                 loss = outputs[0]
                 logits = outputs[1]
