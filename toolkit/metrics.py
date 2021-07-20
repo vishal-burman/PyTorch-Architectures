@@ -5,7 +5,9 @@ import torch.nn.functional as F
 from .utils import dict_to_device
 
 
-def cv_compute_accuracy(model, data_loader, device):
+def cv_compute_accuracy(model, data_loader, device, fp16=False):
+    if not torch.cuda.is_available() and fp16:
+        raise RuntimeError("fp16 only available for cuda devices")
     if model.training:
         warnings.warn("Model is in training mode...switching to eval mode")
         model.eval()
@@ -28,7 +30,11 @@ def cv_compute_accuracy(model, data_loader, device):
                     0
                 ), "Number of Images and Labels should be same"
                 sample = {"pixel_values": sample[0], "labels": sample[1]}
-            outputs = model(**dict_to_device(sample, device))
+            if fp16:
+                with torch.cuda.amp.autocast():
+                    outputs = model(**dict_to_device(sample, device))
+            else:
+                outputs = model(**dict_to_device(sample, device))
             if type(outputs) == tuple:
                 loss = outputs[0]
                 logits = outputs[1]
