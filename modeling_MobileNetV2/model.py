@@ -294,7 +294,7 @@ class MobileNetV2(nn.Module):
 
     def forward(
         self,
-        x,
+        pixel_values,
         labels=None,
     ):
         x = self.features(x)
