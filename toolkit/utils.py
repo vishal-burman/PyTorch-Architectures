@@ -187,6 +187,10 @@ def get_optimal_batchsize(dataset, model, max_trials=25, fp16=False):
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
+
+    if not torch.cuda.is_available() and fp16:
+        raise RuntimeError("fp16 only available for cuda devices")
+
     bs = _run_power_scaling(model, dataset, max_trials, fp16)
     return bs
 
