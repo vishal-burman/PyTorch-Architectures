@@ -297,9 +297,9 @@ class MobileNetV2(nn.Module):
         pixel_values,
         labels=None,
     ):
-        x = self.features(x)
-        x = self.output(x)
-        logits = x.view(x.size(0), -1)
+        pixel_values = self.features(pixel_values)
+        pixel_values = self.output(pixel_values)
+        logits = pixel_values.view(pixel_values.size(0), -1)
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
