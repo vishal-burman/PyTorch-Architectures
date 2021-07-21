@@ -100,7 +100,10 @@ def nlp_compute_accuracy(model, data_loader, device, fp16=False):
     return (correct.float() / total * 100).item()
 
 
-def nlp_compute_mean_loss(model, data_loader, device):
+def nlp_compute_mean_loss(model, data_loader, device, fp16=False):
+    if not torch.cuda.is_available() and fp16:
+        raise RuntimeError("fp16 available only for cuda devices")
+
     if model.training:
         warnings.warn("Model is in training mode...switching to eval mode")
         model.eval()
@@ -119,9 +122,18 @@ def nlp_compute_mean_loss(model, data_loader, device):
                 input_ids = sample["input_ids"].to(device)
                 attention_mask = sample["attention_mask"].to(device)
                 labels = sample["labels"].to(device)
-            outputs = model(
-                input_ids=input_ids, attention_mask=attention_mask, labels=labels
-            )
+
+            if fp16:
+                with torch.cuda.amp.autocast():
+                    outputs = model(
+                        input_ids=input_ids,
+                        attention_mask=attention_mask,
+                        labels=labels,
+                    )
+            else:
+                outputs = model(
+                    input_ids=input_ids, attention_mask=attention_mask, labels=labels
+                )
             if type(outputs) is tuple:
                 loss = outputs[1].item()
             elif hasattr(outputs, "loss"):
