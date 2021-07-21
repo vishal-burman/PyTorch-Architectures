@@ -176,6 +176,31 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
                 break
             else:
                 raise  # some other error not memory related
+
+        # Mid-value forcing
+        high_bs = bs * 2.0
+        mid_bs = (bs + high_bs) // 2
+        dataloader = DataLoader(
+            dataset, bs=mid_bs, shuffle=True, collate_fn=dataset.collate_fn
+        )
+        try:
+            gc_cuda()
+
+            if fp16:
+                with torch.cuda.amp.autocast():
+                    _trial_run(model, dataloader, device)
+            else:
+                _trial_run(model, dataloader, device)
+
+            bs = mid_bs  # if successful, change bs to mid_value
+
+        except RuntimeError as exception:
+            if is_oom_error(exception):
+                gc_cuda()
+                break
+            else:
+                raise  # some other error not memory related
+
     return bs
 
 
