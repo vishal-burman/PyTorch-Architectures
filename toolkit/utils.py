@@ -179,7 +179,7 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
 
     # Mid-value forcing
     high_bs = bs * 2.0
-    mid_bs = (bs + high_bs) // 2
+    mid_bs = int((bs + high_bs) // 2)
     dataloader = DataLoader(
         dataset, batch_size=mid_bs, shuffle=True, collate_fn=dataset.collate_fn
     )
