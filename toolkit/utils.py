@@ -197,7 +197,6 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
     except RuntimeError as exception:
         if is_oom_error(exception):
             gc_cuda()
-            break
         else:
             raise  # some other error not memory related
 
