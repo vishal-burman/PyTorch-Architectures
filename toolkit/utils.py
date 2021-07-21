@@ -181,7 +181,7 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
         high_bs = bs * 2.0
         mid_bs = (bs + high_bs) // 2
         dataloader = DataLoader(
-            dataset, bs=mid_bs, shuffle=True, collate_fn=dataset.collate_fn
+            dataset, batch_size=mid_bs, shuffle=True, collate_fn=dataset.collate_fn
         )
         try:
             gc_cuda()
