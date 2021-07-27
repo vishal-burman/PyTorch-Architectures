@@ -40,6 +40,6 @@ def gc_cuda():
     if torch.cuda.is_available():
         try:  # Last thing which should cause OOM error but seemingly it can
             torch.cuda.empty_cache()
-        except:
+        except RuntimeError as exception:
             if not is_oom_error(exception):
                 raise
