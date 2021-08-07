@@ -178,6 +178,7 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
                 raise  # some other error not memory related
 
     # Mid-value forcing
+    bs_no_mvf = bs
     high_bs = int(bs * 2.0)
     mid_bs = (bs + high_bs) // 2
     dataloader = DataLoader(
@@ -200,7 +201,9 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
         else:
             raise  # some other error not memory related
 
-    return bs
+    print(f"Batch-Size: {bs_no_mvf}")
+    if bs != bs_no_mvf:
+        print(f"Batch-Size with MVF: {bs}")
 
 
 def get_optimal_batchsize(dataset, model, max_trials=25, fp16=False):
