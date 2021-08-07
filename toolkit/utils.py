@@ -203,11 +203,17 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
     return bs
 
 
-def get_optimal_batchsize(dataset, model, max_trials=25, fp16=False):
+def get_optimal_batchsize(
+    dataset, model, optimizer: str, max_trials: int = 25, fp16: bool = False
+):
+    OPTIMIZERS = ["adam", "adamw"]
+
     if not hasattr(dataset, "collate_fn"):
         raise AttributeError(
             "Define a collate_fn in your Dataset and make sure it returns dict type"
         )
+    if optimizer not in OPTIMIZERS:
+        raise TypeError(f"{optimizer} not supported")
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -215,7 +221,7 @@ def get_optimal_batchsize(dataset, model, max_trials=25, fp16=False):
     if not torch.cuda.is_available() and fp16:
         raise RuntimeError("fp16 only available for cuda devices")
 
-    bs = _run_power_scaling(model, dataset, max_trials, fp16)
+    bs = _run_power_scaling(model, dataset, optimizer, max_trials, fp16)
     return bs
 
 
