@@ -177,7 +177,7 @@ def _trial_run(model, dataloader, optimizer, device, step_limit=3):
     gc_cuda()
 
 
-def _run_power_scaling(model, dataset, max_trials, fp16):
+def _run_power_scaling(model, dataset, optimizer, max_trials, fp16):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     bs = 1
     dataloader = DataLoader(
@@ -188,9 +188,9 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
         try:
             if fp16:
                 with torch.cuda.amp.autocast():
-                    _trial_run(model, dataloader, device)
+                    _trial_run(model, dataloader, optimizer, device)
             else:
-                _trial_run(model, dataloader, device)
+                _trial_run(model, dataloader, optimizer, device)
 
             bs = int(bs * 2.0)
             dataloader = DataLoader(
@@ -218,9 +218,9 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
 
         if fp16:
             with torch.cuda.amp.autocast():
-                _trial_run(model, dataloader, device)
+                _trial_run(model, dataloader, optimizer, device)
         else:
-            _trial_run(model, dataloader, device)
+            _trial_run(model, dataloader, optimizer, device)
 
         bs = mid_bs  # if successful, change bs to mid_value
 
