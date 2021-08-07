@@ -124,7 +124,7 @@ def tuple_to_device(sample_tuple, device=torch.device("cpu")):
     return new_tuple
 
 
-def _trial_run(model, dataloader, optimizer, device, step_limit=3):
+def _trial_run(model, dataloader, optimizer, device, step_limit=5):
     model_copy = copy.deepcopy(model)
     model_copy.to(device)
 
