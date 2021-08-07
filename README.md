@@ -54,3 +54,5 @@
 | DistilBERT PT | [Notebook Link](https://github.com/vishal-burman/PyTorch-Architectures/blob/master/misc/test_sample_DistilBERT_PT.ipynb) |
 | Image-Search(Dual Encoder) | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/Image_Search%28Dual_Encoder%29.ipynb) |
 | Metric Learning | [Notebook Link](https://github.com/vishal-burman/PyTorch-Architectures/blob/master/misc/Metric_Learning.ipynb) |
+| FluentQ | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/t5_fluentQA.ipynb) |
+| Transformer-TimeSeries | [Notebook Link](https://nbviewer.jupyter.org/github/vishal-burman/PyTorch-Architectures/blob/master/misc/Transformer_TimeSeries.ipynb) |
