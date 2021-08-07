@@ -124,9 +124,20 @@ def tuple_to_device(sample_tuple, device=torch.device("cpu")):
     return new_tuple
 
 
-def _trial_run(model, dataloader, device, step_limit=3):
+def _trial_run(model, dataloader, optimizer, device, step_limit=3):
     model_copy = copy.deepcopy(model)
     model_copy.to(device)
+
+    LR = 5e-3
+    if optimizer == "adam":
+        optimizer = torch.optim.Adam(model_copy.parameters(), lr=LR)
+    elif optimizer == "adamw":
+        optimizer = torch.optim.AdamW(model_copy.parameters(), lr=LR)
+    else:
+        raise NotImplementedError
+
+    if not model_copy.training:
+        model.train()
 
     for idx, sample in enumerate(dataloader):
         if idx >= step_limit:
@@ -144,7 +155,26 @@ def _trial_run(model, dataloader, device, step_limit=3):
         else:
             raise ValueError("DataLoader should yield dict or BatchEncoding types")
 
+        if type(outputs) is tuple:
+            loss = outputs[0]
+        elif hasattr(outputs, "loss"):
+            loss = outputs.loss
+        else:
+            raise NotImplementedError
+
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
+    # Cleanup section
+    DEVICE_CPU = torch.device("cpu")
+    model_copy.to(DEVICE_CPU)
+    del sample
+    del outputs
+    del loss
     del model_copy
+    del optimizer
+    gc_cuda()
 
 
 def _run_power_scaling(model, dataset, max_trials, fp16):
