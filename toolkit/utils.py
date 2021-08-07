@@ -203,7 +203,7 @@ def _run_power_scaling(model, dataset, max_trials, fp16):
 
     print(f"Batch-Size: {bs_no_mvf}")
     if bs != bs_no_mvf:
-        print(f"Batch-Size with MVF: {bs}")
+        print(f"Batch-Size with MVF: {bs} --> EXPERIMENTAL!")
 
 
 def get_optimal_batchsize(dataset, model, max_trials=25, fp16=False):
