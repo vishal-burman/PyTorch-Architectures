@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class AdaptiveEmbedding(nn.Module):
@@ -12,6 +13,9 @@ class AdaptiveEmbedding(nn.Module):
         cutoffs=[512, 1024, 2048],
     ):
         super().__init__()
+        self.div_val = div_val
+        self.d_embed = d_embed
+        self.d_proj = d_proj
         self.cutoffs = cutoffs + [vocab_size]
         self.cutoff_ends = [0] + self.cutoffs
         self.emb_layers = nn.ModuleList()
@@ -33,5 +37,11 @@ class AdaptiveEmbedding(nn.Module):
 
     def forward(
         self,
+        inp,  # inp ~ [batch_size, max_seq_len]
     ):
-        pass
+        if self.div_val == 1:
+            embed = self.emb_layers[0](inp)
+            if self.d_embed != self.d_proj:
+                embed = F.linear(embed, self.proj_layers[0])
+        else:
+            raise NotImplementedError
