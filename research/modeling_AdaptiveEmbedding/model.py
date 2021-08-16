@@ -7,12 +7,14 @@ class AdaptiveEmbedding(nn.Module):
         self,
         vocab_size,
         d_embed,
+        d_proj,
         div_val=1,
         cutoffs=[512, 1024, 2048],
     ):
         super().__init__()
         self.div_val = div_val
         self.d_embed = d_embed
+        self.d_proj = d_proj
         self.cutoffs = cutoffs + [vocab_size]
         self.cutoff_ends = [0] + self.cutoffs
         self.emb_layers = nn.ModuleList()
@@ -23,6 +25,9 @@ class AdaptiveEmbedding(nn.Module):
                 l_idx, r_idx = self.cutoff_ends[i], self.cutoff_ends[i + 1]
                 d_embed_i = d_embed // (div_val ** i)
                 self.emb_layers.append(nn.Embedding(r_idx - l_idx, d_embed_i))
+                self.proj_layers.append(
+                    nn.Parameter(torch.FloatTensor(d_proj, d_embed_i))
+                )
 
     def forward(
         self,
@@ -31,7 +36,30 @@ class AdaptiveEmbedding(nn.Module):
         if self.div_val == 1:
             embed = self.emb_layers[0](inp)
         else:
-            raise NotImplementedError
+            param = next(self.parameters())
+            inp_flat = inp.view(-1)
+            emb_flat = torch.zeros(
+                [inp_flat.size(0), self.d_proj], dtype=param.dtype, device=param.device
+            )
+            for i in range(len(self.cutoffs)):
+                l_idx, r_idx = self.cutoff_ends[i], self.cutoff_ends[i + 1]
+
+                mask_i = (inp_flat >= l_idx) & (inp_flat < r_idx)
+                indices_i = mask_i.nonzero().squeeze()
+
+                if indices_i.numel() == 0:
+                    continue
+
+                inp_i = inp_flat.index_select(0, indices_i) - l_idx
+                emb_i = self.emb_layers[i](inp_i)
+                emb_i = nn.functional.linear(d_proj, self.proj_layers[i])
+
+                emb_flat.index_copy_(0, indices_i, emb_i)
+
+            embed_shape = inp.size() + (self.d_proj,)
+            embed = emb_flat.view(embed_shape)
+
+        embed.mul_(self.emb_scale)
         return embed
 
 
