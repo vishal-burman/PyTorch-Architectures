@@ -12,6 +12,10 @@ class AdaptiveEmbedding(nn.Module):
         div_val,
         sample_softmax=False,
     ):
+        """
+        Adapted from the paper:
+        https://arxiv.org/pdf/1809.10853v3.pdf
+        """
         super().__init__()
         self.n_token = n_token
         self.d_embed = d_embed
@@ -28,6 +32,12 @@ class AdaptiveEmbedding(nn.Module):
             )
             if d_proj != d_embed:
                 self.emb_projs.append(nn.Parameter(torch.FloatTensor(d_proj, d_embed)))
+        else:
+            for i in range(len(self.cutoffs)):
+                l_idx, r_idx = self.cutoff_ends[i], self.cutoff_ends[i + 1]
+                d_emb_i = d_embed // (div_val ** i)
+                self.emb_layers.append(nn.Embedding(r_idx - l_idx, d_emb_i))
+                self.emb_projs.append(nn.Parameter(torch.FloatTensor(d_proj, d_emb_i)))
 
     def forward(
         self,
@@ -37,6 +47,32 @@ class AdaptiveEmbedding(nn.Module):
             embed = self.emb_layers[0](inp)
             if self.d_proj != self.d_embed:
                 embed = nn.functional.linear(embed, self.emb_projs[0])
+        else:
+            param = next(self.parameters())
+            inp_flat = inp.view(-1)
+            emb_flat = torch.zeros(
+                [inp_flat.size(0), self.d_proj], dtype=param.dtype, device=param.device
+            )
+            for i in range(len(self.cutoffs)):
+                l_idx, r_idx = self.cutoff_ends[i], self.cutoff_ends[i + 1]
+
+                mask_i = (inp_flat >= l_idx) & (inp_flat < r_idx)
+                indices_i = mask_i.nonzero().squeeze()
+
+                if indices_i.numel() == 0:
+                    continue
+
+                inp_i = inp_flat.index_select(0, indices_i) - l_idx
+                emb_i = self.emb_layers[i](inp_i)
+                emb_i = nn.functional.linear(emb_i, self.emb_projs[i])
+
+                emb_flat.index_copy_(0, indices_i, emb_i)
+
+            embed_shape = inp.size() + (self.d_proj,)
+            embed = emb_flat.view(embed_shape)
+
+        embed.mul_(self.emb_scale)
+
         return embed
 
 
