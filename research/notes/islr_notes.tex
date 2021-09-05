@@ -7,9 +7,9 @@
 \begin{document}
 	\maketitle
 	\section{Linear Regression}
-	
+
 	Mathematically we can write the linear relationship as:
-	
+
 	\begin{equation}
 		Y \approx \beta_0 + \beta_1X
 	\end{equation}\\
@@ -20,21 +20,21 @@
 	\end{equation}
 
 	\subsection{Estimating the Coefficients}
-	
+
 	We need to estimate $\hat{\beta_0}$ and $\hat{\beta_1}$ in such a way that it is as close as possible to $\beta_0$ and $\beta_1$. The most common approach is using the least squares criterion.\\
-	
+
 	\textit{i}th residual is calculated as:
 	\begin{equation}
 		e_i =  y_i - \hat{y}_i
 	\end{equation}\\
 	We define the \textit{residual sum of squares} (RSS) as:
-	
+
 	\begin{equation}
 		RSS = e_1^2 + e_2^2 + \cdot\cdot\cdot + e_n^2
 	\end{equation}\\
 
 	The least squares approach chooses $\hat{\beta_0}$ and $\hat{\beta_1}$ to minimize the RSS. The equation is as follows:
-	
+
 	\begin{equation}
 		\hat{\beta_1} = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^{n}(x_i - \bar{x})^2}
 	\end{equation}
@@ -45,14 +45,14 @@
 
 	\subsection{Assessing the Accuracy of the Coefficients Estimates}
 	How accurate is the sample mean $\hat{\mu}$ as an estimate of $\mu$? We answer this question by computing \textit{standard error} of $\hat{\mu}$. We have the well known formula:
-	
+
 	\begin{equation}
 		Var(\hat{\mu}) = SE(\hat{\mu})^2 = \frac{\sigma^2}{n}
 	\end{equation}
 
 	\textit{Standard errors} associated with the predicted coefficients is given as:
-	
-	
+
+
 	\section{Multiple Linear Regression}
 	This is the second section
 \end{document}
