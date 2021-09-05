@@ -43,7 +43,7 @@ class Trainer:
         shuffle_train=False,
         shuffe_valid=False,
     ):
-        if not self.model.train:
+        if not self.model.training:
             print("Model in eval mode...switching to train mode")
             self.model.train()
 
