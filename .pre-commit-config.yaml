@@ -9,4 +9,4 @@ repos:
     rev: stable
     hooks:
     -   id: black
-exclude: '.*\.(ipynb|md)$'
+exclude: '.*\.(ipynb|md|tex|pdf)$'
