@@ -42,17 +42,24 @@ class Trainer:
         batch_size=32,
         shuffle_train=False,
         shuffe_valid=False,
+        num_warmup_steps=0,
     ):
         if not self.model.training:
             print("Model in eval mode...switching to train mode")
             self.model.train()
 
-        train_dataloader = DataLoader(
+        train_loader = DataLoader(
             self.train_dataset, batch_size=batch_size, shuffle=shuffle_train
         )
         valid_loader = DataLoader(
             self.valid_dataset, batch_size=batch_size, shuffle=shuffle_valid
         )
 
+        num_training_steps = epochs * len(train_dataloader)
         optimizer = init_optimizer(optimizer, self.model, lr)
-        scheduler = get_linear_schedule_with_warmup()
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=num_warmup_steps,
+            num_training_steps=num_training_steps,
+            last_epoch=-1,
+        )
