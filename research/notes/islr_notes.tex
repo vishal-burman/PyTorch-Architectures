@@ -51,8 +51,61 @@
 	\end{equation}
 
 	\textit{Standard errors} associated with the predicted coefficients is given as:
+	
+	\begin{equation}
+		SE(\beta_0)^2 = \sigma^2 \bigg[\frac{1}{n} + \frac{\bar{x}^2}{\sum_{i=1}^{n}(x_i - \bar{x})^2}\bigg]
+	\end{equation}
+	\begin{equation}
+		SE(\beta_1)^2 = \frac{\sigma^2}{\sum_{i=1}^{n}(x_i - \bar{x})^2}
+	\end{equation}
 
+	Here $\sigma^2 = Var(\epsilon)$. In general $\sigma^2$ is not known but can be estimated from the data. The estimate is known as residual standard error and is given by the formula:
+	
+	\begin{equation}
+		RSE = \sqrt{RSS/(n - 2)}
+	\end{equation}
 
+	Standard error can be used to calculate confidence interval. A 95\% confidence interval means the actual value lies in that interval with 95\% probability.
+	
+	For Linear Regression, a 95\% confidence interval for $\hat{\beta_1}$ and $\hat{\beta_0}$ is given as:
+	
+	\begin{equation}
+		\hat{\beta_1} \pm 2 \cdot SE(\hat{\beta_1})
+	\end{equation}
+
+	\begin{equation}
+		\hat\beta_0 \pm 2 \cdot SE(\hat{\beta_0})
+	\end{equation}
+
+	Standard errors can also be used to perform \textit{hypothesis tests} on the coefficients. The most common hypothesis test involves testing the \textit{null hypothesis} of:
+	
+	$H_0$ : There is no relationship between X and Y.
+	\\
+	
+	versus the \textit{alternative hypothesis}
+	
+	$H_a$: There is some relationship between X and Y.
+	\\
+	
+	If we take the equation:
+	
+	\begin{equation}
+		Y = \beta_0 + \beta_1X
+	\end{equation}
+
+	Mathematically the \textit{null hypothesis} corresponds to testing:
+	\begin{equation}
+		H_0 : \beta_1 = 0
+	\end{equation}
+
+	versus
+	\begin{equation}
+		H_a : \beta_1 \neq 0
+	\end{equation}
+
+	
+	To test the null hypothesis, we need to verify that $\hat{\beta_1}$ is sufficiently far from zero. For this we use $SE(\hat{\beta_1})$. If $SE(\hat{\beta_1})$ is small, then relatively small value
+	
 	\section{Multiple Linear Regression}
 	This is the second section
 \end{document}
