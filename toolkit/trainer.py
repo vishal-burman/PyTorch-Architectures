@@ -80,3 +80,21 @@ class Trainer:
                 scheduler.step()
                 optimizer.zero_grad()
                 progress_bar.update(1)
+
+    def validate(
+        self,
+        dataloader,
+        metric,
+    ):
+        if self.model.training:
+            print("Model is in train mode ... switching to eval mode")
+            self.model.eval()
+
+        if metric == "nlp_accuracy":
+            pass
+        elif metric == "nlp_perplexity":
+            pass
+        elif metric == "cv_accuracy":
+            pass
+        else:
+            raise NotImplementedError(f"{metric} is not supported")
