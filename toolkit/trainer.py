@@ -1,3 +1,4 @@
+from tqdm.auto import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -56,6 +57,7 @@ class Trainer:
         )
 
         num_training_steps = epochs * len(train_dataloader)
+        progress_bar = tqdm(range(num_training_steps))
         optimizer = init_optimizer(optimizer, self.model, lr)
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
@@ -63,3 +65,18 @@ class Trainer:
             num_training_steps=num_training_steps,
             last_epoch=-1,
         )
+
+        for epoch in range(epochs):
+            if not self.model.training:
+                print("Model is in eval mode ... switching to train mode")
+                model.train()
+
+            for idx, sample in train_loader:
+                outputs = self.model(**dict_to_device(sample, device=self.device))
+                loss, _ = outputs[0]
+                loss.backward()
+
+                optimizer.step()
+                scheduler.step()
+                optimizer.zero_grad()
+                progress_bar.update(1)
