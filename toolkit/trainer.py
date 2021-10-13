@@ -1,7 +1,7 @@
 from tqdm.auto import tqdm
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from .utils import get_linear_schedule_with_warmup, dict_to_device
 from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
 
@@ -20,10 +20,10 @@ def init_optimizer(optimizer: str, model: nn.Module, lr: float):
 class Trainer:
     def __init__(
         self,
-        model,
-        train_dataset,
-        valid_dataset,
-        fp16=False,
+        model: nn.Module,
+        train_dataset: Dataset,
+        valid_dataset: Dataset,
+        fp16: bool = False,
     ):
         self.model = model
         self.train_dataset = train_dataset
