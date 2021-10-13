@@ -6,7 +6,7 @@ from .utils import get_linear_schedule_with_warmup, dict_to_device
 from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
 
 
-def init_optimizer(optimizer: str, model, lr):
+def init_optimizer(optimizer: str, model: nn.Module, lr: float):
     """
     Maps optimizer to its corresponging torch function
     """
