@@ -3,3 +3,6 @@ __pycache__/
 test.py
 wikitext-103/
 *.tgz
+*.aux
+*.gz
+*.log
