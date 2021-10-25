@@ -64,7 +64,7 @@ class Trainer:
             valid_loader = DataLoader(
                 self.valid_dataset, batch_size=batch_size, shuffle=shuffle_valid
             )
-        elif type(self.dataset) is DataLoader:
+        elif type(self.train_dataset) is DataLoader:
             train_loader = self.train_dataset
             valid_loader = self.valid_dataset
         else:
