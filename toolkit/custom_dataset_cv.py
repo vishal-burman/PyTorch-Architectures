@@ -12,8 +12,7 @@ class DatasetCIFAR10Classification(Dataset):
         assert resize <= 224, "resize should be less than or equal to 224"
         self.transforms = transforms.Compose(
             [
-                transforms.Resize(224),
-                transforms.RandomCrop(resize),
+                transforms.Resize(resize),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
