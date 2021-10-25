@@ -86,9 +86,8 @@ class Trainer:
                 print("Model is in eval mode ... switching to train mode")
                 self.model.train()
 
-            for idx, sample in train_loader:
-                outputs = self.model(**dict_to_device(sample, device=self.device))
-                loss, _ = outputs[0]
+            for idx, sample in enumerate(train_loader):
+                loss, logits = self.model(**dict_to_device(sample, device=self.device))
                 loss_list.append(loss.item())
                 loss.backward()
 
