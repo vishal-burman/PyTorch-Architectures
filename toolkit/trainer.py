@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 from tqdm.auto import tqdm
 import torch
 import torch.nn as nn
@@ -44,7 +44,7 @@ class Trainer:
     def train(
         self,
         optimizer: str = "adam",
-        scheduler: str = "linear",
+        scheduler: Optional[str] = "linear",
         lr: float = 3e-5,
         epochs: int = 3,
         batch_size: int = 32,
@@ -72,12 +72,13 @@ class Trainer:
         num_training_steps = epochs * len(train_loader)
         progress_bar = tqdm(range(num_training_steps))
         optimizer = init_optimizer(optimizer, self.model, lr)
-        scheduler = get_linear_schedule_with_warmup(
-            optimizer,
-            num_warmup_steps=num_warmup_steps,
-            num_training_steps=num_training_steps,
-            last_epoch=-1,
-        )
+        if scheduler is not None:
+            scheduler_func = get_linear_schedule_with_warmup(
+                optimizer,
+                num_warmup_steps=num_warmup_steps,
+                num_training_steps=num_training_steps,
+                last_epoch=-1,
+            )
 
         for epoch in range(epochs):
             loss_list = []
@@ -90,7 +91,8 @@ class Trainer:
                 loss.backward()
 
                 optimizer.step()
-                scheduler.step()
+                if scheduler is not None:
+                    scheduler_func.step()
                 optimizer.zero_grad()
                 progress_bar.update(1)
 
