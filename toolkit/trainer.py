@@ -37,15 +37,15 @@ class Trainer:
 
     def train(
         self,
-        optimizer="adam",
-        scheduler="linear",
-        lr=3e-5,
-        epochs=3,
-        batch_size=32,
-        shuffle_train=False,
-        shuffe_valid=False,
-        num_warmup_steps=0,
-        metric="nlp_perplexity",
+        optimizer: str = "adam",
+        scheduler: str = "linear",
+        lr: float = 3e-5,
+        epochs: int = 3,
+        batch_size: int = 32,
+        shuffle_train: bool = False,
+        shuffe_valid: bool = False,
+        num_warmup_steps: int = 0,
+        metric: str = "nlp_perplexity",
     ):
         if not self.model.training:
             print("Model in eval mode...switching to train mode")
