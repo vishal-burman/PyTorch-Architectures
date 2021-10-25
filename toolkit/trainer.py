@@ -82,7 +82,6 @@ class Trainer:
         for epoch in range(epochs):
             loss_list = []
             if not self.model.training:
-                print("Model is in eval mode ... switching to train mode")
                 self.model.train()
 
             for idx, sample in enumerate(train_loader):
@@ -110,7 +109,6 @@ class Trainer:
         metric,
     ):
         if self.model.training:
-            print("Model is in train mode ... switching to eval mode")
             self.model.eval()
 
         if metric == "nlp_accuracy":
