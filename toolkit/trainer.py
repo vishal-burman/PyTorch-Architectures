@@ -54,7 +54,6 @@ class Trainer:
         metric: str = "nlp_perplexity",
     ):
         if not self.model.training:
-            print("Model in eval mode...switching to train mode")
             self.model.train()
 
         if type(self.train_dataset) is Dataset:
