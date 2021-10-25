@@ -57,7 +57,7 @@ class Trainer:
             print("Model in eval mode...switching to train mode")
             self.model.train()
 
-        if type(self.dataset) is Dataset:
+        if type(self.train_dataset) is Dataset:
             train_loader = DataLoader(
                 self.train_dataset, batch_size=batch_size, shuffle=shuffle_train
             )
