@@ -70,7 +70,7 @@ class Trainer:
         else:
             raise NotImplementedError
 
-        num_training_steps = epochs * len(train_dataloader)
+        num_training_steps = epochs * len(train_loader)
         progress_bar = tqdm(range(num_training_steps))
         optimizer = init_optimizer(optimizer, self.model, lr)
         scheduler = get_linear_schedule_with_warmup(
