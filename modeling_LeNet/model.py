@@ -1,10 +1,11 @@
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class LeNet(nn.Module):
-    def __init__(self, num_classes, grayscale=False):
+    def __init__(self, num_classes: int, grayscale: bool = False):
         super(LeNet, self).__init__()
 
         self.grayscale = grayscale
@@ -38,7 +39,9 @@ class LeNet(nn.Module):
             nn.Linear(84 * in_channels, num_classes),
         )
 
-    def forward(self, pixel_values, labels=None):
+    def forward(
+        self, pixel_values: torch.Tensor, labels: Optional[torch.Tensor] = None
+    ):
         x = self.features(pixel_values)
         x = torch.flatten(x, 1)
         logits = self.classifier(x)
