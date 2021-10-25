@@ -28,16 +28,18 @@ class Trainer:
     ):
         self.model = model
 
-        assert type(train_dataset) == type(valid_dataset), f"train_dataset is {type(train_dataset)} and valid_dataset is {type(valid_dataset)}"
+        assert type(train_dataset) == type(
+            valid_dataset
+        ), f"train_dataset is {type(train_dataset)} and valid_dataset is {type(valid_dataset)}"
         self.train_dataset = train_dataset
         self.valid_dataset = valid_dataset
-        
+
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         if fp16:
             assert (
                 torch.cuda.is_available()
             ), f"fp16 available only for CUDA devices, found {self.device}"
-            raise NotImplementedError
+            raise NotImplementedError  # TODO
 
     def train(
         self,
