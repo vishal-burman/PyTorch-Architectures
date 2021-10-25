@@ -1,3 +1,4 @@
+from typing import Union
 from tqdm.auto import tqdm
 import torch
 import torch.nn as nn
@@ -21,13 +22,16 @@ class Trainer:
     def __init__(
         self,
         model: nn.Module,
-        train_dataset: Dataset,
-        valid_dataset: Dataset,
+        train_dataset: Union[Dataset, DataLoader],
+        valid_dataset: Union[Dataset, DataLoader],
         fp16: bool = False,
     ):
         self.model = model
+
+        assert type(train_dataset) == type(valid_dataset), f"train_dataset is {type(train_dataset)} and valid_dataset is {type(valid_dataset)}"
         self.train_dataset = train_dataset
         self.valid_dataset = valid_dataset
+        
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         if fp16:
             assert (
@@ -51,12 +55,18 @@ class Trainer:
             print("Model in eval mode...switching to train mode")
             self.model.train()
 
-        train_loader = DataLoader(
-            self.train_dataset, batch_size=batch_size, shuffle=shuffle_train
-        )
-        valid_loader = DataLoader(
-            self.valid_dataset, batch_size=batch_size, shuffle=shuffle_valid
-        )
+        if type(self.dataset) is Dataset:
+            train_loader = DataLoader(
+                self.train_dataset, batch_size=batch_size, shuffle=shuffle_train
+            )
+            valid_loader = DataLoader(
+                self.valid_dataset, batch_size=batch_size, shuffle=shuffle_valid
+            )
+        elif type(self.dataset) is DataLoader:
+            train_loader = self.train_dataset
+            valid_loader = self.valid_dataset
+        else:
+            raise NotImplementedError
 
         num_training_steps = epochs * len(train_dataloader)
         progress_bar = tqdm(range(num_training_steps))
