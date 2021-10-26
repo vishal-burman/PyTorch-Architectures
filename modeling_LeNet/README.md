@@ -8,11 +8,12 @@ Implementation of LeNet architecture proposed in the paper _LeNet-5_ by Yann LeC
 import torch
 from model import LeNet
 
-x_sample = torch.rand(1, 1, 32, 32)
+x_sample = torch.rand(3, 3, 32, 32)
+labels = torch.ones((1, 3), dtype=torch.long)
 
-model = LeNet(num_classes=2, grayscale=True)
+model = LeNet(num_classes=2, grayscale=False)
 
-logits, pros = model(x_sample)
+loss, logits = model(x_sample, labels)
 ```
 
 ## Training
