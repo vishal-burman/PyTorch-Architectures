@@ -7,6 +7,13 @@ from .utils import get_linear_schedule_with_warmup, dict_to_device
 from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
 
 
+def show_grad_flow(named_parameters: tuple):
+    """
+    Plots the gradient flow in each layer with each epoch
+    """
+    pass
+
+
 def init_optimizer(optimizer: str, model: nn.Module, lr: float):
     """
     Maps optimizer to its corresponging torch function
@@ -52,6 +59,7 @@ class Trainer:
         shuffe_valid: bool = False,
         num_warmup_steps: int = 0,
         metric: str = "nlp_perplexity",
+        show_grad_flow: str = False,
     ):
         if not self.model.training:
             self.model.train()
@@ -89,6 +97,8 @@ class Trainer:
                 loss, logits = self.model(**dict_to_device(sample, device=self.device))
                 loss_list.append(loss.item())
                 loss.backward()
+                if show_grad_flow:
+                    plot_grad_flow(model.named_parameters())
 
                 optimizer.step()
                 if scheduler is not None:
