@@ -37,11 +37,13 @@ class AlexNet(nn.Module):
             nn.Linear(4096, num_classes),
         )
 
-    def forward(self, x: torch.Tensor, labels: Optional[torch.Tensor] = None):
-        x = self.features(x)
-        x = self.avgpool(x)
-        x = x.view(x.size(0), 256 * 6 * 6)
-        logits = self.classifier(x)
+    def forward(
+        self, pixel_values: torch.Tensor, labels: Optional[torch.Tensor] = None
+    ):
+        pixel_values = self.features(pixel_values)
+        pixel_values = self.avgpool(pixel_values)
+        pixel_values = pixel_values.view(pixel_values.size(0), 256 * 6 * 6)
+        logits = self.classifier(pixel_values)
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
