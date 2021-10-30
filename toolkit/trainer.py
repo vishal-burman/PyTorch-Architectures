@@ -126,7 +126,7 @@ class Trainer:
                 loss_list.append(loss.item())
                 loss.backward()
                 if show_grad_flow:
-                    plot_grad_flow(model.named_parameters())
+                    plot_grad_flow(self.model.named_parameters())
 
                 optimizer.step()
                 if scheduler is not None:
