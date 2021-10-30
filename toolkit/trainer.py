@@ -20,7 +20,7 @@ def plot_grad_flow(layers_name: List[str], average_gradients: List[torch.Tensor]
     """
     plt.plot(average_gradients, alpha=0.3, color="b")
     plt.hlines(0, 0, len(average_gradients) + 1, linewidth=1, color="k")
-    plt.xticks(range(0, len(average_gradients) + 1), layers_name, rotation="vertical")
+    plt.xticks(range(0, len(average_gradients), 1), layers_name, rotation="vertical")
     plt.xlim(xmin=0, xmax=len(average_gradients))
     plt.xlabel("Layers")
     plt.ylabel("Average Gradients")
