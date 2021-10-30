@@ -1,10 +1,39 @@
-from typing import Union, Optional
-from tqdm.auto import tqdm
+import logging
+from typing import List, Optional, Tuple, Union
+
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from .utils import get_linear_schedule_with_warmup, dict_to_device
+from tqdm.auto import tqdm
+
 from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
+from .utils import dict_to_device, get_linear_schedule_with_warmup
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+
+def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
+    """
+    Plots the gradient flow in each layer with each epoch
+    https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/7
+    """
+
+    layers_name = []
+    average_gradients = []
+    for name, param in named_parameters:
+        if param.requires_grad and "bias" not in name:
+            layers_name.append(name)
+            average_gradients.append(param.grad.abs().mean())
+
+    plt.plot(average_gradients, alpha=0.3, color="b")
+    plt.hlines(0, 0, len(average_gradients) + 1, linewidth=1, color="k")
+    plt.xticks(range(0, len(average_gradients), 1), layers_name, rotation="vertical")
+    plt.xlim(xmin=0, xmax=len(average_gradients))
+    plt.xlabel("Layers")
+    plt.ylabel("Average Gradients")
+    plt.title("Gradient Flow")
+    plt.grid(True)
 
 
 def init_optimizer(optimizer: str, model: nn.Module, lr: float):
@@ -52,6 +81,7 @@ class Trainer:
         shuffe_valid: bool = False,
         num_warmup_steps: int = 0,
         metric: str = "nlp_perplexity",
+        show_grad_flow: str = False,
     ):
         if not self.model.training:
             self.model.train()
@@ -80,8 +110,18 @@ class Trainer:
                 last_epoch=-1,
             )
 
+        # Details
+        logging.info("********** Running Training **********")
+        logging.info(f"  Total Training Steps = {num_training_steps}  ")
+        logging.info(f"  Epochs = {epochs}  ")
+        logging.info(f"  Batch Size = {batch_size}  ")
+        logging.info(f"  Length of Train DataLoader = {len(train_loader)}  ")
+        logging.info(f"  Length of Valid DataLoader = {len(valid_loader)}  ")
+
         for epoch in range(epochs):
             loss_list = []
+            layers = []
+            average_gradients = []
             if not self.model.training:
                 self.model.train()
 
@@ -89,6 +129,8 @@ class Trainer:
                 loss, logits = self.model(**dict_to_device(sample, device=self.device))
                 loss_list.append(loss.item())
                 loss.backward()
+                if show_grad_flow:
+                    plot_grad_flow(self.model.named_parameters())
 
                 optimizer.step()
                 if scheduler is not None:
@@ -101,9 +143,11 @@ class Trainer:
                 metric_output = self.validate(valid_loader, metric=metric)
 
             mean_loss = torch.mean(torch.tensor(loss_list)).item()
-            print(
-                f"Epoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
+            logging.info(
+                f"\nEpoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
             )
+            logging.info(f"\nGradient-Flow for epoch {epoch + 1}")
+            plt.show()
 
     def validate(
         self,
