@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
 from .utils import dict_to_device, get_linear_schedule_with_warmup
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
 def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
