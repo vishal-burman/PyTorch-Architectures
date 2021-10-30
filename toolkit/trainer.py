@@ -25,6 +25,7 @@ def plot_grad_flow(layers_name: List[str], average_gradients: List[torch.Tensor]
     plt.ylabel("Average Gradients")
     plt.title("Gradient Flow")
     plt.grid(True)
+    plt.show()
 
 
 def init_optimizer(optimizer: str, model: nn.Module, lr: float):
