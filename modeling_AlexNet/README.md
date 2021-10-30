@@ -8,11 +8,12 @@ Implementation of AlexNet architecture proposed by Alex Krizhevsky, Ilya Sutskev
 import torch
 from model import AlexNet
 
-x_sample = torch.rand(1, 3, 128, 128)
+x_sample = torch.rand(2, 3, 128, 128)
+labels_sample = torch.ones(2, dtype=torch.long)
 
 model = AlexNet(num_classes = 2)
 
-logits, probs = model(x_sample)
+loss, logits = model(pixel_values=x_sample, labels=labels_sample)
 ```
 
 ## Training
