@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Union
 
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
@@ -15,8 +16,22 @@ logging.basicConfig(level=logging.INFO)
 def show_grad_flow(named_parameters: tuple):
     """
     Plots the gradient flow in each layer with each epoch
+    https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/7
     """
-    pass
+    average_gradients = []
+    layers_name = []
+    for name, param in named_parameters:
+        if param.requires_grad and "bias" not in name:
+            layers.append(name)
+            average_gradients.append(param.grad.abs().mean().item())
+
+    plt.plot(average_gradients, alpha=0.3, color="b")
+    plt.hlines(0, 0, len(average_gradients) + 1, linewidth=1, color="k")
+    plt.xticks(range(0, len(average_gradients) + 1), layers_name, rotation="vertical")
+    plt.xlabel("Layers")
+    plt.ylabel("Average Gradients")
+    plt.title("Gradient Flow")
+    plt.grid(True)
 
 
 def init_optimizer(optimizer: str, model: nn.Module, lr: float):
