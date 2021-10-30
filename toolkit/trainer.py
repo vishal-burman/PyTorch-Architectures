@@ -13,7 +13,7 @@ from .utils import dict_to_device, get_linear_schedule_with_warmup
 logging.basicConfig(level=logging.INFO)
 
 
-def plot_grad_flow(layers: List[str], average_gradients: List[torch.Tensor]):
+def plot_grad_flow(layers_name: List[str], average_gradients: List[torch.Tensor]):
     """
     Plots the gradient flow in each layer with each epoch
     https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/7
