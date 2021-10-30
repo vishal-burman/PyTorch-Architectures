@@ -34,7 +34,7 @@ def plot_grad_flow(named_parameters: tuple):
     plt.ylabel("Average Gradients")
     plt.title("Gradient Flow")
     plt.grid(True)
-    plt.show()
+    # plt.show()
 
 
 def init_optimizer(optimizer: str, model: nn.Module, lr: float):
