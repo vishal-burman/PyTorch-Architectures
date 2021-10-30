@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import matplotlib.pyplot as plt
 import torch
@@ -13,18 +13,11 @@ from .utils import dict_to_device, get_linear_schedule_with_warmup
 logging.basicConfig(level=logging.INFO)
 
 
-def plot_grad_flow(named_parameters: tuple):
+def plot_grad_flow(layers: List[str], average_gradients: List[torch.Tensor]):
     """
     Plots the gradient flow in each layer with each epoch
     https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/7
     """
-    average_gradients = []
-    layers_name = []
-    for name, param in named_parameters:
-        if param.requires_grad and "bias" not in name:
-            layers.append(name)
-            average_gradients.append(param.grad.abs().mean().item())
-
     plt.plot(average_gradients, alpha=0.3, color="b")
     plt.hlines(0, 0, len(average_gradients) + 1, linewidth=1, color="k")
     plt.xticks(range(0, len(average_gradients) + 1), layers_name, rotation="vertical")
@@ -118,6 +111,8 @@ class Trainer:
 
         for epoch in range(epochs):
             loss_list = []
+            layers = []
+            average_gradients = []
             if not self.model.training:
                 self.model.train()
 
@@ -126,7 +121,10 @@ class Trainer:
                 loss_list.append(loss.item())
                 loss.backward()
                 if show_grad_flow:
-                    plot_grad_flow(self.model.named_parameters())
+                    for name, param in self.model.named_parameters():
+                        if param.requires_grad and "bias" not in name:
+                            layers.append(name)
+                            average_gradients.append(param.grad.abs().mean())
 
                 optimizer.step()
                 if scheduler is not None:
@@ -142,6 +140,8 @@ class Trainer:
             logging.info(
                 f"Epoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
             )
+            logging.info(f"Gradient-Flow for epoch {epoch + 1}")
+            plot_grad_flow(layers, average_gradients)
 
     def validate(
         self,
