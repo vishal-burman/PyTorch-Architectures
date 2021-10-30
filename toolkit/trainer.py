@@ -1,10 +1,15 @@
-from typing import Union, Optional
-from tqdm.auto import tqdm
+import logging
+from typing import Optional, Union
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
-from .utils import get_linear_schedule_with_warmup, dict_to_device
+from tqdm.auto import tqdm
+
 from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
+from .utils import dict_to_device, get_linear_schedule_with_warmup
+
+logging.basicConfig(level=logging.INFO)
 
 
 def show_grad_flow(named_parameters: tuple):
@@ -88,6 +93,14 @@ class Trainer:
                 last_epoch=-1,
             )
 
+        # Details
+        logging.info("********** Running Training **********")
+        logging.info(f"  Total Training Steps = {num_training_steps}  ")
+        logging.info(f"  Epochs = {epochs}  ")
+        logging.info(f"  Batch Size = {batch_size}  ")
+        logging.info(f"  Length of Train DataLoader = {len(train_loader)}  ")
+        logging.info(f"  Length of Valid DataLoader = {len(valid_loader)}  ")
+
         for epoch in range(epochs):
             loss_list = []
             if not self.model.training:
@@ -111,7 +124,7 @@ class Trainer:
                 metric_output = self.validate(valid_loader, metric=metric)
 
             mean_loss = torch.mean(torch.tensor(loss_list)).item()
-            print(
+            logging.info(
                 f"Epoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
             )
 
