@@ -147,6 +147,8 @@ class Trainer:
             logging.info(
                 f"Epoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
             )
+            logging.info(f"Gradient-Flow for epoch {epoch + 1}")
+            plt.show()
 
     def validate(
         self,
