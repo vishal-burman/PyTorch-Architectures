@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import torch
@@ -13,7 +13,7 @@ from .utils import dict_to_device, get_linear_schedule_with_warmup
 logging.basicConfig(level=logging.INFO)
 
 
-def plot_grad_flow(named_parameters: tuple):
+def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
     """
     Plots the gradient flow in each layer with each epoch
     https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/7
@@ -34,7 +34,6 @@ def plot_grad_flow(named_parameters: tuple):
     plt.ylabel("Average Gradients")
     plt.title("Gradient Flow")
     plt.grid(True)
-    # plt.show()
 
 
 def init_optimizer(optimizer: str, model: nn.Module, lr: float):
@@ -145,9 +144,9 @@ class Trainer:
 
             mean_loss = torch.mean(torch.tensor(loss_list)).item()
             logging.info(
-                f"Epoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
+                f"\nEpoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
             )
-            logging.info(f"Gradient-Flow for epoch {epoch + 1}")
+            logging.info(f"\nGradient-Flow for epoch {epoch + 1}")
             plt.show()
 
     def validate(
