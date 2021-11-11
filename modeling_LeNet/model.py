@@ -73,6 +73,8 @@ class LeNetTestCase(unittest.TestCase):
         self.assertEqual(logits.dim(), 2)
         self.assertEqual(logits.size(0), pixel_values_sample.size(0))
         self.assertEqual(logits.size(1), 2)
+        self.assertIsNotNone(loss)
+        self.assertTrue(type(loss), torch.Tensor)
 
     def tearDown(self):
         del self.model
