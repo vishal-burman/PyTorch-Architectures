@@ -2,6 +2,12 @@
 
 Implementation of LeNet architecture proposed in the paper _LeNet-5_ by Yann LeCun et al.
 
+## Unit Tests
+
+```bash
+python -m unittest test_model.py
+```
+
 ## Usage
 
 ```python
