@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 
 class VGG16(nn.Module):
-    def __init__(self, num_classes: int, num_features):
+    def __init__(self, num_classes: int):
         super(VGG16, self).__init__()
 
         self.block_1 = nn.Sequential(
