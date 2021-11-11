@@ -5,7 +5,7 @@ Implementation of LeNet architecture proposed in the paper _LeNet-5_ by Yann LeC
 ## Unit Tests
 
 ```bash
-python -m unittest test_model.py
+python -m unittest -v test_model.py
 ```
 
 ## Usage
