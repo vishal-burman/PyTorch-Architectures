@@ -28,7 +28,7 @@ Training procedure is exaplained in test_sample_AlexNet.ipynb
 
 ## Citations
 
-```bibtext
+```bibtex
 @inproceedings{NIPS2012_c399862d,
  author = {Krizhevsky, Alex and Sutskever, Ilya and Hinton, Geoffrey E},
  booktitle = {Advances in Neural Information Processing Systems},
