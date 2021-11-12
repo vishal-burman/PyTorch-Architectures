@@ -2,6 +2,12 @@
 
 Implementation of AlexNet architecture proposed by Alex Krizhevsky, Ilya Sutskever and Geoffrey Hinton.
 
+## Unit Tests
+
+```bash
+python -m unittest -v test_model.py
+```
+
 ## Usage
 
 ```python
