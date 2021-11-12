@@ -151,13 +151,13 @@ class VGG16(nn.Module):
     def forward(
         self, pixel_values: torch.Tensor, labels: Optional[torch.Tensor] = None
     ):
-        x = self.block_1(pixel_values)
-        x = self.block_2(x)
-        x = self.block_3(x)
-        x = self.block_4(x)
-        x = self.block_5(x)
-        x = x.view(x.size(0), -1)
-        logits = self.classifier(x)
+        pixel_values = self.block_1(pixel_values)
+        pixel_values = self.block_2(pixel_values)
+        pixel_values = self.block_3(pixel_values)
+        pixel_values = self.block_4(pixel_values)
+        pixel_values = self.block_5(pixel_values)
+        pixel_values = pixel_values.view(pixel_values.size(0), -1)
+        logits = self.classifier(pixel_values)
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
