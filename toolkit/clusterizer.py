@@ -8,9 +8,7 @@ import torch.nn.functional as F
 from tqdm import trange
 from transformers import AutoModel, AutoTokenizer
 
-from .utils import dict_to_device
-
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 SUPPORTED_MODELS = [
     "sentence-transformers/all-mpnet-base-v2",
@@ -22,6 +20,8 @@ def clusterer(
     corpus_sentences: Union[str, List[str]],
     batch_size: int,
     model_name: str = "sentence-transformers/all-mpnet-base-v2",
+    convert_to_numpy: bool = True,
+    convert_to_tensor: bool = False,
 ):
     tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
@@ -46,12 +46,12 @@ def clusterer(
         features = tokenizer(
             sentences_batch, padding=True, truncation=True, return_tensors="pt"
         )
-        features = dict_to_device(features, device=_get_device())
+        features = _dict_to_device(features, device=_get_device())
 
-        with torch.inference_mode():
+        with torch.set_grad_enabled(False):
             outputs = model(**features)
             token_embeddings = outputs[0]
-            pooled_embeddings = mean_pooling(
+            pooled_embeddings = _mean_pooling(
                 token_embeddings, features["attention_mask"]
             )
             pooled_embeddings = pooled_embeddings.detach()
@@ -74,7 +74,7 @@ def clusterer(
 
 def _file_to_corpus(filename: str):
     with open(filename, "r") as f:
-        corpus = filename.readlines()
+        corpus = f.readlines()
 
     corpus = [line.strip() for line in corpus]
     return corpus
@@ -112,6 +112,15 @@ def _init_pipeline(model_name: str):
 
 def _get_length(text: Union[str, List[str]]):
     return sum([len(t) for t in text])
+
+
+def _dict_to_device(sample_dict, device=torch.device("cpu")):
+    keys, values = list(sample_dict.keys()), list(sample_dict.values())
+    if not all(isinstance(x, torch.Tensor) for x in values):
+        raise TypeError("Only torch.Tensor values can be shifted to CUDA")
+    values = list(map(lambda x: x.to(device), values))
+    final_dict = dict(zip(keys, values))
+    return final_dict
 
 
 if __name__ == "__main__":
