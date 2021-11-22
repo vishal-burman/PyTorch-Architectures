@@ -18,8 +18,12 @@ SUPPORTED_MODELS = [
 ]
 
 
-def clusterer(corpus_sentences: List[str], batch_size: int):
-    tokenizer, model = _init_pipeline("all_mpnet_base_v2")
+def clusterer(
+    corpus_sentences: List[str],
+    batch_size: int,
+    model_name: str = "sentence-transformers/all-mpnet-base-v2",
+):
+    tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
 
     if len(corpus_sentences) <= 1:
