@@ -6,7 +6,9 @@ from tqdm import trange
 logger = logging.get_logger(__name__)
 
 
-def make_batch(corpus_sentences: List[str], batch_size: int):
+def clusterer(corpus_sentences: List[str], batch_size: int):
+    tokenizer, model = _init_pipeline("all_mpnet_base_v2")
+
     if len(corpus_sentences) <= 1:
         raise ValueError(
             f"Clusterizer cannot perform with {len(corpus_sentences)} sentences"
@@ -19,6 +21,15 @@ def make_batch(corpus_sentences: List[str], batch_size: int):
 
     for start_index in trange(0, len(corpus_sentences), batch_size, desc="Batches"):
         sentences_batch = corpus_sentences[start_index : start_index + batch_size]
+
+        features = tokenizer(sentences_batch)
+
+
+def _get_device():
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    device = torch.device("cpu")
+    return device
 
 
 def _init_pipeline(model_name: str):
