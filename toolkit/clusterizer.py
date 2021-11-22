@@ -72,6 +72,14 @@ def clusterer(
     return all_embeddings
 
 
+def _file_to_corpus(filename: str):
+    with open(filename, "r") as f:
+        corpus = filename.readlines()
+
+    corpus = [line.strip() for line in corpus]
+    return corpus
+
+
 def _get_device():
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
