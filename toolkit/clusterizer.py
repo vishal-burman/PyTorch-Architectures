@@ -1,7 +1,12 @@
 import logging
+from typing import List, Union
 
 import fire
+import numpy as np
+import torch
+import torch.nn.functional as F
 from tqdm import trange
+from transformers import AutoModel, AutoTokenizer
 
 from .utils import dict_to_device
 
@@ -30,7 +35,9 @@ def clusterer(corpus_sentences: List[str], batch_size: int):
     for start_index in trange(0, len(corpus_sentences), batch_size, desc="Batches"):
         sentences_batch = corpus_sentences[start_index : start_index + batch_size]
 
-        features = tokenizer(sentences_batch)
+        features = tokenizer(
+            sentences_batch, padding=True, truncation=True, return_tensors="pt"
+        )
         features = dict_to_device(features, device=_get_device())
 
         with torch.inference_mode():
@@ -42,6 +49,12 @@ def _get_device():
         device = torch.device("cuda:0")
     device = torch.device("cpu")
     return device
+
+
+def mean_pooling(
+    self,
+):
+    pass
 
 
 def _init_pipeline(model_name: str):
