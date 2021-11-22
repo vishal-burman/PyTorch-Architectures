@@ -55,10 +55,13 @@ def _get_device():
     return device
 
 
-def mean_pooling(
-    self,
-):
-    pass
+def mean_pooling(token_embeddings: torch.Tensor, attention_mask: torch.Tensor):
+    input_mask_expanded = (
+        attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    )
+    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(
+        input_mask_expanded.sum(1), min=1e-9
+    )
 
 
 def _init_pipeline(model_name: str):
