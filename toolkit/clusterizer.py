@@ -36,6 +36,7 @@ def clusterer(
     )
     sentences_sorted = [corpus_sentences[idx] for idx in length_sorted_idx]
 
+    all_embeddings = []
     for start_index in trange(0, len(corpus_sentences), batch_size, desc="Batches"):
         sentences_batch = corpus_sentences[start_index : start_index + batch_size]
 
@@ -46,10 +47,18 @@ def clusterer(
 
         with torch.inference_mode():
             outputs = model(**features)
+            token_embeddings = outputs[0]
+            pooled_embeddings = mean_pooling(
+                token_embeddings, features["attention_mask"]
+            )
+            pooled_embeddings = pooled_embeddings.detach()
+            pooled_embeddings = F.normalize(pooled_embeddings, p=2, dim=1)
+            pooled_embeddings = pooled_embeddings.detach()
 
-        token_embeddings = outputs[0]
-        pooled_embeddings = mean_pooling(token_embeddings, features["attention_mask"])
-        pooled_embeddings = F.normalize(pooled_embeddings, p=2, dim=1)
+        if convert_to_numpy:
+            pooled_embeddings = pooled_embeddings.cpu()
+
+        all_embeddings.extend(pooled_embeddings)
 
 
 def _get_device():
