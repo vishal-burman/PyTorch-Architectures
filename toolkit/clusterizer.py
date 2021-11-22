@@ -19,12 +19,15 @@ SUPPORTED_MODELS = [
 
 
 def clusterer(
-    corpus_sentences: List[str],
+    corpus_sentences: Union[str, List[str]],
     batch_size: int,
     model_name: str = "sentence-transformers/all-mpnet-base-v2",
 ):
     tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
+
+    if isinstance(corpus_sentences, str):
+        corpus_sentences = _file_to_corpus(corpus_sentences)
 
     if len(corpus_sentences) <= 1:
         raise ValueError(
@@ -53,12 +56,20 @@ def clusterer(
             )
             pooled_embeddings = pooled_embeddings.detach()
             pooled_embeddings = F.normalize(pooled_embeddings, p=2, dim=1)
-            pooled_embeddings = pooled_embeddings.detach()
 
         if convert_to_numpy:
             pooled_embeddings = pooled_embeddings.cpu()
 
         all_embeddings.extend(pooled_embeddings)
+
+    all_embeddings = [all_embeddings[idx] for idx in np.argsort(length_sorted_idx)]
+
+    if convert_to_tensor:
+        all_embeddings = torch.stack(all_embeddings)
+    elif convert_to_numpy:
+        all_embeddings = [emb.numpy() for emb in all_embeddings]
+
+    return all_embeddings
 
 
 def _get_device():
@@ -68,7 +79,7 @@ def _get_device():
     return device
 
 
-def mean_pooling(token_embeddings: torch.Tensor, attention_mask: torch.Tensor):
+def _mean_pooling(token_embeddings: torch.Tensor, attention_mask: torch.Tensor):
     input_mask_expanded = (
         attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
     )
