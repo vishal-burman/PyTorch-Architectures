@@ -3,11 +3,19 @@ import logging
 import fire
 from tqdm import trange
 
+from .utils import dict_to_device
+
 logger = logging.get_logger(__name__)
+
+SUPPORTED_MODELS = [
+    "sentence-transformers/all-mpnet-base-v2",
+    "sentence-transformers/all-MiniLM-L12-v2",
+]
 
 
 def clusterer(corpus_sentences: List[str], batch_size: int):
     tokenizer, model = _init_pipeline("all_mpnet_base_v2")
+    model.to(_get_device())
 
     if len(corpus_sentences) <= 1:
         raise ValueError(
@@ -23,6 +31,10 @@ def clusterer(corpus_sentences: List[str], batch_size: int):
         sentences_batch = corpus_sentences[start_index : start_index + batch_size]
 
         features = tokenizer(sentences_batch)
+        features = dict_to_device(features, device=_get_device())
+
+        with torch.inference_mode():
+            outputs = model(**features)
 
 
 def _get_device():
@@ -33,6 +45,9 @@ def _get_device():
 
 
 def _init_pipeline(model_name: str):
+    if model_name not in SUPPORTED_MODELS:
+        raise ValueError(f"Please try clusterizer.py with {SUPPORTED_MODELS}")
+
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name)
     model.eval()
