@@ -123,5 +123,29 @@ def _dict_to_device(sample_dict, device=torch.device("cpu")):
     return final_dict
 
 
+def _community_detection(
+    embeddings,
+    threshold: float = 0.75,
+    min_community_size: int = 10,
+    init_max_size: int = 1000,
+):
+    init_max_size = min(init_max_size, len(embeddings))  # Max size of community
+
+    cosine_scores = _calculate_cs(embeddings, embeddings)
+    pass
+
+
+def _calculate_cs(a: torch.Tensor, b: torch.Tensor):
+    if not isinstance(a, torch.Tensor):
+        a = torch.Tensor(a)
+
+    if not isinstance(b, torch.Tensor):
+        b = torch.Tensor(b)
+
+    a_norm = F.normalize(a, p=2, dim=1)
+    b_norm = F.normalize(b, p=2, dim=1)
+    return torch.mm(a_norm, b_norm.transpose(0, 1))
+
+
 if __name__ == "__main__":
     fire.Fire(clusterer)
