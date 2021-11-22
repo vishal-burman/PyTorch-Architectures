@@ -47,6 +47,10 @@ def clusterer(
         with torch.inference_mode():
             outputs = model(**features)
 
+        token_embeddings = outputs[0]
+        pooled_embeddings = mean_pooling(token_embeddings, features["attention_mask"])
+        pooled_embeddings = F.normalize(pooled_embeddings, p=2, dim=1)
+
 
 def _get_device():
     if torch.cuda.is_available():
@@ -80,3 +84,7 @@ def _init_pipeline(model_name: str):
 
 def _get_length(text: Union[str, List[str]]):
     return sum([len(t) for t in text])
+
+
+if __name__ == "__main__":
+    fire.Fire(clusterer)
