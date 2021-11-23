@@ -93,9 +93,8 @@ def _file_to_corpus(filename: str):
 
 def _get_device():
     if torch.cuda.is_available():
-        device = torch.device("cuda:0")
-    device = torch.device("cpu")
-    return device
+        return torch.device("cuda:0")
+    return torch.device("cpu")
 
 
 def _mean_pooling(token_embeddings: torch.Tensor, attention_mask: torch.Tensor):
@@ -141,6 +140,7 @@ def _community_detection(
     init_max_size: int = 1000,
 ):
     init_max_size = min(init_max_size, len(embeddings))  # Max size of community
+    logger.info(f"Maximum size of community = {init_max_size}")
 
     cosine_scores = _calculate_cs(embeddings, embeddings)
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
