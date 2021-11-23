@@ -132,6 +132,7 @@ def _community_detection(
     init_max_size = min(init_max_size, len(embeddings))  # Max size of community
 
     cosine_scores = _calculate_cs(embeddings, embeddings)
+    top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
     pass
 
 
