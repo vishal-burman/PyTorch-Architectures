@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from tqdm import trange
 from transformers import AutoModel, AutoTokenizer
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SUPPORTED_MODELS = [
