@@ -1,4 +1,6 @@
 import logging
+import time
+from datetime import timedelta
 from typing import List, Union
 
 import fire
@@ -139,11 +141,16 @@ def _community_detection(
     min_community_size: int = 10,
     init_max_size: int = 1000,
 ):
+    start_time = time.time()
     init_max_size = min(init_max_size, len(embeddings))  # Max size of community
     logger.info(f"Maximum size of community = {init_max_size}")
 
     cosine_scores = _calculate_cs(embeddings, embeddings)
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
+
+    end_time = time.time() - start_time
+    elapsed_time_str = str(timedelta(milliseconds=end_time))
+    logger.info(f"Elapsed Time for clustering: {elapsed_time_str}")
     return top_k_values
 
 
