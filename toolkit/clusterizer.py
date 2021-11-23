@@ -19,7 +19,7 @@ SUPPORTED_MODELS = [
 def clusterer(
     corpus_sentences: Union[str, List[str]],
     batch_size: int,
-    model_name: str = "sentence-transformers/all-mpnet-base-v2",
+    model_name: str = "sentence-transformers/all-MiniLM-L12-v2",
     convert_to_numpy: bool = True,
     convert_to_tensor: bool = False,
     threshold: float = 0.75,
