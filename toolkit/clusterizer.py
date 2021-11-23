@@ -22,6 +22,9 @@ def clusterer(
     model_name: str = "sentence-transformers/all-mpnet-base-v2",
     convert_to_numpy: bool = True,
     convert_to_tensor: bool = False,
+    threshold: float = 0.75,
+    min_community_size: int = 10,
+    init_max_size: int = 1000,
 ):
     tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
@@ -69,7 +72,14 @@ def clusterer(
     elif convert_to_numpy:
         all_embeddings = np.asarray([emb.numpy() for emb in all_embeddings])
 
-    return all_embeddings
+    output = _community_detection(
+        all_embeddings,
+        threshold=threshold,
+        min_community_size=min_community_size,
+        init_max_size=init_max_size,
+    )
+    logger.info(f"Output Size --> {output.shape}")
+    return output
 
 
 def _file_to_corpus(filename: str):
@@ -133,7 +143,7 @@ def _community_detection(
 
     cosine_scores = _calculate_cs(embeddings, embeddings)
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
-    pass
+    return top_k_values
 
 
 def _calculate_cs(a: torch.Tensor, b: torch.Tensor):
