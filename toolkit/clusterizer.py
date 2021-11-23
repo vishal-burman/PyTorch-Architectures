@@ -79,7 +79,7 @@ def clusterer(
         init_max_size=init_max_size,
     )
     logger.info(f"Output Size --> {output.shape}")
-    return output
+    # return output
 
 
 def _file_to_corpus(filename: str):
