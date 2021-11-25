@@ -172,10 +172,31 @@ def _community_detection(
 
             extracted_communities.append(new_cluster)
 
+    # Largest cluster first
+    extracted_communities = sorted(
+        extracted_communities, key=lambda x: len(x), reverse=True
+    )
+
+    # Step 2 --> Remove overlapping communities
+    unique_communities = []
+    extracted_ids = set()
+
+    for community in extracted_communities:
+        add_cluster = True
+        for idx in community:
+            if idx in extracted_ids:
+                add_cluster = False
+                break
+
+        if add_cluster:
+            unique_communities.append(community)
+            for idx in community:
+                extracted_ids.add(idx)
+
     end_time = time.time() - start_time
     elapsed_time_str = str(timedelta(milliseconds=end_time))
     logger.info(f"Elapsed Time for clustering: {elapsed_time_str}")
-    return top_k_values
+    return unique_communities
 
 
 def _calculate_cs(a: torch.Tensor, b: torch.Tensor):
