@@ -147,7 +147,9 @@ def _community_detection(
     init_max_size = min(init_max_size, len(embeddings))  # Max size of community
     logger.info(f"Maximum size of community = {init_max_size}")
 
-    cosine_scores = _calculate_cs(embeddings, embeddings)
+    cosine_scores = _calculate_cs(
+        embeddings, embeddings
+    )  # TODO fix OOM error when large corpus
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
 
     extracted_communities = []
