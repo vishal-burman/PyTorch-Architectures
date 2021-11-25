@@ -1,1 +1,2 @@
-from .trainer import Trainer
+from clusterizer import clusterer
+from trainer import Trainer
