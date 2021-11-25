@@ -148,6 +148,30 @@ def _community_detection(
     cosine_scores = _calculate_cs(embeddings, embeddings)
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
 
+    extracted_communities = []
+    for i in range(top_k_values):
+        if top_k_values[i][-1] >= threshold:
+            new_cluster = []
+
+            top_val_large, top_idx_large = cosine_scores.topk(
+                k=init_max_size, largest=True
+            )
+            top_idx_large = top_idx_large.tolist()
+            top_val_large = top_val_large.tolist()
+
+            if top_val_large[-1] < threshold:  # start fine-grained search
+                for idx, val in zip(top_idx_large, top_val_large):
+                    if val < threshold:
+                        break
+                    new_cluster.append(idx)
+            else:
+                # Slow process!
+                for idx, val in enumerate(cosine_scores[i].tolist()):
+                    if val >= threshold:
+                        new_cluster.append(idx)
+
+            extracted_communities.append(new_cluster)
+
     end_time = time.time() - start_time
     elapsed_time_str = str(timedelta(milliseconds=end_time))
     logger.info(f"Elapsed Time for clustering: {elapsed_time_str}")
