@@ -81,8 +81,10 @@ def clusterer(
         min_community_size=min_community_size,
         init_max_size=init_max_size,
     )
-    logger.info(f"Output Size --> {output.shape}")
-    # return output
+    logger.info(f"Total Clusters: {len(output)}")
+    if len(output) > 0:
+        logger.info(f"Length of Largest Cluster: {len(output[0])}")
+    return output
 
 
 def _file_to_corpus(filename: str):
