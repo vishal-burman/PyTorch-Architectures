@@ -155,7 +155,7 @@ def _community_detection(
         if top_k_values[i][-1] >= threshold:
             new_cluster = []
 
-            top_val_large, top_idx_large = cosine_scores.topk(
+            top_val_large, top_idx_large = cosine_scores[i].topk(
                 k=init_max_size, largest=True
             )
             top_idx_large = top_idx_large.tolist()
