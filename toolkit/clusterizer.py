@@ -47,7 +47,7 @@ def clusterer(
 
     all_embeddings = []
     for start_index in trange(0, len(corpus_sentences), batch_size, desc="Batches"):
-        sentences_batch = corpus_sentences[start_index : start_index + batch_size]
+        sentences_batch = sentences_sorted[start_index : start_index + batch_size]
 
         features = tokenizer(
             sentences_batch, padding=True, truncation=True, return_tensors="pt"
