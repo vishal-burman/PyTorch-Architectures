@@ -1,17 +1,18 @@
 import copy
-import os
 import logging
-import urllib
-import tarfile
+import os
 import string
-import wget
+import tarfile
+import urllib
+
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from torch.optim.lr_scheduler import LambdaLR
 import torch.onnx
 from datasets import load_dataset
+from torch.optim.lr_scheduler import LambdaLR
+from torch.utils.data import DataLoader, Dataset
+
 from .cuda_memory_utils import gc_cuda, is_oom_error
 
 
@@ -69,6 +70,8 @@ def get_image_classification_dataset(
     if os.path.exists(os.path.join(os.getcwd(), "cifar10")):
         print("cifar10 exists...")
     else:
+        import wget  # Only needed here
+
         filename = wget.download(
             "https://s3.amazonaws.com/fast-ai-imageclas/cifar10.tgz"
         )
