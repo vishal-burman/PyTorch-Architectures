@@ -149,7 +149,7 @@ def _community_detection(
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
 
     extracted_communities = []
-    for i in range(top_k_values):
+    for i in range(len(top_k_values)):
         if top_k_values[i][-1] >= threshold:
             new_cluster = []
 
