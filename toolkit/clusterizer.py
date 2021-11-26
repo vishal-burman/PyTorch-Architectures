@@ -248,6 +248,7 @@ def _calculate_cs(
     b: Union[np.ndarray, torch.Tensor],
 ):
     assert type(a) == type(b), f"a is {type(a)} and b is {type(b)}"
+    logger.info(f"Embeddings device: {a.device}")
 
     if isinstance(a, torch.Tensor):
         cs = _calculate_cs_torch(a, b)
