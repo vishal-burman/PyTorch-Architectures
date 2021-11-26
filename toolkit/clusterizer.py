@@ -204,9 +204,26 @@ def _community_detection(
 
 
 def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor):
+    assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
+
     a_norm = F.normalize(a, p=2, dim=1)
     b_norm = F.normalize(b, p=2, dim=1)
-    return torch.mm(a_norm, b_norm.transpose(0, 1))
+    return a_norm @ b_norm.T
+
+
+def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray):
+    assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
+
+    non_zero_vector = np.full((a.shape), 1e-12, dtype=np.float64)  # Prevent div by zero
+    a_norm = a / np.maximum(
+        np.repeat(np.linalg.norm(a, axis=1, keepdims=True), a.shape[1], axis=1),
+        non_zero_vector,
+    )
+    b_norm = b / np.maximum(
+        np.repeat(np.linalg.norm(b, axis=1, keepdims=True), b.shape[1], axis=1),
+        non_zero_vector,
+    )
+    return a_norm @ b_norm.T
 
 
 def _calculate_cs(
