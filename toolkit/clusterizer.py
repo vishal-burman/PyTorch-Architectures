@@ -207,7 +207,7 @@ def _community_detection(
     return unique_communities
 
 
-def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool = True):
+def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
     if use_fp16:
@@ -226,7 +226,7 @@ def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool = True)
     return a_norm @ b_norm.T
 
 
-def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray, use_fp16: bool = True):
+def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray, use_fp16: bool):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
     # Cast to float32 to reduce memory during calculations
@@ -267,9 +267,9 @@ def _calculate_cs(
     assert type(a) == type(b), f"a is {type(a)} and b is {type(b)}"
 
     if isinstance(a, torch.Tensor):
-        cs = _calculate_cs_torch(a, b)
+        cs = _calculate_cs_torch(a, b, use_fp16)
         return cs
-    cs = _calculate_cs_numpy(a, b)
+    cs = _calculate_cs_numpy(a, b, use_fp16)
     return cs
 
 
