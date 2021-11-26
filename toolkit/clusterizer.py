@@ -72,8 +72,11 @@ def clusterer(
 
     if convert_to_tensor:
         all_embeddings = torch.stack(all_embeddings)
+        all_embeddings = all_embeddings.to(torch.float32)
+        all_embeddings = all_embeddings.to(_get_device())
     elif convert_to_numpy:
         all_embeddings = np.asarray([emb.numpy() for emb in all_embeddings])
+        all_embeddings = all_embeddings.astype(np.float32)
 
     output = _community_detection(
         all_embeddings,
@@ -148,6 +151,9 @@ def _community_detection(
     logger.info(f"Maximum size of community = {init_max_size}")
 
     cosine_scores = _calculate_cs(embeddings, embeddings)
+
+    if isinstance(cosine_scores, np.ndarray):
+        cosine_scores = torch.from_numpy(cosine_scores)
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
 
     extracted_communities = []
@@ -201,16 +207,48 @@ def _community_detection(
     return unique_communities
 
 
-def _calculate_cs(a: torch.Tensor, b: torch.Tensor):
-    if not isinstance(a, torch.Tensor):
-        a = torch.Tensor(a)
-
-    if not isinstance(b, torch.Tensor):
-        b = torch.Tensor(b)
+def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor):
+    assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
     a_norm = F.normalize(a, p=2, dim=1)
     b_norm = F.normalize(b, p=2, dim=1)
-    return torch.mm(a_norm, b_norm.transpose(0, 1))
+
+    assert (a_norm.device == a.device) and (
+        b_norm.device == b.device
+    )  # check if on same device
+    return a_norm @ b_norm.T
+
+
+def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray):
+    assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
+
+    non_zero_vector = np.full((a.shape), 1e-12, dtype=a.dtype)  # Prevent div by zero
+    a_norm = a / np.maximum(
+        np.repeat(np.linalg.norm(a, axis=1, keepdims=True), a.shape[1], axis=1),
+        non_zero_vector,
+    )
+    b_norm = b / np.maximum(
+        np.repeat(np.linalg.norm(b, axis=1, keepdims=True), b.shape[1], axis=1),
+        non_zero_vector,
+    )
+
+    assert (a.dtype == a_norm.dtype) and (
+        b.dtype == b_norm.dtype
+    )  # check type preserve
+    return a_norm @ b_norm.T
+
+
+def _calculate_cs(
+    a: Union[np.ndarray, torch.Tensor],
+    b: Union[np.ndarray, torch.Tensor],
+):
+    assert type(a) == type(b), f"a is {type(a)} and b is {type(b)}"
+
+    if isinstance(a, torch.Tensor):
+        cs = _calculate_cs_torch(a, b)
+        return cs
+    cs = _calculate_cs_numpy(a, b)
+    return cs
 
 
 if __name__ == "__main__":
