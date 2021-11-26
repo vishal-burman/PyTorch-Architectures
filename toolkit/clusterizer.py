@@ -215,8 +215,8 @@ def _community_detection(
 def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
-    a_norm = F.normalize(a_copy, p=2, dim=1)
-    b_norm = F.normalize(b_copy, p=2, dim=1)
+    a_norm = F.normalize(a, p=2, dim=1)
+    b_norm = F.normalize(b, p=2, dim=1)
 
     if use_fp16:
         a_norm = a_norm.to(torch.float16)
