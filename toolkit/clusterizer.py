@@ -150,6 +150,9 @@ def _community_detection(
     cosine_scores = _calculate_cs(
         embeddings, embeddings
     )  # TODO fix OOM error when large corpus
+
+    if isinstance(cosine_scores, np.ndarray):
+        cosine_scores = torch.from_numpy(cosine_scores, dtype=torch.float64)
     top_k_values, _ = cosine_scores.topk(k=min_community_size, largest=True)
 
     extracted_communities = []
