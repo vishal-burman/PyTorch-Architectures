@@ -30,6 +30,9 @@ def clusterer(
     init_max_size: int = 1000,
     use_fp16: bool = True,
 ):
+    if use_fp16 and convert_to_numpy:
+        logging.warning(f"NumPy fp16 has low performance on Intel Processors")
+
     tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
 
@@ -223,6 +226,9 @@ def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool):
     assert (a_norm.dtype == a_copy.dtype) and (
         b_norm.dtype == b_copy.dtype
     )  # Check type preserve
+    assert (a_norm.device == a.device) and (
+        b_norm.device == b.device
+    )  # check if on same device
     return a_norm @ b_norm.T
 
 
