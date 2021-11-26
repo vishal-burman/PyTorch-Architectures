@@ -28,6 +28,7 @@ def clusterer(
     threshold: float = 0.75,
     min_community_size: int = 10,
     init_max_size: int = 1000,
+    use_fp16: bool = True,
 ):
     tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
@@ -80,6 +81,7 @@ def clusterer(
         threshold=threshold,
         min_community_size=min_community_size,
         init_max_size=init_max_size,
+        use_fp16=use_fp16,
     )
     logger.info(f"Total Clusters: {len(output)}")
     if len(output) > 0:
@@ -142,14 +144,13 @@ def _community_detection(
     threshold: float = 0.75,
     min_community_size: int = 10,
     init_max_size: int = 1000,
+    use_fp16: bool = True,
 ):
     start_time = time.time()
     init_max_size = min(init_max_size, len(embeddings))  # Max size of community
     logger.info(f"Maximum size of community = {init_max_size}")
 
-    cosine_scores = _calculate_cs(
-        embeddings, embeddings
-    )  # TODO fix OOM error when large corpus
+    cosine_scores = _calculate_cs(embeddings, embeddings, use_fp16)
 
     if isinstance(cosine_scores, np.ndarray):
         cosine_scores = torch.from_numpy(cosine_scores)
@@ -206,21 +207,39 @@ def _community_detection(
     return unique_communities
 
 
-def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor):
+def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool = True):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
-    a_norm = F.normalize(a, p=2, dim=1)
-    b_norm = F.normalize(b, p=2, dim=1)
+    if use_fp16:
+        a_copy = a.to(torch.float16)
+        b_copy = b.to(torch.float16)
+    else:
+        a_copy = a.to(torch.float32)
+        b_copy = b.to(torch.float32)
+
+    a_norm = F.normalize(a_copy, p=2, dim=1)
+    b_norm = F.normalize(b_copy, p=2, dim=1)
+
+    assert (a_norm.dtype == a_copy.dtype) and (
+        b_norm.dtype == b_copy.dtype
+    )  # Check type preserve
     return a_norm @ b_norm.T
 
 
-def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray):
+def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray, use_fp16: bool = True):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
-    # Cast to float32 to reduce memory during calculations
-    a_copy = a.astype(np.float32)
-    b_copy = b.astype(np.float32)
 
-    non_zero_vector = np.full((a.shape), 1e-12, dtype=np.float32)  # Prevent div by zero
+    # Cast to float32 to reduce memory during calculations
+    if use_fp16:
+        a_copy = a.astype(np.float16)
+        b_copy = a.astype(np.float16)
+    else:
+        a_copy = a.astype(np.float32)
+        b_copy = b.astype(np.float32)
+
+    non_zero_vector = np.full(
+        (a.shape), 1e-12, dtype=a_copy.dtype
+    )  # Prevent div by zero
     a_norm = a_copy / np.maximum(
         np.repeat(
             np.linalg.norm(a_copy, axis=1, keepdims=True), a_copy.shape[1], axis=1
@@ -241,7 +260,9 @@ def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray):
 
 
 def _calculate_cs(
-    a: Union[np.ndarray, torch.Tensor], b: Union[np.ndarray, torch.Tensor]
+    a: Union[np.ndarray, torch.Tensor],
+    b: Union[np.ndarray, torch.Tensor],
+    use_fp16: bool = True,
 ):
     assert type(a) == type(b), f"a is {type(a)} and b is {type(b)}"
 
