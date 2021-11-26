@@ -216,6 +216,7 @@ def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor):
 
 def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
+    # Cast to float32 to reduce memory during calculations
     a_copy = a.astype(np.float32)
     b_copy = b.astype(np.float32)
 
@@ -233,8 +234,9 @@ def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray):
         non_zero_vector,
     )
 
-    assert a_copy.dtype == a_norm.dtype
-    assert b_copy.dtype == b_norm.dtype
+    assert (a_copy.dtype == a_norm.dtype) and (
+        b_copy.dtype == b_norm.dtype
+    )  # check type preserve
     return a_norm @ b_norm.T
 
 
