@@ -76,8 +76,10 @@ def clusterer(
 
     if convert_to_tensor:
         all_embeddings = torch.stack(all_embeddings)
+        all_embeddings = all_embeddings.to(torch.float32)
     elif convert_to_numpy:
         all_embeddings = np.asarray([emb.numpy() for emb in all_embeddings])
+        all_embeddings = all_embeddings.astype(np.float32)
 
     output = _community_detection(
         all_embeddings,
@@ -213,19 +215,13 @@ def _community_detection(
 def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
-    if use_fp16:
-        a_copy = a.to(torch.float16)
-        b_copy = b.to(torch.float16)
-    else:
-        a_copy = a.to(torch.float32)
-        b_copy = b.to(torch.float32)
-
     a_norm = F.normalize(a_copy, p=2, dim=1)
     b_norm = F.normalize(b_copy, p=2, dim=1)
 
-    assert (a_norm.dtype == a_copy.dtype) and (
-        b_norm.dtype == b_copy.dtype
-    )  # Check type preserve
+    if use_fp16:
+        a_norm = a_norm.to(torch.float16)
+        b_norm = b_norm.to(torch.float16)
+
     assert (a_norm.device == a.device) and (
         b_norm.device == b.device
     )  # check if on same device
@@ -235,13 +231,10 @@ def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor, use_fp16: bool):
 def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray, use_fp16: bool):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
-    # Cast to float32 to reduce memory during calculations
+    # Cast to float16 to reduce memory during calculations
     if use_fp16:
         a_copy = a.astype(np.float16)
         b_copy = a.astype(np.float16)
-    else:
-        a_copy = a.astype(np.float32)
-        b_copy = b.astype(np.float32)
 
     non_zero_vector = np.full(
         (a.shape), 1e-12, dtype=a_copy.dtype
