@@ -73,6 +73,7 @@ def clusterer(
     if convert_to_tensor:
         all_embeddings = torch.stack(all_embeddings)
         all_embeddings = all_embeddings.to(torch.float32)
+        all_embeddings = all_embeddings.to(_get_device())
     elif convert_to_numpy:
         all_embeddings = np.asarray([emb.numpy() for emb in all_embeddings])
         all_embeddings = all_embeddings.astype(np.float32)
