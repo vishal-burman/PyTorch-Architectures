@@ -222,24 +222,18 @@ def _calculate_cs_torch(a: torch.Tensor, b: torch.Tensor):
 def _calculate_cs_numpy(a: np.ndarray, b: np.ndarray):
     assert a.shape == b.shape, f"Shape of a: {a.shape} and Shape of b: {b.shape}"
 
-    non_zero_vector = np.full(
-        (a.shape), 1e-12, dtype=a_copy.dtype
-    )  # Prevent div by zero
-    a_norm = a_copy / np.maximum(
-        np.repeat(
-            np.linalg.norm(a_copy, axis=1, keepdims=True), a_copy.shape[1], axis=1
-        ),
+    non_zero_vector = np.full((a.shape), 1e-12, dtype=a.dtype)  # Prevent div by zero
+    a_norm = a / np.maximum(
+        np.repeat(np.linalg.norm(a, axis=1, keepdims=True), a.shape[1], axis=1),
         non_zero_vector,
     )
-    b_norm = b_copy / np.maximum(
-        np.repeat(
-            np.linalg.norm(b_copy, axis=1, keepdims=True), b_copy.shape[1], axis=1
-        ),
+    b_norm = b / np.maximum(
+        np.repeat(np.linalg.norm(b, axis=1, keepdims=True), b.shape[1], axis=1),
         non_zero_vector,
     )
 
-    assert (a_copy.dtype == a_norm.dtype) and (
-        b_copy.dtype == b_norm.dtype
+    assert (a.dtype == a_norm.dtype) and (
+        b.dtype == b_norm.dtype
     )  # check type preserve
     return a_norm @ b_norm.T
 
