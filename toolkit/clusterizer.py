@@ -7,6 +7,7 @@ import fire
 import numpy as np
 import torch
 import torch.nn.functional as F
+from sklearn.cluster import KMeans
 from tqdm import trange
 from transformers import AutoModel, AutoTokenizer
 
@@ -30,6 +31,7 @@ def clusterer(
     threshold: float = 0.75,
     min_community_size: int = 10,
     init_max_size: int = 1000,
+    num_clusters: int = 5,
 ):
     tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
@@ -88,7 +90,7 @@ def clusterer(
             init_max_size=init_max_size,
         )
     elif method_name == "k-means":
-        output = _k_means()
+        output = _k_means(all_embeddings, num_clusters)
     else:
         raise ValueError(f"Supported methods are {SUPPORTED_METHODS}")
 
@@ -148,8 +150,23 @@ def _dict_to_device(sample_dict, device=torch.device("cpu")):
     return final_dict
 
 
+def _k_means(embeddings: Union[torch.Tensor, np.ndarray], num_clusters: int):
+    if isinstance(embeddings, torch.Tensor):
+        embeddings = torch.from_numpy(embeddings)
+
+    clustering_model = KMeans(n_clusters=num_clusters)
+    clustering_model.fit(embeddings)
+    cluster_assignment = clustering_model.labels_
+
+    clustered_sentences = [[] for i in num_clusters]
+    for sentence_id, cluster_id in enumerate(cluster_assignment):
+        clustered_sentences[cluster_id].append(sentence_id)
+
+    return clustered_sentences
+
+
 def _community_detection(
-    embeddings,
+    embeddings: Union[torch.Tensor, np.ndarray],
     threshold: float = 0.75,
     min_community_size: int = 10,
     init_max_size: int = 1000,
