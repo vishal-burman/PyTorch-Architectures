@@ -58,8 +58,11 @@ PyYAML==5.4.1
 regex==2021.4.4
 requests==2.25.1
 sacremoses==0.0.45
+scikit-learn==1.0.1
+scipy==1.7.3
 six==1.16.0
 termcolor==1.1.0
+threadpoolctl==3.0.0
 tokenizers==0.10.3
 toml==0.10.2
 torch==1.8.1+cpu
