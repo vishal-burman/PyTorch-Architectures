@@ -17,12 +17,14 @@ SUPPORTED_MODELS = [
     "sentence-transformers/all-mpnet-base-v2",
     "sentence-transformers/all-MiniLM-L12-v2",
 ]
+SUPPORTED_METHODS = ["community-detection", "k-means"]
 
 
 def clusterer(
     corpus_sentences: Union[str, List[str]],
     batch_size: int,
     model_name: str = "sentence-transformers/all-MiniLM-L12-v2",
+    method_name: str = "community-detection",
     convert_to_numpy: bool = True,
     convert_to_tensor: bool = False,
     threshold: float = 0.75,
@@ -78,12 +80,18 @@ def clusterer(
         all_embeddings = np.asarray([emb.numpy() for emb in all_embeddings])
         all_embeddings = all_embeddings.astype(np.float32)
 
-    output = _community_detection(
-        all_embeddings,
-        threshold=threshold,
-        min_community_size=min_community_size,
-        init_max_size=init_max_size,
-    )
+    if method_name == "community-detection":
+        output = _community_detection(
+            all_embeddings,
+            threshold=threshold,
+            min_community_size=min_community_size,
+            init_max_size=init_max_size,
+        )
+    elif method_name == "k-means":
+        output = _k_means()
+    else:
+        raise ValueError(f"Supported methods are {SUPPORTED_METHODS}")
+
     logger.info(f"Total Clusters: {len(output)}")
     if len(output) > 0:
         logger.info(f"Length of Largest Cluster: {len(output[0])}")
