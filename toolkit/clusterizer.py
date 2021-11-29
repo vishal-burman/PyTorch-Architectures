@@ -7,7 +7,7 @@ import fire
 import numpy as np
 import torch
 import torch.nn.functional as F
-from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering, KMeans
 from tqdm import trange
 from transformers import AutoModel, AutoTokenizer
 
@@ -18,7 +18,7 @@ SUPPORTED_MODELS = [
     "sentence-transformers/all-mpnet-base-v2",
     "sentence-transformers/all-MiniLM-L12-v2",
 ]
-SUPPORTED_METHODS = ["community-detection", "k-means"]
+SUPPORTED_METHODS = ["community-detection", "k-means", "agglomerative"]
 
 
 def clusterer(
@@ -32,6 +32,7 @@ def clusterer(
     min_community_size: int = 10,
     init_max_size: int = 1000,
     num_clusters: int = 5,
+    distance_threshold: float = 0.4,
 ):
     tokenizer, model = _init_pipeline(model_name)
     model.to(_get_device())
@@ -91,6 +92,8 @@ def clusterer(
         )
     elif method_name == "k-means":
         output = _k_means(all_embeddings, num_clusters)
+    elif method_name == "agglomerative":
+        output = _agglomerative(all_embeddings, distance_threshold)
     else:
         raise ValueError(f"Supported methods are {SUPPORTED_METHODS}")
 
@@ -148,6 +151,31 @@ def _dict_to_device(sample_dict, device=torch.device("cpu")):
     values = list(map(lambda x: x.to(device), values))
     final_dict = dict(zip(keys, values))
     return final_dict
+
+
+def _agglomerative(
+    embeddings: Union[torch.Tensor, np.ndarray], distance_threshold: float
+):
+    if isinstance(embeddings, torch.Tensor):
+        embeddings = torch.from_numpy(embeddings)
+
+    clustering_model = AgglomerativeClustering(
+        n_clusters=None,
+        affinity="cosine",
+        linkage="average",
+        distance_threshold=distance_threshold,
+    )
+    clustering_model.fit(embeddings)
+    cluster_assignment = clustering_model.labels_
+
+    clustered_sentences = {}
+    for sentence_id, cluster_id in enumerate(cluster_assignment):
+        if cluster_id not in clustered_sentences:
+            clustered_sentences[cluster_id] = []
+
+        clustered_sentences[cluster_id].append(sentence_id)
+
+    return clustered_sentences
 
 
 def _k_means(embeddings: Union[torch.Tensor, np.ndarray], num_clusters: int):
