@@ -158,7 +158,7 @@ def _k_means(embeddings: Union[torch.Tensor, np.ndarray], num_clusters: int):
     clustering_model.fit(embeddings)
     cluster_assignment = clustering_model.labels_
 
-    clustered_sentences = [[] for i in num_clusters]
+    clustered_sentences = [[] for i in range(num_clusters)]
     for sentence_id, cluster_id in enumerate(cluster_assignment):
         clustered_sentences[cluster_id].append(sentence_id)
 
