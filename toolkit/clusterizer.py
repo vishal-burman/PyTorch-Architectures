@@ -168,11 +168,8 @@ def _agglomerative(
     clustering_model.fit(embeddings)
     cluster_assignment = clustering_model.labels_
 
-    clustered_sentences = {}
+    clustered_sentences = [[] for i in range(max(cluster_assignment))]
     for sentence_id, cluster_id in enumerate(cluster_assignment):
-        if cluster_id not in clustered_sentences:
-            clustered_sentences[cluster_id] = []
-
         clustered_sentences[cluster_id].append(sentence_id)
 
     return clustered_sentences
