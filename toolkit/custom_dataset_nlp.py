@@ -276,7 +276,7 @@ class DatasetPermutationLanguageModeling(Dataset):
         return input_ids.long(), perm_mask, target_mapping, labels.long()
 
 
-class DatasetT5MaskedLanguageModeling:
+class DatasetT5MaskedLanguageModeling(Dataset):
     def __init__(self, tokenizer: T5Tokenizer, input_texts):
         self.tokenizer = tokenizer
         self.input_texts = input_texts
