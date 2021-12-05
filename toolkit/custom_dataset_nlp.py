@@ -1,7 +1,8 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
-from transformers import XLNetTokenizer
 import datasets
+import torch
+from torch.utils.data import DataLoader, Dataset
+from transformers import T5Tokenizer, XLNetTokenizer
+
 from .utils import get_classification_dataset, get_language_modeling_dataset
 
 
@@ -273,6 +274,25 @@ class DatasetPermutationLanguageModeling(Dataset):
                 <= perm_index.reshape((1, labels.size(1)))
             ) & masked_indices[i]
         return input_ids.long(), perm_mask, target_mapping, labels.long()
+
+
+class DatasetT5MaskedLanguageModeling:
+    def __init__(self, tokenizer: T5Tokenizer, input_texts):
+        self.tokenizer = tokenizer
+        self.input_texts = input_texts
+
+    def __len__(
+        self,
+    ):
+        return len(self.input_texts)
+
+    def __getitem__(self, idx):
+        return self.input_texts[idx]
+
+    def collate_fn(
+        self,
+    ):
+        pass
 
 
 class DataLoaderTextClassification:
