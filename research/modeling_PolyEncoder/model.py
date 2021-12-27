@@ -11,10 +11,6 @@ class Encode(nn.Module):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(encoder_name)
         self.encoder = AutoModel.from_pretrained(encoder_name)
-        if "max_position_embeddings" in self.encoder.config.to_dict():
-            self.max_length = self.encoder.config.max_position_embeddings
-        else:
-            raise NotImplementedError
 
     def forward(
         self,
