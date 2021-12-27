@@ -1,5 +1,8 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from transformers import AutoModel, AutoTokenizer
 
 
@@ -38,12 +41,21 @@ class PolyEncoder(nn.Module):
         self.poly_code_embeddings = nn.Embedding(self.poly_m, hidden_size)
         torch.nn.init.normal_(self.poly_code_embeddings.weight, hidden_size ** -0.5)
 
+    def dot_attention(
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
+    ):
+        attention_weights = query @ key.transpose(1, -1)
+        attention_weights = F.softmax(attention_weights, dim=-1)
+        output = attention_weights @ value
+        return output
+
     def forward(
         self,
         context_ids: torch.Tensor,
         context_mask: torch.Tensor,
         candidate_ids: torch.Tensor,
         candidate_mask: torch.Tensor,
+        labels: Optional[torch.Tensor] = None,
     ):
         bs, seq_len = context_ids.shape
         context_emb = self.encoder(input_ids=context_ids, attention_mask=context_mask)
@@ -52,4 +64,7 @@ class PolyEncoder(nn.Module):
         )
         poly_code_ids = poly_code_ids.unsqueeze(0).expand(bs, self.poly_m)
         poly_code_emb = self.poly_code_embeddings(poly_code_ids)
-        return poly_code_emb
+        embs = self.dot_attention(
+            query=poly_code_emb, key=context_emb, value=context_emb
+        )
+        return embs
