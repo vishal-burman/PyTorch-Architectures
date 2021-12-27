@@ -43,8 +43,10 @@ class PolyEncoder(nn.Module):
         candidate_ids: torch.Tensor,
         candidate_mask: torch.Tensor,
     ):
+        bs, seq_len = context_ids.shape
         context_emb = self.encoder(input_ids=context_ids, attention_mask=context_mask)
         poly_code_ids = torch.arange(self.poly_m, dtype=torch.long).to(
             context_emb.device
         )
+        poly_code_ids = poly_code_ids.unsqueeze(0).expand(bs, self.poly_m)
         pass
