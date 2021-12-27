@@ -7,6 +7,7 @@ class Encode(nn.Module):
     def __init__(
         self,
         encoder_name: str = "distilbert-base-uncased",
+        return_pooled: bool = False,
     ):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(encoder_name)
@@ -15,6 +16,7 @@ class Encode(nn.Module):
             self.max_length = self.encoder.config.max_position_embeddings
         else:
             raise NotImplementedError
+        self.return_pooled = return_pooled
 
     def forward(
         self,
@@ -29,5 +31,6 @@ class Encode(nn.Module):
         )
         outputs = self.encoder(**tokens)
         logits = outputs.last_hidden_state
-        pooled_output = logits[:, 0]
-        return pooled_output
+        if self.return_pooled:
+            logits = logits[:, 0]  # First token pooling
+        return logits
