@@ -34,3 +34,16 @@ class Encode(nn.Module):
         if self.return_pooled:
             logits = logits[:, 0]  # First token pooling
         return logits
+
+
+class PolyEncoder(nn.Module):
+    def __init__(
+        self,
+    ):
+        super().__init__()
+        pass
+
+    def forward(
+        self,
+    ):
+        pass
