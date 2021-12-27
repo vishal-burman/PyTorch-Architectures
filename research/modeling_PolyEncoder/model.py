@@ -6,7 +6,7 @@ from transformers import AutoModel, AutoTokenizer
 class Encode(nn.Module):
     def __init__(
         self,
-        encoder_name: str = "distilbert-base-uncased",
+        encoder_name: str,
     ):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(encoder_name)
@@ -28,13 +28,15 @@ class Encode(nn.Module):
 class PolyEncoder(nn.Module):
     def __init__(
         self,
-        encoder_name: str,
         poly_m: int,
+        hidden_size: int,
+        encoder_name: str = "distilbert-base-uncased",
     ):
         super().__init__()
         self.encoder = Encode(encoder_name=encoder_name)
         self.poly_m = poly_m
-        pass
+        self.poly_code_embeddings = nn.Embedding(self.poly_m, hidden_size)
+        torch.nn.init.normal_(self.poly_code_embeddings.weight, hidden_size ** -0.5)
 
     def forward(
         self,
@@ -49,4 +51,5 @@ class PolyEncoder(nn.Module):
             context_emb.device
         )
         poly_code_ids = poly_code_ids.unsqueeze(0).expand(bs, self.poly_m)
-        pass
+        poly_code_emb = self.poly_code_embeddings(poly_code_ids)
+        return poly_code_emb
