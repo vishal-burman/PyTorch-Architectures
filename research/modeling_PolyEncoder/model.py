@@ -36,7 +36,7 @@ class PolyEncoder(nn.Module):
         poly_m: int,
     ):
         super().__init__()
-        self.encoder = Encoder(encoder_name=encoder_name)
+        self.encoder = Encode(encoder_name=encoder_name)
         self.poly_m = poly_m
         pass
 
