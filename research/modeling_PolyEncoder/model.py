@@ -7,7 +7,6 @@ class Encode(nn.Module):
     def __init__(
         self,
         encoder_name: str = "distilbert-base-uncased",
-        return_pooled: bool = False,
     ):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(encoder_name)
@@ -16,22 +15,16 @@ class Encode(nn.Module):
             self.max_length = self.encoder.config.max_position_embeddings
         else:
             raise NotImplementedError
-        self.return_pooled = return_pooled
 
     def forward(
         self,
-        text: str,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        return_pooled: bool = False,
     ):
-        tokens = self.tokenizer(
-            text,
-            max_length=self.max_length,
-            padding=True,
-            truncation=True,
-            return_tensors="pt",
-        )
-        outputs = self.encoder(**tokens)
+        outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         logits = outputs.last_hidden_state
-        if self.return_pooled:
+        if return_pooled:
             logits = logits[:, 0]  # First token pooling
         return logits
 
@@ -39,11 +32,23 @@ class Encode(nn.Module):
 class PolyEncoder(nn.Module):
     def __init__(
         self,
+        encoder_name: str,
+        poly_m: int,
     ):
         super().__init__()
+        self.encoder = Encoder(encoder_name=encoder_name)
+        self.poly_m = poly_m
         pass
 
     def forward(
         self,
+        context_ids: torch.Tensor,
+        context_mask: torch.Tensor,
+        candidate_ids: torch.Tensor,
+        candidate_mask: torch.Tensor,
     ):
+        context_emb = self.encoder(input_ids=context_ids, attention_mask=context_mask)
+        poly_code_ids = torch.arange(self.poly_m, dtype=torch.long).to(
+            context_emb.device
+        )
         pass
