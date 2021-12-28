@@ -82,4 +82,11 @@ class PolyEncoder(nn.Module):
         weighted_embs = self.dot_attention(query=candidate_emb, key=embs, value=embs)
         dot_product = (weighted_embs * candidate_emb).sum(-1)  # [bs, bs]
 
+        if labels is not None:
+            # TODO create classification head for training
+            pass
+        else:
+            # TODO return logits for inference
+            pass
+
         return cont_cand_attention
