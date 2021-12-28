@@ -58,6 +58,8 @@ class PolyEncoder(nn.Module):
         labels: Optional[torch.Tensor] = None,
     ):
         bs, seq_len = context_ids.shape
+
+        # Context Encoder
         context_emb = self.encoder(input_ids=context_ids, attention_mask=context_mask)
         poly_code_ids = torch.arange(self.poly_m, dtype=torch.long).to(
             context_emb.device
@@ -67,4 +69,10 @@ class PolyEncoder(nn.Module):
         embs = self.dot_attention(
             query=poly_code_emb, key=context_emb, value=context_emb
         )
+
+        # Candidate Encoder
+        candidate_emb = self.encoder(
+            input_ids=candidate_ids, attention_mask=candidate_mask, return_pooled=True
+        )
+        candidate_emb = candidate_emb.unsqueeze(1)
         return embs
