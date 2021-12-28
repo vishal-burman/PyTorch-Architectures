@@ -75,4 +75,11 @@ class PolyEncoder(nn.Module):
             input_ids=candidate_ids, attention_mask=candidate_mask, return_pooled=True
         )
         candidate_emb = candidate_emb.unsqueeze(1)
-        return embs
+        candidate_emb = candidate_emb.permute(1, 0, 2).expand(
+            bs, bs, candidate_emb.size(2)
+        )
+
+        weighted_embs = self.dot_attention(query=candidate_emb, key=embs, value=embs)
+        dot_product = (cont_cand_attention * candidate_emb).sum(-1)
+
+        return cont_cand_attention
