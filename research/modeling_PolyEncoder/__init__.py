@@ -1,1 +1,1 @@
-from model import PolyEncoder
+from .model import PolyEncoder
