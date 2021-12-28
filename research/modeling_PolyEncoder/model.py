@@ -68,7 +68,7 @@ class PolyEncoder(nn.Module):
         poly_code_emb = self.poly_code_embeddings(poly_code_ids)
         embs = self.dot_attention(
             query=poly_code_emb, key=context_emb, value=context_emb
-        )
+        )  # [bs, poly_m, dim]
 
         # Candidate Encoder
         candidate_emb = self.encoder(
@@ -80,6 +80,6 @@ class PolyEncoder(nn.Module):
         )
 
         weighted_embs = self.dot_attention(query=candidate_emb, key=embs, value=embs)
-        dot_product = (cont_cand_attention * candidate_emb).sum(-1)
+        dot_product = (weighted_embs * candidate_emb).sum(-1)  # [bs, bs]
 
         return cont_cand_attention
