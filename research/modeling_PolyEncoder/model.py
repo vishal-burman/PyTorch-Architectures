@@ -45,6 +45,7 @@ class PolyEncoder(nn.Module):
         self.pre_classifier = nn.Linear(batch_size, hidden_size)
         self.classifier = nn.Linear(hidden_size, num_labels)
         self.dropout = nn.Dropout(dropout)
+        self.relu = nn.ReLU()
 
     def dot_attention(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
@@ -87,6 +88,11 @@ class PolyEncoder(nn.Module):
         weighted_embs = self.dot_attention(query=candidate_emb, key=embs, value=embs)
         dot_product = (weighted_embs * candidate_emb).sum(-1)  # [bs, bs]
 
+        logits = self.pre_classifier(dot_product)
+        logits = self.relu(logits)
+        logits = self.dropout(logits)
+        logits = self.classifier(logits)
+
         if labels is not None:
             # TODO create classification head for training
             pass
@@ -94,4 +100,4 @@ class PolyEncoder(nn.Module):
             # TODO return logits for inference
             pass
 
-        return dot_product
+        return logits
