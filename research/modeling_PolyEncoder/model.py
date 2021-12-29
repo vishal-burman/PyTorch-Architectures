@@ -31,15 +31,20 @@ class Encode(nn.Module):
 class PolyEncoder(nn.Module):
     def __init__(
         self,
+        batch_size: int,
         poly_m: int,
         hidden_size: int,
         encoder_name: str = "distilbert-base-uncased",
+        dropout: float = 0.2,
     ):
         super().__init__()
         self.encoder = Encode(encoder_name=encoder_name)
         self.poly_m = poly_m
         self.poly_code_embeddings = nn.Embedding(self.poly_m, hidden_size)
         torch.nn.init.normal_(self.poly_code_embeddings.weight, hidden_size ** -0.5)
+        self.pre_classifier = nn.Linear(batch_size, hidden_size)
+        self.classifier = nn.Linear(hidden_size, num_labels)
+        self.dropout = nn.Dropout(dropout)
 
     def dot_attention(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
