@@ -34,6 +34,7 @@ class PolyEncoder(nn.Module):
         batch_size: int,
         poly_m: int,
         hidden_size: int,
+        num_labels: int,
         encoder_name: str = "distilbert-base-uncased",
         dropout: float = 0.2,
     ):
