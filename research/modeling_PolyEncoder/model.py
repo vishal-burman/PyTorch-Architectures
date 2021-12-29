@@ -43,10 +43,10 @@ class PolyEncoder(nn.Module):
         self.poly_m = poly_m
         self.poly_code_embeddings = nn.Embedding(self.poly_m, hidden_size)
         torch.nn.init.normal_(self.poly_code_embeddings.weight, hidden_size ** -0.5)
-        self.pre_classifier = nn.Linear(batch_size, hidden_size)
-        self.classifier = nn.Linear(hidden_size, num_labels)
-        self.dropout = nn.Dropout(dropout)
-        self.relu = nn.ReLU()
+        # self.pre_classifier = nn.Linear(batch_size, hidden_size)
+        self.classifier = nn.Linear(batch_size, num_labels)
+        # self.dropout = nn.Dropout(dropout)
+        # self.relu = nn.ReLU()
 
     def dot_attention(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
@@ -89,9 +89,9 @@ class PolyEncoder(nn.Module):
         weighted_embs = self.dot_attention(query=candidate_emb, key=embs, value=embs)
         dot_product = (weighted_embs * candidate_emb).sum(-1)  # [bs, bs]
 
-        logits = self.pre_classifier(dot_product)
-        logits = self.relu(logits)
-        logits = self.dropout(logits)
+        # logits = self.pre_classifier(dot_product)
+        # logits = self.relu(logits)
+        # logits = self.dropout(logits)
         logits = self.classifier(logits)
 
         loss = None
