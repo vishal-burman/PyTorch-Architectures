@@ -89,4 +89,4 @@ class PolyEncoder(nn.Module):
             # TODO return logits for inference
             pass
 
-        return cont_cand_attention
+        return dot_product
