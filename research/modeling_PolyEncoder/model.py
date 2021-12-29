@@ -94,11 +94,9 @@ class PolyEncoder(nn.Module):
         logits = self.dropout(logits)
         logits = self.classifier(logits)
 
+        loss = None
         if labels is not None:
-            # TODO create classification head for training
-            pass
-        else:
-            # TODO return logits for inference
-            pass
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(logits.view(logits.size(0), -1), labels.view(-1))
 
-        return logits
+        return loss, logits
