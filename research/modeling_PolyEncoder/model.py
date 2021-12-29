@@ -92,7 +92,7 @@ class PolyEncoder(nn.Module):
         # logits = self.pre_classifier(dot_product)
         # logits = self.relu(logits)
         # logits = self.dropout(logits)
-        logits = self.classifier(logits)
+        logits = self.classifier(dot_product)
 
         loss = None
         if labels is not None:
