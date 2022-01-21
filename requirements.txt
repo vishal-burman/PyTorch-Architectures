@@ -26,7 +26,7 @@ future==0.18.2
 huggingface-hub==0.1.2
 identify==2.2.11
 idna==2.10
-ipython==7.19.0
+ipython==7.31.1
 ipython-genutils==0.2.0
 isort==5.9.3
 jedi==0.17.2
