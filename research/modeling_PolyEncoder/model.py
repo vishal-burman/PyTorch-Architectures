@@ -31,22 +31,17 @@ class Encode(nn.Module):
 class PolyEncoder(nn.Module):
     def __init__(
         self,
-        # batch_size: int,
         poly_m: int,
         hidden_size: int,
         num_labels: int,
         encoder_name: str = "distilbert-base-uncased",
-        dropout: float = 0.2,
     ):
         super().__init__()
         self.encoder = Encode(encoder_name=encoder_name)
         self.poly_m = poly_m
         self.poly_code_embeddings = nn.Embedding(self.poly_m, hidden_size)
         torch.nn.init.normal_(self.poly_code_embeddings.weight, hidden_size ** -0.5)
-        # self.pre_classifier = nn.Linear(batch_size, hidden_size)
         self.classifier = nn.Linear(hidden_size, num_labels)
-        # self.dropout = nn.Dropout(dropout)
-        # self.relu = nn.ReLU()
 
     def dot_attention(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
@@ -82,17 +77,10 @@ class PolyEncoder(nn.Module):
             input_ids=candidate_ids, attention_mask=candidate_mask, return_pooled=True
         )
         candidate_emb = candidate_emb.unsqueeze(1)
-        # candidate_emb = candidate_emb.permute(1, 0, 2).expand(
-        #    bs, bs, candidate_emb.size(2)
-        # )
 
         weighted_embs = self.dot_attention(query=candidate_emb, key=embs, value=embs)
         weighted_embs = weighted_embs.squeeze()
-        # dot_product = (weighted_embs * candidate_emb).sum(-1)  # [bs, bs]
 
-        # logits = self.pre_classifier(dot_product)
-        # logits = self.relu(logits)
-        # logits = self.dropout(logits)
         logits = self.classifier(weighted_embs)
 
         loss = None
