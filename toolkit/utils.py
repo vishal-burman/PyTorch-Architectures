@@ -258,6 +258,27 @@ def convert_to_onnx(torch_model, sample_input: torch.Tensor, save_path: str):
     raise NotImplementedError("TBD")
 
 
+def batch_sliding_window(input_tensor: torch.Tensor, window_size: int):
+    """
+    Batched sliding-window with a stride 1
+    """
+    if input_tensor.dim() >= 3:
+        raise NotImplementedError()
+
+    if input_tensor.dim() == 1:
+        input_tensor = input_tensor.unsqueeze(0)
+
+    max_len = input_tensor.size(1)
+
+    tensor_windows = []
+    for index in range(max_len - window_size + 1):
+        indices = torch.arange(index, index + window_size)
+        tensor_window = torch.index_select(input_tensor, 1, indices)
+        tensor_windows.append(tensor_window)
+
+    return tensor_windows
+
+
 class EarlyStopping:
     def __init__(
         self, metric, patience=3, verbose=False, delta=0, path="checkpoint.pt"
