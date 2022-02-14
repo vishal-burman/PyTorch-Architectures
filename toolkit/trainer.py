@@ -104,19 +104,7 @@ class Trainer:
 
     def train(
         self,
-        optimizer: str = "adam",
-        scheduler: Optional[str] = "linear",
-        lr: float = 3e-5,
-        epochs: int = 3,
-        batch_size: int = 32,
-        shuffle_train: bool = False,
-        shuffe_valid: bool = False,
-        num_warmup_steps: int = 0,
-        metric: str = "nlp_perplexity",
-        show_grad_flow: str = False,
     ):
-        if not self.model.training:
-            self.model.train()
 
         if type(self.train_dataset) is Dataset:
             train_loader = DataLoader(
