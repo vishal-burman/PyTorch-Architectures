@@ -106,17 +106,6 @@ class Trainer:
         self,
     ):
 
-        num_training_steps = epochs * len(train_loader)
-        progress_bar = tqdm(range(num_training_steps))
-        optimizer = init_optimizer(optimizer, self.model, lr)
-        if scheduler is not None:
-            scheduler_func = get_linear_schedule_with_warmup(
-                optimizer,
-                num_warmup_steps=num_warmup_steps,
-                num_training_steps=num_training_steps,
-                last_epoch=-1,
-            )
-
         # Details
         logging.info("********** Running Training **********")
         logging.info(f"  Total Training Steps = {self.num_training_steps}  ")
