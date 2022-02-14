@@ -4,11 +4,10 @@ from typing import List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+from metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
-
-from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
-from .utils import dict_to_device, get_linear_schedule_with_warmup
+from utils import dict_to_device, get_linear_schedule_with_warmup
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
@@ -53,18 +52,40 @@ class Trainer:
         model: nn.Module,
         train_dataset: Union[Dataset, DataLoader],
         valid_dataset: Union[Dataset, DataLoader],
-        fp16: bool = False,
+        optimizer: str = "adam",
+        scheduler: Optional[str] = "linear",
+        lr: float = 3e-5,
+        epochs: int = 3,
+        batch_size: int = 32,
+        num_warmup_steps: int = 0,
+        shuffle_train: bool = True,
+        shuffle_valid: bool = False,
+        use_amp: bool = False,
+        eval_metric: str = "nlp_perplexity",
+        show_grad_flow: bool = False,
     ):
         self.model = model
 
         assert type(train_dataset) == type(
             valid_dataset
         ), f"train_dataset is {type(train_dataset)} and valid_dataset is {type(valid_dataset)}"
+        assert type(train_dataset) is Dataset or type(train_dataset) is DataLoader
         self.train_dataset = train_dataset
         self.valid_dataset = valid_dataset
 
+        if type(self.train_dataset) is Dataset:
+            self.train_loader = DataLoader(
+                self.train_dataset, batch_size=batch_size, shuffle=shuffle_train
+            )
+            self.valid_loader = DataLoader(
+                self.valid_dataset, batch_size=batch_size, shuffle=shuffle_valid
+            )
+        else:
+            self.train_loader = self.train_dataset
+            self.valid_loader = self.valid_dataset
+
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        if fp16:
+        if use_amp:
             assert (
                 torch.cuda.is_available()
             ), f"fp16 available only for CUDA devices, found {self.device}"
