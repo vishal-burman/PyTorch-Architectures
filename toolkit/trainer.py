@@ -91,7 +91,7 @@ class Trainer:
             ), f"fp16 available only for CUDA devices, found {self.device}"
             raise NotImplementedError  # TODO
 
-        num_training_steps = epochs * len(self.train_loader)
+        self.num_training_steps = epochs * len(self.train_loader)
         progress_bar = tqdm(range(num_training_steps))
         optimizer = init_optimizer(optimizer, self.model, lr)
         if scheduler is not None:
@@ -106,19 +106,6 @@ class Trainer:
         self,
     ):
 
-        if type(self.train_dataset) is Dataset:
-            train_loader = DataLoader(
-                self.train_dataset, batch_size=batch_size, shuffle=shuffle_train
-            )
-            valid_loader = DataLoader(
-                self.valid_dataset, batch_size=batch_size, shuffle=shuffle_valid
-            )
-        elif type(self.train_dataset) is DataLoader:
-            train_loader = self.train_dataset
-            valid_loader = self.valid_dataset
-        else:
-            raise NotImplementedError
-
         num_training_steps = epochs * len(train_loader)
         progress_bar = tqdm(range(num_training_steps))
         optimizer = init_optimizer(optimizer, self.model, lr)
@@ -132,7 +119,7 @@ class Trainer:
 
         # Details
         logging.info("********** Running Training **********")
-        logging.info(f"  Total Training Steps = {num_training_steps}  ")
+        logging.info(f"  Total Training Steps = {self.num_training_steps}  ")
         logging.info(f"  Epochs = {epochs}  ")
         logging.info(f"  Batch Size = {batch_size}  ")
         logging.info(f"  Length of Train DataLoader = {len(train_loader)}  ")
