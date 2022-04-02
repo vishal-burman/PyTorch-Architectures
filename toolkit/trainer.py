@@ -92,15 +92,17 @@ class Trainer:
             raise NotImplementedError  # TODO
 
         self.num_training_steps = epochs * len(self.train_loader)
-        progress_bar = tqdm(range(num_training_steps))
-        optimizer = init_optimizer(optimizer, self.model, lr)
-        if scheduler is not None:
-            scheduler_func = get_linear_schedule_with_warmup(
-                optimizer,
-                num_warmup_steps=num_warmup_steps,
-                num_training_steps=num_training_steps,
-                last_epoch=-1,
-            )
+        self.optimizer = init_optimizer(optimizer, self.model, lr)
+        self.scheduler = get_linear_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=num_warmup_steps,
+            num_training_steps=self.num_training_steps,
+            last_epoch=-1,
+        )
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.eval_metric = eval_metric
+        self.show_grad_flow = show_grad_flow
 
     def train(
         self,
@@ -109,34 +111,38 @@ class Trainer:
         # Details
         logging.info("********** Running Training **********")
         logging.info(f"  Total Training Steps = {self.num_training_steps}  ")
-        logging.info(f"  Epochs = {epochs}  ")
-        logging.info(f"  Batch Size = {batch_size}  ")
-        logging.info(f"  Length of Train DataLoader = {len(train_loader)}  ")
-        logging.info(f"  Length of Valid DataLoader = {len(valid_loader)}  ")
+        logging.info(f"  Epochs = {self.epochs}  ")
+        logging.info(f"  Batch Size = {self.batch_size}  ")
+        logging.info(f"  Length of Train DataLoader = {len(self.train_loader)}  ")
+        logging.info(f"  Length of Valid DataLoader = {len(self.valid_loader)}  ")
 
-        for epoch in range(epochs):
+        progress_bar = tqdm(range(self.num_training_steps))
+
+        for epoch in range(self.epochs):
             loss_list = []
             layers = []
             average_gradients = []
             if not self.model.training:
                 self.model.train()
 
-            for idx, sample in enumerate(train_loader):
+            for idx, sample in enumerate(self.train_loader):
                 loss, logits = self.model(**dict_to_device(sample, device=self.device))
                 loss_list.append(loss.item())
                 loss.backward()
-                if show_grad_flow:
+                if self.show_grad_flow:
                     plot_grad_flow(self.model.named_parameters())
 
-                optimizer.step()
-                if scheduler is not None:
-                    scheduler_func.step()
-                optimizer.zero_grad()
+                self.optimizer.step()
+                if self.scheduler is not None:
+                    scheduler.step()
+                self.optimizer.zero_grad()
                 progress_bar.update(1)
 
             self.model.eval()
             with torch.set_grad_enabled(False):
-                metric_output = self.validate(valid_loader, metric=metric)
+                metric_output = self.validate(
+                    self.valid_loader, metric=self.eval_metric
+                )
 
             mean_loss = torch.mean(torch.tensor(loss_list)).item()
             logging.info(
