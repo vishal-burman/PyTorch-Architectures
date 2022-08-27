@@ -149,7 +149,7 @@ class Trainer:
 
             mean_loss = torch.mean(torch.tensor(loss_list)).item()
             logging.info(
-                f"\nEpoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {metric}: {metric_output:.3f}"
+                f"\nEpoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {self.eval_metric}: {metric_output:.3f}"
             )
             logging.info(f"\nGradient-Flow for epoch {epoch + 1}")
             plt.show()
