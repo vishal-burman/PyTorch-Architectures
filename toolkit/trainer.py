@@ -94,7 +94,7 @@ class Trainer:
         self.num_training_steps = epochs * len(self.train_loader)
         self.optimizer = init_optimizer(optimizer, self.model, lr)
         self.scheduler = get_linear_schedule_with_warmup(
-            optimizer,
+            self.optimizer,
             num_warmup_steps=num_warmup_steps,
             num_training_steps=self.num_training_steps,
             last_epoch=-1,
