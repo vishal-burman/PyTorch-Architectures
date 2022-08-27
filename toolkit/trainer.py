@@ -7,7 +7,7 @@ import torch.nn as nn
 from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean_loss
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
-from utils import dict_to_device, get_linear_schedule_with_warmup
+from .utils import dict_to_device, get_linear_schedule_with_warmup
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
