@@ -93,7 +93,7 @@ class Trainer:
 
         self.num_training_steps = epochs * len(self.train_loader)
         self.optimizer = init_optimizer(optimizer, self.model, lr)
-        if self.scheduler is not None:
+        if scheduler is not None:
             self.scheduler = get_linear_schedule_with_warmup(
                 self.optimizer,
                 num_warmup_steps=num_warmup_steps,
