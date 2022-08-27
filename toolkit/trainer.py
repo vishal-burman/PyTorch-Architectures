@@ -93,12 +93,15 @@ class Trainer:
 
         self.num_training_steps = epochs * len(self.train_loader)
         self.optimizer = init_optimizer(optimizer, self.model, lr)
-        self.scheduler = get_linear_schedule_with_warmup(
-            self.optimizer,
-            num_warmup_steps=num_warmup_steps,
-            num_training_steps=self.num_training_steps,
-            last_epoch=-1,
-        )
+        if self.scheduler is not None:
+            self.scheduler = get_linear_schedule_with_warmup(
+                self.optimizer,
+                num_warmup_steps=num_warmup_steps,
+                num_training_steps=self.num_training_steps,
+                last_epoch=-1,
+            )
+        else:
+            self.scheduler = None
         self.epochs = epochs
         self.batch_size = batch_size
         self.eval_metric = eval_metric
@@ -134,7 +137,7 @@ class Trainer:
 
                 self.optimizer.step()
                 if self.scheduler is not None:
-                    scheduler.step()
+                    self.scheduler.step()
                 self.optimizer.zero_grad()
                 progress_bar.update(1)
 
