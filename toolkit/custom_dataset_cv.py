@@ -50,7 +50,15 @@ class DataLoaderCIFAR10Classification:
             train=train,
         )
 
-    def return_dataloader(self, batch_size=4, shuffle=False):
+    #def return_dataloader(self, batch_size=4, shuffle=False):
+    #    return DataLoader(
+    #        self.dataset,
+    #        batch_size=batch_size,
+    #        shuffle=shuffle,
+    #        collate_fn=self.dataset.collate_fn,
+    #    )
+    
+    def __call__(self, batch_size=4, shuffle=False):
         return DataLoader(
             self.dataset,
             batch_size=batch_size,
