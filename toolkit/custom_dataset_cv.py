@@ -56,30 +56,3 @@ def DataLoaderCIFAR10Classification(resize: int = 224,
             shuffle=shuffle,
             collate_fn=dataset.collate_fn,
             )
-
-#class DataLoaderCIFAR10Classification:
-#    def __init__(self, resize=224, train=True):
-#        self.dataset = DatasetCIFAR10Classification(
-#            resize=resize,
-#            train=train,
-#        )
-#
-#    #def return_dataloader(self, batch_size=4, shuffle=False):
-#    #    return DataLoader(
-#    #        self.dataset,
-#    #        batch_size=batch_size,
-#    #        shuffle=shuffle,
-#    #        collate_fn=self.dataset.collate_fn,
-#    #    )
-#    
-#    def __call__(self, resize=224, train=True, batch_size=4, shuffle=False):
-#        dataset = DatasetCIFAR10Classification(
-#                resize=resize,
-#                train=train,
-#                )
-#        return DataLoader(
-#            dataset,
-#            batch_size=batch_size,
-#            shuffle=shuffle,
-#            collate_fn=self.dataset.collate_fn,
-#        )
