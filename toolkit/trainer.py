@@ -1,4 +1,3 @@
-import logging
 from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -8,17 +7,6 @@ from .metrics import cv_compute_accuracy, nlp_compute_accuracy, nlp_compute_mean
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
 from .utils import dict_to_device, get_linear_schedule_with_warmup
-
-#logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-sh = logging.StreamHandler()
-sh.setLevel(logging.INFO)
-#logger.setFormat(fmt="%(message)s")
-formatter = logging.Formatter("%(message)s")
-sh.setFormatter(formatter)
-logger.addHandler(sh)
-
 
 def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
     """
@@ -120,12 +108,12 @@ class Trainer:
     ):
 
         # Details
-        logger.info("********** Running Training **********")
-        logger.info(f"  Total Training Steps = {self.num_training_steps}  ")
-        logger.info(f"  Epochs = {self.epochs}  ")
-        logger.info(f"  Batch Size = {self.batch_size}  ")
-        logger.info(f"  Length of Train DataLoader = {len(self.train_loader)}  ")
-        logger.info(f"  Length of Valid DataLoader = {len(self.valid_loader)}  ")
+        print("********** Running Training **********")
+        print(f"  Total Training Steps = {self.num_training_steps}  ")
+        print(f"  Epochs = {self.epochs}  ")
+        print(f"  Batch Size = {self.batch_size}  ")
+        print(f"  Length of Train DataLoader = {len(self.train_loader)}  ")
+        print(f"  Length of Valid DataLoader = {len(self.valid_loader)}  ")
 
         progress_bar = tqdm(range(self.num_training_steps))
 
@@ -156,10 +144,10 @@ class Trainer:
                 )
 
             mean_loss = torch.mean(torch.tensor(loss_list)).item()
-            logger.info(
+            print(
                 f"\nEpoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {self.eval_metric}: {metric_output:.3f}"
             )
-            logger.info(f"\nGradient-Flow for epoch {epoch + 1}")
+            print.info(f"\nGradient-Flow for epoch {epoch + 1}")
             plt.show()
 
     def validate(
