@@ -19,7 +19,7 @@ def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
     for name, param in named_parameters:
         if param.requires_grad and "bias" not in name:
             layers_name.append(name)
-            average_gradients.append(param.grad.abs().mean())
+            average_gradients.append(param.grad.abs().mean().cpu())
 
     plt.plot(average_gradients, alpha=0.3, color="b")
     plt.hlines(0, 0, len(average_gradients) + 1, linewidth=1, color="k")
