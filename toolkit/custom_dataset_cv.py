@@ -42,26 +42,44 @@ class DatasetCIFAR10Classification(Dataset):
             "labels": labels,
         }
 
-
-class DataLoaderCIFAR10Classification:
-    def __init__(self, resize=224, train=True):
-        self.dataset = DatasetCIFAR10Classification(
-            resize=resize,
-            train=train,
-        )
-
-    #def return_dataloader(self, batch_size=4, shuffle=False):
-    #    return DataLoader(
-    #        self.dataset,
-    #        batch_size=batch_size,
-    #        shuffle=shuffle,
-    #        collate_fn=self.dataset.collate_fn,
-    #    )
-    
-    def __call__(self, batch_size=4, shuffle=False):
-        return DataLoader(
-            self.dataset,
+def DataLoaderCIFAR10Classification(resize: int = 224,
+                                    train: bool = True,
+                                    batch_size: int = 4,
+                                    shuffle: bool = False):
+    """
+    Returns DataLoader for CIFAR10 classification
+    """
+    dataset = DatasetCIFAR10Classification(resize=resize, train=train)
+    return DataLoader(
+            dataset,
             batch_size=batch_size,
             shuffle=shuffle,
-            collate_fn=self.dataset.collate_fn,
-        )
+            collate_fn=dataset.collate_fn,
+            )
+
+#class DataLoaderCIFAR10Classification:
+#    def __init__(self, resize=224, train=True):
+#        self.dataset = DatasetCIFAR10Classification(
+#            resize=resize,
+#            train=train,
+#        )
+#
+#    #def return_dataloader(self, batch_size=4, shuffle=False):
+#    #    return DataLoader(
+#    #        self.dataset,
+#    #        batch_size=batch_size,
+#    #        shuffle=shuffle,
+#    #        collate_fn=self.dataset.collate_fn,
+#    #    )
+#    
+#    def __call__(self, resize=224, train=True, batch_size=4, shuffle=False):
+#        dataset = DatasetCIFAR10Classification(
+#                resize=resize,
+#                train=train,
+#                )
+#        return DataLoader(
+#            dataset,
+#            batch_size=batch_size,
+#            shuffle=shuffle,
+#            collate_fn=self.dataset.collate_fn,
+#        )
