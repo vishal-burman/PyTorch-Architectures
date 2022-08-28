@@ -1,7 +1,7 @@
 import unittest
 
 import torch
-from model import LeNet
+from .model import LeNet
 
 
 class LeNetTestCase(unittest.TestCase):
