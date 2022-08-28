@@ -12,7 +12,12 @@ from .utils import dict_to_device, get_linear_schedule_with_warmup
 #logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger.setFormat(fmt="%(message)s")
+sh = logging.StreamHandler()
+sh.setLevel(logging.INFO)
+#logger.setFormat(fmt="%(message)s")
+formatter = logging.Formatter("%(message)s")
+sh.setFormatter(formatter)
+logger.addHandler(sh)
 
 
 def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
