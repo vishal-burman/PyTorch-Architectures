@@ -147,8 +147,9 @@ class Trainer:
             print(
                 f"\nEpoch: {epoch + 1} || Training Loss: {mean_loss:.3f} || {self.eval_metric}: {metric_output:.3f}"
             )
-            print(f"\nGradient-Flow for epoch {epoch + 1}")
-            plt.show()
+            if self.show_grad_flow:
+                print(f"\nGradient-Flow for epoch {epoch + 1}")
+                plt.show()
 
     def validate(
         self,
