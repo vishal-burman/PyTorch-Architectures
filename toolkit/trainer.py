@@ -82,11 +82,12 @@ class Trainer:
             self.valid_loader = self.valid_dataset
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        if use_amp:
+        self.use_amp = use_amp
+        if self.use_amp:
             assert (
                 torch.cuda.is_available()
             ), f"fp16 available only for CUDA devices, found {self.device}"
-            raise NotImplementedError  # TODO
+            self.scaler = torch.cuda.amp.GradScaler()
 
         self.num_training_steps = epochs * len(self.train_loader)
         self.optimizer = init_optimizer(optimizer, self.model, lr)
