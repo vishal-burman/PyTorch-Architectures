@@ -149,7 +149,7 @@ class Trainer:
                         if self.scheduler is not None:
                             self.scheduler.step()
                     else:
-                        self.scaler.step(optimizer)
+                        self.scaler.step(self.optimizer)
                         self.scaler.update()
                         self.scheduler.step()
                     self.optimizer.zero_grad()
