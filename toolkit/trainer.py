@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple, Union
+import gc
 
 import matplotlib.pyplot as plt
 import torch
@@ -54,6 +55,7 @@ class Trainer:
         epochs: int = 3,
         batch_size: int = 32,
         num_warmup_steps: int = 0,
+        gradient_accumulation_steps=1,
         shuffle_train: bool = True,
         shuffle_valid: bool = False,
         use_amp: bool = False,
@@ -81,11 +83,12 @@ class Trainer:
             self.valid_loader = self.valid_dataset
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        if use_amp:
+        self.use_amp = use_amp
+        if self.use_amp:
             assert (
                 torch.cuda.is_available()
             ), f"fp16 available only for CUDA devices, found {self.device}"
-            raise NotImplementedError  # TODO
+            self.scaler = torch.cuda.amp.GradScaler()
 
         self.num_training_steps = epochs * len(self.train_loader)
         self.optimizer = init_optimizer(optimizer, self.model, lr)
@@ -100,6 +103,7 @@ class Trainer:
             self.scheduler = None
         self.epochs = epochs
         self.batch_size = batch_size
+        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.eval_metric = eval_metric
         self.show_grad_flow = show_grad_flow
 
@@ -125,17 +129,39 @@ class Trainer:
                 self.model.train()
 
             for idx, sample in enumerate(self.train_loader):
-                loss, logits = self.model(**dict_to_device(sample, device=self.device))
-                loss_list.append(loss.item())
-                loss.backward()
+                if not self.use_amp:
+                    loss, logits = self.model(**dict_to_device(sample, device=self.device))
+                    loss_list.append(loss.item())
+                    loss.backward()
+                else:
+                    with torch.cuda.amp.autocast():
+                        loss, logits = self.model(**dict_to_device(sample, device=self.device))
+                        loss_list.append(loss.item())
+                    self.scaler.scale(loss).backward()
+
+                loss = loss / self.gradient_accumulation_steps
+
                 if self.show_grad_flow:
                     plot_grad_flow(self.model.named_parameters())
 
-                self.optimizer.step()
-                if self.scheduler is not None:
-                    self.scheduler.step()
-                self.optimizer.zero_grad()
+                if ((idx + 1) % self.gradient_accumulation_steps == 0) or (idx + 1 == len(self.train_loader)):
+                    if not self.use_amp:
+                        self.optimizer.step()
+                        if self.scheduler is not None:
+                            self.scheduler.step()
+                    else:
+                        self.scaler.step(self.optimizer)
+                        self.scaler.update()
+                        if self.scheduler is not None:
+                            self.scheduler.step()
+                    self.optimizer.zero_grad()
+
                 progress_bar.update(1)
+
+                # Garbage Collection
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                _ = gc.collect()
 
             self.model.eval()
             with torch.set_grad_enabled(False):
