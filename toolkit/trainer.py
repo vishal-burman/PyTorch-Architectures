@@ -128,9 +128,15 @@ class Trainer:
                 self.model.train()
 
             for idx, sample in enumerate(self.train_loader):
-                loss, logits = self.model(**dict_to_device(sample, device=self.device))
-                loss_list.append(loss.item())
-                loss.backward()
+                if not self.use_amp:
+                    loss, logits = self.model(**dict_to_device(sample, device=self.device))
+                    loss_list.append(loss.item())
+                    loss.backward()
+                else:
+                    with torch.cuda.amp.autocast():
+                        loss, logits = self.model(**dict_to_device(sample, device=self.device))
+                        loss_list.append(loss.item())
+                    self.scaler.scale(loss).backward()
 
                 loss = loss / self.gradient_accumulation_steps
 
@@ -138,10 +144,16 @@ class Trainer:
                     plot_grad_flow(self.model.named_parameters())
 
                 if ((idx + 1) % self.gradient_accumulation_steps == 0) or (idx + 1 == len(self.train_loader)):
-                    self.optimizer.step()
-                    if self.scheduler is not None:
+                    if not self.use_amp:
+                        self.optimizer.step()
+                        if self.scheduler is not None:
+                            self.scheduler.step()
+                    else:
+                        self.scaler.step(optimizer)
+                        self.scaler.update()
                         self.scheduler.step()
                     self.optimizer.zero_grad()
+
                 progress_bar.update(1)
 
             self.model.eval()
