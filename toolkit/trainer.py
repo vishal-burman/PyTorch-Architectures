@@ -151,7 +151,8 @@ class Trainer:
                     else:
                         self.scaler.step(self.optimizer)
                         self.scaler.update()
-                        self.scheduler.step()
+                        if self.scheduler is not None:
+                            self.scheduler.step()
                     self.optimizer.zero_grad()
 
                 progress_bar.update(1)
