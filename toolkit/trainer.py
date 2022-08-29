@@ -54,6 +54,7 @@ class Trainer:
         epochs: int = 3,
         batch_size: int = 32,
         num_warmup_steps: int = 0,
+        gradient_accumulation_steps=1,
         shuffle_train: bool = True,
         shuffle_valid: bool = False,
         use_amp: bool = False,
@@ -100,6 +101,7 @@ class Trainer:
             self.scheduler = None
         self.epochs = epochs
         self.batch_size = batch_size
+        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.eval_metric = eval_metric
         self.show_grad_flow = show_grad_flow
 
@@ -128,13 +130,17 @@ class Trainer:
                 loss, logits = self.model(**dict_to_device(sample, device=self.device))
                 loss_list.append(loss.item())
                 loss.backward()
+
+                loss = loss / self.gradient_accumulation_steps
+
                 if self.show_grad_flow:
                     plot_grad_flow(self.model.named_parameters())
 
-                self.optimizer.step()
-                if self.scheduler is not None:
-                    self.scheduler.step()
-                self.optimizer.zero_grad()
+                if ((idx + 1) % self.gradient_accumulation_steps == 0) or (idx + 1 == len(self.train_loader)):
+                    self.optimizer.step()
+                    if self.scheduler is not None:
+                        self.scheduler.step()
+                    self.optimizer.zero_grad()
                 progress_bar.update(1)
 
             self.model.eval()
