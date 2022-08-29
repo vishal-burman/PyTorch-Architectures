@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple, Union
+import gc
 
 import matplotlib.pyplot as plt
 import torch
@@ -156,6 +157,11 @@ class Trainer:
                     self.optimizer.zero_grad()
 
                 progress_bar.update(1)
+
+                # Garbage Collection
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                _ = gc.collect()
 
             self.model.eval()
             with torch.set_grad_enabled(False):
