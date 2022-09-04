@@ -1,7 +1,7 @@
 import unittest
 
 import torch
-from model import AlexNet
+from .model import AlexNet
 
 
 class AlexNetTestCase(unittest.TestCase):
