@@ -2,6 +2,12 @@
 
 Implementation of VGG16 architecture proposed in the paper _Very Deep Convolutional Networks for Large-Scale Image Recognition_ by K. Simonyan et al.
 
+## Unit Test
+
+```bash
+python -m unittest -v test_model.py
+```
+
 ## Usage
 
 ```python
