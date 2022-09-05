@@ -15,7 +15,7 @@ class VGG16TestCase(unittest.TestCase):
         self.assertEqual(params_count, 33605442)
 
     def test_forward_pass(self):
-        pixel_values_sample = torch.rand(2, 3, 128, 128)
+        pixel_values_sample = torch.rand(2, 3, 32, 32)
         labels_sample = torch.ones(2, dtype=torch.long)
 
         loss, logits = self.model(
