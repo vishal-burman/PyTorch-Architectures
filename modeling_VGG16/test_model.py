@@ -12,7 +12,7 @@ class VGG16TestCase(unittest.TestCase):
         params_count = sum(
             p.numel() for p in self.model.parameters() if p.requires_grad
         )
-        self.assertEqual(params_count, 33638218)
+        self.assertEqual(params_count, 33605442)
 
     def test_forward_pass(self):
         pixel_values_sample = torch.rand(2, 3, 128, 128)
