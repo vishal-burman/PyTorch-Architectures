@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
 from .utils import dict_to_device, get_linear_schedule_with_warmup
 
+
 def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
     """
     Plots the gradient flow in each layer with each epoch
@@ -24,7 +25,8 @@ def plot_grad_flow(named_parameters: Tuple[List[str], List[torch.Tensor]]):
 
     plt.plot(average_gradients, alpha=0.3, color="b")
     plt.hlines(0, 0, len(average_gradients) + 1, linewidth=1, color="k")
-    plt.xticks(range(0, len(average_gradients), 1), layers_name, rotation="vertical")
+    plt.xticks(range(0, len(average_gradients), 1),
+               layers_name, rotation="vertical")
     plt.xlim(xmin=0, xmax=len(average_gradients))
     plt.xlabel("Layers")
     plt.ylabel("Average Gradients")
@@ -67,7 +69,8 @@ class Trainer:
         assert type(train_dataset) == type(
             valid_dataset
         ), f"train_dataset is {type(train_dataset)} and valid_dataset is {type(valid_dataset)}"
-        assert type(train_dataset) is Dataset or type(train_dataset) is DataLoader
+        assert type(train_dataset) is Dataset or type(
+            train_dataset) is DataLoader
         self.train_dataset = train_dataset
         self.valid_dataset = valid_dataset
 
@@ -82,7 +85,8 @@ class Trainer:
             self.train_loader = self.train_dataset
             self.valid_loader = self.valid_dataset
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda:0" if torch.cuda.is_available() else "cpu")
         self.use_amp = use_amp
         if self.use_amp:
             assert (
@@ -123,19 +127,19 @@ class Trainer:
 
         for epoch in range(self.epochs):
             loss_list = []
-            layers = []
-            average_gradients = []
             if not self.model.training:
                 self.model.train()
 
             for idx, sample in enumerate(self.train_loader):
                 if not self.use_amp:
-                    loss, logits = self.model(**dict_to_device(sample, device=self.device))
+                    loss, logits = self.model(
+                        **dict_to_device(sample, device=self.device))
                     loss_list.append(loss.item())
                     loss.backward()
                 else:
                     with torch.cuda.amp.autocast():
-                        loss, logits = self.model(**dict_to_device(sample, device=self.device))
+                        loss, _ = self.model(
+                            **dict_to_device(sample, device=self.device))
                         loss_list.append(loss.item())
                     self.scaler.scale(loss).backward()
 
