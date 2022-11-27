@@ -1,16 +1,16 @@
-from collections import namedtuple
 from dataclasses import dataclass
 from typing import List
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import AgglomerativeClustering
-from tqdm.auto import tqdm
+
 
 @dataclass
 class ChunkRecord:
     chunk: List[str]
     chunk_embeds: np.array
+
 
 class Clusterer:
     def __init__(self, sentence_encoder: str = "all-MiniLM-L12-v2"):
@@ -56,7 +56,7 @@ class Clusterer:
         sentences_signature = np.mean(sentences_embeds, axis=0, keepdims=True)
 
         return sentences_signature
-    
+
     def create_cluster(self, sentences_embeds: np.array):
         cluster_model = AgglomerativeClustering(
             n_clusters=None,
