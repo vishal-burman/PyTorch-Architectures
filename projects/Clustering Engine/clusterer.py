@@ -9,7 +9,7 @@ class Clusterer:
         self.model = SentenceTransformer(sentence_encoder)
 
     def create_chunks(
-        self, sentences: List[str], chunk_size: int = 10000, verbose: bool = False
+        self, sentences: List[str], chunk_size: int, verbose: bool = False
     ) -> List[List[str]]:
         chunks = [
             sentences[i : i + chunk_size] for i in range(0, len(sentences), chunk_size)
@@ -33,6 +33,11 @@ class Clusterer:
 
         return sentences_signature
 
-    def cluster(self, sentences: List[str]):  # TODO define a return type
-        chunks = self.create_chunks(sentences)
-        pass
+    def cluster(self, sentences: List[str], chunk_size: int = 10000):  # TODO define a return type
+        chunks = self.create_chunks(sentences, chunk_size=chunk_size)
+        chunks_embeds = [self.encode_sentences(chunk) for chunk in chunks]
+        chunks_signature = [self.create_signature(ce) for ce in chunks_embeds]
+        assert len(chunks_embeds) == len(chunks_signature)
+
+        chunks_vector = list(zip(chunks_embeds, chunks_signature))
+        return chunks_vector
