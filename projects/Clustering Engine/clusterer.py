@@ -2,6 +2,7 @@ from typing import List
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from tqdm.auto import tqdm
 
 
 class Clusterer:
@@ -26,16 +27,18 @@ class Clusterer:
         )
         return sentences_embeds
 
-    def create_signature(self, sentences_embeds: np.array):
+    def create_signature(self, sentences_embeds: np.array, verbose: bool = False):
         if sentences_embeds.ndim == 1:
             sentences_embeds = sentences_embeds.reshape(1, -1)
         sentences_signature = np.mean(sentences_embeds, axis=0, keepdims=True)
 
         return sentences_signature
 
-    def cluster(self, sentences: List[str], chunk_size: int = 10000):  # TODO define a return type
-        chunks = self.create_chunks(sentences, chunk_size=chunk_size)
-        chunks_embeds = [self.encode_sentences(chunk) for chunk in chunks]
+    def cluster(
+        self, sentences: List[str], chunk_size: int = 10000, verbose: bool = False
+    ):  # TODO define a return type
+        chunks = self.create_chunks(sentences, chunk_size=chunk_size, verbose=verbose)
+        chunks_embeds = [self.encode_sentences(chunk, verbose=verbose) for chunk in chunks]
         chunks_signature = [self.create_signature(ce) for ce in chunks_embeds]
         assert len(chunks_embeds) == len(chunks_signature)
 
