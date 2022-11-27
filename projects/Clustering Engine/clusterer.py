@@ -22,6 +22,10 @@ class Clusterer:
             print(f"No of windows created from {len(sentences)} sentences: {len(chunks)}")
 
         return chunks
+    
+    def normalize_embeddings(self, sentences_embeds: np.array) -> np.array:
+        sentences_embeds = sentences_embeds / np.linalg.norm(sentences_embeds, axis=1, keepdims=True)
+        pass
 
     def encode_sentences(self, sentences: List[str], verbose: bool = False) -> np.array:
         sentences_embeds = self.model.encode(
