@@ -65,9 +65,9 @@ class Clusterer:
             for chunk in chunks
         ]
         chunks_signature = [self.create_signature(ce) for ce in chunks_embeds]
+        assert len(chunks) == len(chunks_embeds)
         assert len(chunks_embeds) == len(chunks_signature)
 
-        # chunks_vector = list(zip(chunks_embeds, chunks_signature))
         chunks_records = [
             self.record(c, ce, cs)
             for c, ce, cs in zip(chunks, chunks_embeds, chunks_signature)
