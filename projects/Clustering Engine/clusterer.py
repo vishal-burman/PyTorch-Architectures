@@ -3,12 +3,19 @@ from typing import List
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from sklearn.cluster import AgglomerativeClustering
 from tqdm.auto import tqdm
 
 
 class Clusterer:
     def __init__(self, sentence_encoder: str = "all-MiniLM-L12-v2"):
         self.model = SentenceTransformer(sentence_encoder)
+        self.cluster_model = AgglomerativeClustering(
+            n_clusters=None,
+            affinity="cosine",
+            linkage="average",
+            distance_threshold=0.3,
+        )
         self.record = namedtuple("record", ["chunk", "chunk_embeds", "chunk_signature"])
 
     def create_chunks(
