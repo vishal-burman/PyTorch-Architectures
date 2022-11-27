@@ -1,3 +1,4 @@
+from collections import namedtuple
 from typing import List
 
 import numpy as np
@@ -8,6 +9,7 @@ from tqdm.auto import tqdm
 class Clusterer:
     def __init__(self, sentence_encoder: str = "all-MiniLM-L12-v2"):
         self.model = SentenceTransformer(sentence_encoder)
+        self.record = namedtuple('record', ["chunk_embeds", "chunk_signature"])
 
     def create_chunks(
         self, sentences: List[str], chunk_size: int, verbose: bool = False
@@ -42,5 +44,6 @@ class Clusterer:
         chunks_signature = [self.create_signature(ce) for ce in chunks_embeds]
         assert len(chunks_embeds) == len(chunks_signature)
 
-        chunks_vector = list(zip(chunks_embeds, chunks_signature))
-        return chunks_vector
+        # chunks_vector = list(zip(chunks_embeds, chunks_signature))
+        chunks_records = [self.record(ce, cs) for ce, cs in zip(chunks_embeds, chunks_signature)]
+        return chunks_records
