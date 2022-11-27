@@ -19,7 +19,7 @@ class Clusterer:
         ]
 
         if verbose:
-            print(f"No of windows created from {len(sentences)}: {len(chunks)}")
+            print(f"No of windows created from {len(sentences)} sentences: {len(chunks)}")
 
         return chunks
 
