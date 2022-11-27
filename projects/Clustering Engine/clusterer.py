@@ -16,7 +16,7 @@ class Clusterer:
             linkage="average",
             distance_threshold=0.3,
         )
-        self.record = namedtuple("record", ["chunk", "chunk_embeds", "chunk_signature"])
+        self.record = namedtuple("record", ["chunk", "chunk_embeds"])
 
     def create_chunks(
         self, sentences: List[str], chunk_size: int, verbose: bool = False
@@ -71,12 +71,10 @@ class Clusterer:
             self.encode_sentences(chunk, normalize_embeddings, verbose=verbose)
             for chunk in chunks
         ]
-        chunks_signature = [self.create_signature(ce) for ce in chunks_embeds]
         assert len(chunks) == len(chunks_embeds)
-        assert len(chunks_embeds) == len(chunks_signature)
-
+        
         chunks_records = [
-            self.record(c, ce, cs)
-            for c, ce, cs in zip(chunks, chunks_embeds, chunks_signature)
+            self.record(c, ce)
+            for c, ce in zip(chunks, chunks_embeds)
         ]
         return chunks_records
