@@ -4,6 +4,7 @@ from typing import List, Optional
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import AgglomerativeClustering
+from tqdm.auto import tqdm
 
 
 @dataclass
@@ -90,7 +91,8 @@ class Clusterer:
         assert len(chunks) == len(chunks_embeds)
 
         chunks_records = []
-        for chunk, chunk_embeds in zip(chunks, chunks_embeds):
+        print(f"Preparing clusters from individual chunks...")
+        for chunk, chunk_embeds in tqdm(zip(chunks, chunks_embeds), total=len(chunks)):
             cluster_chunk = self.create_cluster_from_chunk(
                 chunk,
                 chunk_embeds,
