@@ -58,7 +58,9 @@ class Clusterer:
 
         return sentences_signature
 
-    def create_cluster_from_chunk(self, sentences: List[str], sentences_embeds: np.array, **kwargs):
+    def create_cluster_from_chunk(
+        self, sentences: List[str], sentences_embeds: np.array, **kwargs
+    ):
         cluster_model = AgglomerativeClustering(**kwargs)
         cluster_model.fit(sentences_embeds)
         labels = cluster_model.labels_
@@ -66,7 +68,7 @@ class Clusterer:
         clustered_sentences = [[] for _ in range(max(labels) + 1)]
         for sentence_idx, label in enumerate(labels):
             clustered_sentences[label].append(sentences[sentence_idx])
-        
+
         return clustered_sentences
 
     def cluster(
@@ -89,9 +91,18 @@ class Clusterer:
 
         chunks_records = []
         for chunk, chunk_embeds in zip(chunks, chunks_embeds):
-            cluster_chunk = self.create_cluster_from_chunk(chunk, chunk_embeds, n_clusters=n_clusters, affinity=affinity, linkage=linkage, distance_threshold=distance_threshold)
+            cluster_chunk = self.create_cluster_from_chunk(
+                chunk,
+                chunk_embeds,
+                n_clusters=n_clusters,
+                affinity=affinity,
+                linkage=linkage,
+                distance_threshold=distance_threshold,
+            )
             cr = ChunkRecord(chunk, chunk_embeds, cluster_chunk)
             chunks_records.append(cr)
-        assert len(chunks_records) == len(chunks), f"#ChunkRecords != #chunks"
+        assert len(chunks_records) == len(
+            chunks
+        ), f"No. of ChunkRecords != No. of chunks"
 
         return chunks_records
