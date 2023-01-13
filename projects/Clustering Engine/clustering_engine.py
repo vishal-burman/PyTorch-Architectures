@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--filename")
     parser.add_argument("-m", "--model", default="all-MiniLM-L12-v2")
-    parser.add_argument("-cs", "--chunk_size", default=1000)
+    parser.add_argument("-cs", "--chunk_size", type=int, default=1000)
 
     args = parser.parse_args()
     filename = args.filename
