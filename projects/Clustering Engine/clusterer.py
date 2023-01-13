@@ -93,7 +93,7 @@ class Clusterer:
         chunks_records = []
         print(f"Preparing clusters from individual chunks...")
         for chunk, chunk_embeds in tqdm(zip(chunks, chunks_embeds), total=len(chunks)):
-            cluster_chunk = self.create_cluster_from_chunk(
+            chunk_cluster = self.create_cluster_from_chunk(
                 chunk,
                 chunk_embeds,
                 n_clusters=n_clusters,
@@ -101,7 +101,7 @@ class Clusterer:
                 linkage=linkage,
                 distance_threshold=distance_threshold,
             )
-            cr = ChunkRecord(chunk, chunk_embeds, cluster_chunk)
+            cr = ChunkRecord(chunk, chunk_embeds, chunk_cluster)
             chunks_records.append(cr)
         assert len(chunks_records) == len(
             chunks
