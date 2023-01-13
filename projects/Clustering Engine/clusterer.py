@@ -74,8 +74,10 @@ class Clusterer:
 
     def post_filter_clusters(self, clusters: List[List[str]], min_community_size: int):
         if min_community_size < 1:
-            raise RuntimeError(f"Minimum cluster size should be greater than or equal to 1")
-        
+            raise RuntimeError(
+                f"Minimum cluster size should be greater than or equal to 1"
+            )
+
         clusters = list(filter(lambda x: len(x) >= min_community_size, clusters))
         clusters = sorted(clusters, key=len, reverse=True)
 
