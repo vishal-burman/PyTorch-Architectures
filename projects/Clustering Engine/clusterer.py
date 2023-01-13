@@ -119,7 +119,9 @@ class Clusterer:
             chunks
         ), f"No. of ChunkRecords != No. of chunks"
 
-        all_clusters = [cr.chunk_cluster for cr in chunks_records]
+        all_clusters = []
+        for cr in chunks_records:
+            all_clusters.extend(cr.chunk_cluster)
         all_clusters = self.post_filter_clusters(all_clusters, min_community_size)
 
         return all_clusters
