@@ -18,7 +18,7 @@ def read_file(filename: str) -> List[str]:
 
 def write_cluster_file(clusters: List[str], filename: str):
     with open(filename, "w") as fout:
-        for cluster_idx, cluster in clusters:
+        for cluster_idx, cluster in enumerate(clusters):
             fout.write(f"Cluster {cluster_idx}:\n")
             for sentence in cluster:
                 fout.write(sentence + "\n")
