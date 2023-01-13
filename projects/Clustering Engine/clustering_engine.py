@@ -5,7 +5,7 @@ from clusterer import Clusterer
 
 
 def filter_sentences(sentences: List[str]) -> List[str]:
-    sentences = list(filter(lambda x: len(x.split()) > 2 and len(x.split()) < 128))
+    sentences = list(filter(lambda x: len(x.split()) > 2 and len(x.split()) < 128, sentences))
     return sentences
 
 
