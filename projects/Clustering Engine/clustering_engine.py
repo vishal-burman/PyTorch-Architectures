@@ -5,7 +5,9 @@ from clusterer import Clusterer
 
 
 def filter_sentences(sentences: List[str]) -> List[str]:
-    sentences = list(filter(lambda x: len(x.split()) > 2 and len(x.split()) < 128, sentences))
+    sentences = list(
+        filter(lambda x: len(x.split()) > 2 and len(x.split()) < 128, sentences)
+    )
     return sentences
 
 
@@ -42,5 +44,7 @@ if __name__ == "__main__":
     list_sentences = filter_sentences(list_sentences)
     print(f"Total read sentences(filtered): {len(list_sentences)}")
 
-    all_clusters = clusterer.cluster(list_sentences, chunk_size=chunk_size, verbose=True)
+    all_clusters = clusterer.cluster(
+        list_sentences, chunk_size=chunk_size, verbose=True
+    )
     write_cluster_file(clusters=all_clusters, filename=f"{filename}_clusters")
