@@ -4,6 +4,11 @@ from typing import List
 from clusterer import Clusterer
 
 
+def filter_sentences(sentences: List[str]) -> List[str]:
+    sentences = list(filter(lambda x: len(x.split()) > 2 and len(x.split()) < 128))
+    return sentences
+
+
 def read_file(filename: str) -> List[str]:
     file_ = open(filename, "r").readlines()
     file_ = list(map(lambda x: x.strip(), file_))
@@ -23,3 +28,4 @@ if __name__ == "__main__":
     clusterer = Clusterer(sentence_encoder)
 
     list_sentences = read_file(filename)
+    list_sentences = filter_sentences(list_sentences)
