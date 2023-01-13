@@ -72,6 +72,15 @@ class Clusterer:
 
         return clustered_sentences
 
+    def post_filter_clusters(self, clusters: List[List[str]], min_community_size: int):
+        if min_community_size < 1:
+            raise RuntimeError(f"Minimum cluster size should be greater than or equal to 1")
+        
+        clusters = list(filter(lambda x: len(x) >= min_community_size, clusters))
+        clusters = sorted(clusters, key=len, reverse=True)
+
+        return clusters
+
     def cluster(
         self,
         sentences: List[str],
@@ -81,6 +90,7 @@ class Clusterer:
         affinity: str = "cosine",
         linkage: str = "average",
         distance_threshold: float = 0.4,
+        min_community_size: int = 3,
         verbose: bool = False,
     ):  # TODO define a return type
         chunks = self.create_chunks(sentences, chunk_size=chunk_size, verbose=verbose)
@@ -107,4 +117,7 @@ class Clusterer:
             chunks
         ), f"No. of ChunkRecords != No. of chunks"
 
-        return chunks_records
+        all_clusters = [cr.chunk_cluster for cr in chunks_records]
+        all_clusters = self.post_filter_clusters(all_clusters, min_community_size)
+
+        return all_clusters
