@@ -40,6 +40,7 @@ if __name__ == "__main__":
 
     list_sentences = read_file(filename)
     list_sentences = filter_sentences(list_sentences)
+    print(f"Total read sentences(filtered): {len(list_sentences)}")
 
-    all_clusters = clusterer.cluster(list_sentences, chunk_size=chunk_size)
+    all_clusters = clusterer.cluster(list_sentences, chunk_size=chunk_size, verbose=True)
     write_cluster_file(clusters=all_clusters, filename=f"{filename}_clusters")
