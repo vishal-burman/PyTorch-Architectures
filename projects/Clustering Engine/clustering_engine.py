@@ -16,16 +16,30 @@ def read_file(filename: str) -> List[str]:
     return file_
 
 
+def write_cluster_file(clusters: List[str], filename: str):
+    with open(filename, "w") as fout:
+        for cluster_idx, cluster in clusters:
+            fout.write(f"Cluster {cluster_idx}:\n")
+            for sentence in cluster:
+                fout.write(sentence + "\n")
+            fout.write("\n")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--filename")
     parser.add_argument("-m", "--model", default="all-MiniLM-L12-v2")
+    parser.add_argument("-cs", "--chunk_size", default=1000)
 
     args = parser.parse_args()
     filename = args.filename
     sentence_encoder = args.model
+    chunk_size = args.chunk_size
 
     clusterer = Clusterer(sentence_encoder)
 
     list_sentences = read_file(filename)
     list_sentences = filter_sentences(list_sentences)
+
+    all_clusters = clusterer.cluster(list_sentences, chunk_size=chunk_size)
+    write_cluster_file(clusters=all_clusters, filename=f"{filename}_clusters")
