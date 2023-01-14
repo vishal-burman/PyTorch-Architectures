@@ -4,6 +4,7 @@ from typing import List, Optional
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
 
 
@@ -88,6 +89,11 @@ class Clusterer:
         print(f"Creating centroids embeddings...")
         centroids_embeds = self.model.encode(centroids, show_progress_bar=verbose)
         return centroids_embeds
+
+    def merge_cluster_with_centroid_similarity(self, clusters: List[List[str]]):
+        centroid_embeds = self.get_centroid_embeddings(clusters)
+        cs_matrix = cosine_similarity(centroid_embeds, centroid_embeds)
+        pass
 
     def cluster(
         self,
