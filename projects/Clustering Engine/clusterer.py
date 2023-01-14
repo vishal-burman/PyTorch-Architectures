@@ -93,6 +93,8 @@ class Clusterer:
     def merge_cluster_with_centroid_similarity(self, clusters: List[List[str]]):
         centroid_embeds = self.get_centroid_embeddings(clusters)
         cs_matrix = cosine_similarity(centroid_embeds, centroid_embeds)
+        np.fill_diagonal(cs_matrix, 0) # Set the diagonal(all 1) to 0
+        cs_matrix = np.triu(cs_matrix)
         pass
 
     def cluster(
