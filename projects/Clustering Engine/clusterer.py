@@ -83,6 +83,12 @@ class Clusterer:
 
         return clusters
 
+    def get_centroid_embeddings(self, clusters: List[List[str]], verbose: bool):
+        centroids = [c[0] for c in clusters]
+        print(f"Creating centroids embeddings...")
+        centroids_embeds = self.model.encode(centroids, show_progress_bar=verbose)
+        return centroids_embeds
+
     def cluster(
         self,
         sentences: List[str],
