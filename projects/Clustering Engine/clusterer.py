@@ -93,7 +93,7 @@ class Clusterer:
 
     def _merge_clusters(self, clusters, cluster_merge_dict, remaining_idxs):
         new_clusters = []
-        for cluster_idx, sim_idxs in cluster_merge_dict.keys():
+        for cluster_idx, sim_idxs in cluster_merge_dict.items():
             sentence_list = clusters[cluster_idx]
             for idx in sim_idxs:
                 sentence_list.extend(clusters[idx])
