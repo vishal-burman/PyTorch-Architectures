@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -90,12 +91,25 @@ class Clusterer:
         centroids_embeds = self.model.encode(centroids, show_progress_bar=verbose)
         return centroids_embeds
 
-    def merge_cluster_with_centroid_similarity(self, clusters: List[List[str]]):
+    def _merge_clusters(self, clusters, cluster_merge_dict, remaining_idxs):
+        pass
+
+    def merge_cluster_with_centroid_similarity(self, clusters: List[List[str]], distance_threshold: float):
         centroid_embeds = self.get_centroid_embeddings(clusters)
         cs_matrix = cosine_similarity(centroid_embeds, centroid_embeds)
         np.fill_diagonal(cs_matrix, 0) # Set the diagonal(all 1) to 0
         cs_matrix = np.triu(cs_matrix)
-        pass
+        rows, columns = np.asarray(cs_matrix >= distance_threshold).nonzero()
+        used_idxs, cluster_merge_dict = set(), defaultdict(list)
+        for row, column in zip(rows, columns):
+            if row not in used_idxs and column not in used_idxs:
+                cluster_merge_dict[row].append(column)
+                used_idxs.add(column)
+        used_idxs = used_idxs.union(set(cluster_merge_dict.keys()))
+        remaining_idxs = set(range(len(clusters))) - used_idxs
+        new_merged_clusters = self._merge_clusters(clusters, cluster_merge_dict, remaining_idxs)
+        assert len(new_merged_clusters) == len(cluster_merge_dict.keys()) + len(remaining_idxs) 
+        return new_merged_clusters
 
     def cluster(
         self,
