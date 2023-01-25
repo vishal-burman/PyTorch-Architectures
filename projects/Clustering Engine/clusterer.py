@@ -92,7 +92,17 @@ class Clusterer:
         return centroids_embeds
 
     def _merge_clusters(self, clusters, cluster_merge_dict, remaining_idxs):
-        pass
+        new_clusters = []
+        for cluster_idx, sim_idxs in cluster_merge_dict.keys():
+            sentence_list = clusters[cluster_idx]
+            for idx in sim_idxs:
+                sentence_list.extend(clusters[idx])
+            new_clusters.append(sentence_list)
+        
+        for idx in remaining_idxs:
+            new_clusters.append(clusters[idx])
+        
+        return new_clusters
 
     def merge_cluster_with_centroid_similarity(self, clusters: List[List[str]], distance_threshold: float):
         centroid_embeds = self.get_centroid_embeddings(clusters)
