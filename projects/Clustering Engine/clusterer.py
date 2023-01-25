@@ -98,18 +98,20 @@ class Clusterer:
             for idx in sim_idxs:
                 sentence_list.extend(clusters[idx])
             new_clusters.append(sentence_list)
-        
+
         for idx in remaining_idxs:
             new_clusters.append(clusters[idx])
-        
+
         new_clusters = sorted(new_clusters, key=len, reverse=True)
 
         return new_clusters
 
-    def merge_cluster_with_centroid_similarity(self, clusters: List[List[str]], distance_threshold: float):
-        centroid_embeds = self.get_centroid_embeddings(clusters)
+    def merge_cluster_with_centroid_similarity(
+        self, clusters: List[List[str]], distance_threshold: float, verbose: bool
+    ):
+        centroid_embeds = self.get_centroid_embeddings(clusters, verbose=verbose)
         cs_matrix = cosine_similarity(centroid_embeds, centroid_embeds)
-        np.fill_diagonal(cs_matrix, 0) # Set the diagonal(all 1) to 0
+        np.fill_diagonal(cs_matrix, 0)  # Set the diagonal(all 1) to 0
         cs_matrix = np.triu(cs_matrix)
         rows, columns = np.asarray(cs_matrix >= distance_threshold).nonzero()
         used_idxs, cluster_merge_dict = set(), defaultdict(list)
@@ -119,8 +121,12 @@ class Clusterer:
                 used_idxs.add(column)
         used_idxs = used_idxs.union(set(cluster_merge_dict.keys()))
         remaining_idxs = set(range(len(clusters))) - used_idxs
-        new_merged_clusters = self._merge_clusters(clusters, cluster_merge_dict, remaining_idxs)
-        assert len(new_merged_clusters) == len(cluster_merge_dict.keys()) + len(remaining_idxs) 
+        new_merged_clusters = self._merge_clusters(
+            clusters, cluster_merge_dict, remaining_idxs
+        )
+        assert len(new_merged_clusters) == len(cluster_merge_dict.keys()) + len(
+            remaining_idxs
+        )
         return new_merged_clusters
 
     def cluster(
@@ -164,6 +170,8 @@ class Clusterer:
             all_clusters.extend(cr.chunk_cluster)
         all_clusters = self.post_filter_clusters(all_clusters, min_community_size)
 
-        all_clusters = self.merge_cluster_with_centroid_similarity(all_clusters, distance_threshold=distance_threshold)
+        all_clusters = self.merge_cluster_with_centroid_similarity(
+            all_clusters, distance_threshold=distance_threshold, verbose=verbose
+        )
 
         return all_clusters
