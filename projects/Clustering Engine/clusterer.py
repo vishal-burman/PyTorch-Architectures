@@ -164,4 +164,6 @@ class Clusterer:
             all_clusters.extend(cr.chunk_cluster)
         all_clusters = self.post_filter_clusters(all_clusters, min_community_size)
 
+        all_clusters = self.merge_cluster_with_centroid_similarity(all_clusters, distance_threshold=distance_threshold)
+
         return all_clusters
