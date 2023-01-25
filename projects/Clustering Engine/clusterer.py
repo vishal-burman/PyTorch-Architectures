@@ -1,9 +1,11 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Optional
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
 
 
@@ -83,6 +85,50 @@ class Clusterer:
 
         return clusters
 
+    def get_centroid_embeddings(self, clusters: List[List[str]], verbose: bool):
+        centroids = [c[0] for c in clusters]
+        print(f"Creating centroids embeddings...")
+        centroids_embeds = self.model.encode(centroids, show_progress_bar=verbose)
+        return centroids_embeds
+
+    def _merge_clusters(self, clusters, cluster_merge_dict, remaining_idxs):
+        new_clusters = []
+        for cluster_idx, sim_idxs in cluster_merge_dict.items():
+            sentence_list = clusters[cluster_idx]
+            for idx in sim_idxs:
+                sentence_list.extend(clusters[idx])
+            new_clusters.append(sentence_list)
+
+        for idx in remaining_idxs:
+            new_clusters.append(clusters[idx])
+
+        new_clusters = sorted(new_clusters, key=len, reverse=True)
+
+        return new_clusters
+
+    def merge_cluster_with_centroid_similarity(
+        self, clusters: List[List[str]], distance_threshold: float, verbose: bool
+    ):
+        centroid_embeds = self.get_centroid_embeddings(clusters, verbose=verbose)
+        cs_matrix = cosine_similarity(centroid_embeds, centroid_embeds)
+        np.fill_diagonal(cs_matrix, 0)  # Set the diagonal(all 1) to 0
+        cs_matrix = np.triu(cs_matrix)
+        rows, columns = np.asarray(cs_matrix >= distance_threshold).nonzero()
+        used_idxs, cluster_merge_dict = set(), defaultdict(list)
+        for row, column in zip(rows, columns):
+            if row not in used_idxs and column not in used_idxs:
+                cluster_merge_dict[row].append(column)
+                used_idxs.add(column)
+        used_idxs = used_idxs.union(set(cluster_merge_dict.keys()))
+        remaining_idxs = set(range(len(clusters))) - used_idxs
+        new_merged_clusters = self._merge_clusters(
+            clusters, cluster_merge_dict, remaining_idxs
+        )
+        assert len(new_merged_clusters) == len(cluster_merge_dict.keys()) + len(
+            remaining_idxs
+        )
+        return new_merged_clusters
+
     def cluster(
         self,
         sentences: List[str],
@@ -123,5 +169,9 @@ class Clusterer:
         for cr in chunks_records:
             all_clusters.extend(cr.chunk_cluster)
         all_clusters = self.post_filter_clusters(all_clusters, min_community_size)
+
+        all_clusters = self.merge_cluster_with_centroid_similarity(
+            all_clusters, distance_threshold=distance_threshold, verbose=verbose
+        )
 
         return all_clusters
