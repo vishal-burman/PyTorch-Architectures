@@ -102,6 +102,8 @@ class Clusterer:
         for idx in remaining_idxs:
             new_clusters.append(clusters[idx])
         
+        new_clusters = sorted(new_clusters, key=len, reverse=True)
+
         return new_clusters
 
     def merge_cluster_with_centroid_similarity(self, clusters: List[List[str]], distance_threshold: float):
